@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f2f2f7;
+  --surface: #ffffff;
+  --surface-raised: rgba(255, 255, 255, 0.85);
+  --dark: #1c1c1e;
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary: #aeaeb2;
+  --separator: rgba(60, 60, 67, 0.08);
+  --blue: #007aff;
+  --green: #34c759;
+  --red: #ff3b30;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Card hover lift ── */
+.card-lift {
+  transition: transform 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow  220ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.card-lift:hover { transform: translateY(-2px); }
+
+.card-shadow-dark {
+  box-shadow: 0 8px 40px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.14);
+}
+.card-shadow-dark:hover {
+  box-shadow: 0 16px 52px rgba(0,0,0,0.30), 0 2px 8px rgba(0,0,0,0.18);
+}
+
+.card-shadow-light {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03);
+}
+.card-shadow-light:hover {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+}
+
+/* ── Search input glass focus ── */
+.search-glass {
+  transition: background 180ms ease-out, box-shadow 180ms ease-out;
+}
+.search-glass:focus {
+  outline: none;
+  background: rgba(60,60,67,0.04) !important;
+  box-shadow: 0 0 0 3px rgba(0,122,255,0.13);
+}
+
+/* ── Primary button lift ── */
+.btn-lift {
+  transition: transform 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity     150ms ease-out;
+}
+.btn-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,122,255,0.30);
+}
+.btn-lift:active { transform: translateY(0); box-shadow: none; opacity: 0.85; }
+
+/* ── Icon button scale ── */
+.icon-btn {
+  transition: color 150ms ease-out, background 150ms ease-out,
+              transform 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.icon-btn:hover { transform: scale(1.08); }
+
+/* ── Nav link ── */
+.nav-link {
+  transition: color 150ms ease-out, opacity 150ms ease-out;
+}
+.nav-link:not([data-active]):hover { color: #48484a !important; }
+
+/* ── Disable hover lifts on touch devices ── */
+@media (hover: none) {
+  .card-lift:hover        { transform: none; }
+  .card-shadow-dark:hover { box-shadow: 0 8px 40px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.14); }
+  .card-shadow-light:hover{ box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03); }
+  .btn-lift:hover         { transform: none; box-shadow: none; }
+  .icon-btn:hover         { transform: none; }
+}
