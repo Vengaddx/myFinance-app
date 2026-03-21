@@ -1,50 +1,132 @@
-import { allocationData, summaryData } from "../data/assets";
+"use client";
+
+import { useState } from "react";
+import { useTheme } from "@/lib/ThemeContext";
+
+type AllocationItem = {
+  label: string;
+  pct: number;
+  amount: number;
+  color: string;
+};
+
+type Props = {
+  allocationData: AllocationItem[];
+  totalAssets: number;
+};
 
 function fmtINRShort(n: number) {
   if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(1)} Cr`;
-  if (n >= 100_000)    return `₹${(n / 100_000).toFixed(1)} L`;
+  if (n >= 100_000) return `₹${(n / 100_000).toFixed(1)} L`;
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
-// Uses viewBox so CSS can control the rendered size
-function DonutChart() {
-  const size = 148;
+function DonutChart({
+  allocationData,
+  totalAssets,
+  isDark,
+}: {
+  allocationData: AllocationItem[];
+  totalAssets: number;
+  isDark: boolean;
+}) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const size = 200;
   const cx = size / 2;
   const cy = size / 2;
-  const r = 50;
-  const strokeWidth = 13;
+  const r = 68;
+  const strokeWidth = 16;
+  const hoveredStrokeWidth = 20;
   const gap = 2.5;
   const total = allocationData.reduce((s, d) => s + d.pct, 0);
 
   let angle = -90;
   const slices = allocationData.map((seg) => {
-    const degrees = (seg.pct / total) * 360 - gap;
+    const degrees = total > 0 ? (seg.pct / total) * 360 - gap : 0;
     const startAngle = angle;
     angle += degrees + gap;
     const startRad = (startAngle * Math.PI) / 180;
-    const endRad   = ((startAngle + degrees) * Math.PI) / 180;
+    const endRad = ((startAngle + degrees) * Math.PI) / 180;
+
     const x1 = cx + r * Math.cos(startRad);
     const y1 = cy + r * Math.sin(startRad);
     const x2 = cx + r * Math.cos(endRad);
     const y2 = cy + r * Math.sin(endRad);
     const largeArc = degrees > 180 ? 1 : 0;
-    return { ...seg, d: `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}` };
+
+    return {
+      ...seg,
+      d: `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`,
+    };
   });
 
-  const totalAssets = summaryData.netWorth + summaryData.liabilities;
+  const hovered = hoveredIndex !== null ? slices[hoveredIndex] : null;
+  const primaryFill = isDark ? "#ffffff" : "#1d1d1f";
+  const mutedFill = isDark ? "rgba(235,235,245,0.4)" : "#aeaeb2";
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-auto">
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f0f0f5" strokeWidth={strokeWidth} />
-      {slices.map((s, i) => (
-        <path key={i} d={s.d} fill="none" stroke={s.color} strokeWidth={strokeWidth} strokeLinecap="round" />
-      ))}
-      <text x={cx} y={cy - 7} textAnchor="middle" fontSize="13" fontWeight="700" fill="#1d1d1f">
-        {fmtINRShort(totalAssets)}
-      </text>
-      <text x={cx} y={cy + 8} textAnchor="middle" fontSize="8" fontWeight="500" fill="#aeaeb2" letterSpacing="0.07em">
-        TOTAL ASSETS
-      </text>
+    <svg
+      viewBox={`0 0 ${size} ${size}`}
+      className="w-full h-auto"
+      style={{ overflow: "visible" }}
+    >
+      {/* Track ring */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke={isDark ? "rgba(255,255,255,0.08)" : "#f0f0f5"}
+        strokeWidth={strokeWidth}
+      />
+
+      {/* Segments */}
+      {slices.map((s, i) =>
+        s.pct > 0 ? (
+          <path
+            key={i}
+            d={s.d}
+            fill="none"
+            stroke={s.color}
+            strokeWidth={hoveredIndex === i ? hoveredStrokeWidth : strokeWidth}
+            strokeLinecap="round"
+            opacity={hoveredIndex !== null && hoveredIndex !== i ? 0.35 : 1}
+            style={{ cursor: "pointer", transition: "opacity 180ms ease, stroke-width 150ms ease" }}
+            onMouseEnter={() => setHoveredIndex(i)}
+            onMouseLeave={() => setHoveredIndex(null)}
+          />
+        ) : null
+      )}
+
+      {/* Center text — shows hovered segment or total */}
+      {hovered ? (
+        <>
+          <text x={cx} y={cy - 18} textAnchor="middle" fontSize="9" fontWeight="600"
+            fill={hovered.color} letterSpacing="0.06em">
+            {hovered.label.toUpperCase()}
+          </text>
+          <text x={cx} y={cy + 2} textAnchor="middle" fontSize="15" fontWeight="700"
+            fill={primaryFill}>
+            {hovered.pct}%
+          </text>
+          <text x={cx} y={cy + 18} textAnchor="middle" fontSize="10" fontWeight="500"
+            fill={mutedFill}>
+            {fmtINRShort(hovered.amount)}
+          </text>
+        </>
+      ) : (
+        <>
+          <text x={cx} y={cy - 6} textAnchor="middle" fontSize="14" fontWeight="700"
+            fill={primaryFill}>
+            {fmtINRShort(totalAssets)}
+          </text>
+          <text x={cx} y={cy + 11} textAnchor="middle" fontSize="8" fontWeight="500"
+            fill={mutedFill} letterSpacing="0.07em">
+            TOTAL ASSETS
+          </text>
+        </>
+      )}
     </svg>
   );
 }
@@ -59,17 +141,18 @@ function InfoIcon() {
   );
 }
 
-type SegmentRowProps = { label: string; pct: number; amount: number; color: string };
-function SegmentRow({ label, pct, amount, color }: SegmentRowProps) {
+function SegmentRow({ label, pct, amount, color }: AllocationItem) {
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
-        <span className="text-[11.5px] font-medium" style={{ color: "#86868b" }}>{label}</span>
+        <span className="text-[11.5px] font-medium" style={{ color: "var(--text-secondary)" }}>
+          {label}
+        </span>
       </div>
-      <p className="text-[11.5px] font-semibold pl-3" style={{ color: "#1d1d1f" }}>
+      <p className="text-[11.5px] font-semibold pl-3" style={{ color: "var(--text-primary)" }}>
         {pct}%
-        <span className="font-normal ml-1.5" style={{ color: "#aeaeb2" }}>
+        <span className="font-normal ml-1.5" style={{ color: "var(--text-tertiary)" }}>
           · {fmtINRShort(amount)}
         </span>
       </p>
@@ -77,48 +160,53 @@ function SegmentRow({ label, pct, amount, color }: SegmentRowProps) {
   );
 }
 
-export default function AllocationCard() {
+export default function AllocationCard({ allocationData, totalAssets }: Props) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  const firstColumn = allocationData.slice(0, 3);
+  const secondColumn = allocationData.slice(3);
+
   return (
     <div
-      className="card-lift card-shadow-light flex flex-col h-full rounded-[20px] p-5"
+      className="card-lift flex flex-col h-full rounded-[20px] p-5"
       style={{
-        background: "#fff",
-        border: "1px solid rgba(60,60,67,0.07)",
+        background: "var(--surface)",
+        border: "1px solid var(--separator)",
+        boxShadow: isDark
+          ? "0 0 0 1px rgba(255,255,255,0.06), 0 4px 20px rgba(255,255,255,0.03)"
+          : "0 1px 3px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03)",
       }}
     >
-      {/* header */}
       <div className="flex items-center justify-between mb-4 sm:mb-5">
-        <p className="text-[14px] font-semibold" style={{ color: "#1d1d1f" }}>Asset Allocation</p>
-        <button className="icon-btn text-[#c7c7cc] hover:text-[#86868b]" style={{ transition: "color 150ms ease-out" }}>
+        <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)" }}>
+          Asset Allocation
+        </p>
+        <button className="icon-btn" style={{ color: "var(--text-tertiary)" }}>
           <InfoIcon />
         </button>
       </div>
 
-      {/* Donut + legend */}
-      <div className="flex items-center gap-4 sm:gap-7 flex-1">
-
-        {/* Donut: 110px on mobile, 148px on sm+ */}
-        <div className="w-[100px] sm:w-[148px] shrink-0">
-          <DonutChart />
+      <div className="flex items-center gap-4 sm:gap-6 flex-1">
+        <div className="w-[140px] sm:w-[180px] shrink-0">
+          <DonutChart allocationData={allocationData} totalAssets={totalAssets} isDark={isDark} />
         </div>
 
-        {/* Legend */}
         <div className="flex flex-1 gap-3 sm:gap-5 min-w-0">
-
-          {/* First column — always visible */}
-          <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
-            {allocationData.map((seg) => (
-              <SegmentRow key={seg.label} {...seg} />
-            ))}
+          <div className="flex flex-1 gap-6 min-w-0">
+            <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
+              {firstColumn.map((seg) => (
+                <SegmentRow key={seg.label} {...seg} />
+              ))}
+            </div>
+            {secondColumn.length > 0 && (
+              <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
+                {secondColumn.map((seg) => (
+                  <SegmentRow key={`r-${seg.label}`} {...seg} />
+                ))}
+              </div>
+            )}
           </div>
-
-          {/* Second column — sm and above only */}
-          <div className="hidden sm:flex flex-col gap-3.5 flex-1 min-w-0">
-            {allocationData.map((seg) => (
-              <SegmentRow key={`r-${seg.label}`} {...seg} />
-            ))}
-          </div>
-
         </div>
       </div>
     </div>

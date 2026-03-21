@@ -1,31 +1,47 @@
-import { summaryData } from "../data/assets";
+"use client";
+
+import { useTheme } from "@/lib/ThemeContext";
+
+type Props = {
+  netWorth: number;
+  invested: number;
+  investedPctOfNetWorth: number;
+  totalPnl: number;
+  totalPnlPct: number;
+  netWorthChange?: number;
+};
 
 function fmtINR(n: number) {
   return `₹\u202f${n.toLocaleString("en-IN")}`;
 }
 
-export default function NetWorthCard() {
-  const d = summaryData;
-  const up = d.netWorthChange >= 0;
+export default function NetWorthCard({
+  netWorth,
+  invested,
+  investedPctOfNetWorth,
+  totalPnl,
+  totalPnlPct,
+  netWorthChange = 0,
+}: Props) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const up = netWorthChange >= 0;
+
+  const bg = isDark ? "rgba(255,255,255,0.04)" : "#1c1c1e";
+  const border = isDark ? "1px solid rgba(255,255,255,0.1)" : "none";
+  const shadow = isDark
+    ? "0 0 0 1px rgba(255,255,255,0.07), 0 8px 40px rgba(255,255,255,0.04)"
+    : "0 8px 40px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.14)";
 
   return (
     <div
-      className="card-lift card-shadow-dark flex flex-col justify-between h-full rounded-[20px] p-6 relative overflow-hidden"
-      style={{ background: "#111113" }}
+      className="card-lift flex flex-col justify-between h-full rounded-[20px] p-6 relative overflow-hidden"
+      style={{ background: bg, border, boxShadow: shadow }}
     >
-      {/* subtle inner highlight */}
-      <div
-        className="absolute inset-0 rounded-[20px] pointer-events-none"
-        style={{
-          background: "linear-gradient(135deg, rgba(255,255,255,0.055) 0%, transparent 55%)",
-        }}
-      />
-
-      {/* Content */}
       <div>
         <p
           className="text-[10.5px] font-semibold uppercase mb-2"
-          style={{ color: "rgba(255,255,255,0.38)", letterSpacing: "0.13em" }}
+          style={{ color: "rgba(255,255,255,0.45)", letterSpacing: "0.13em" }}
         >
           Net Worth
         </p>
@@ -34,10 +50,10 @@ export default function NetWorthCard() {
           className="text-[30px] font-bold leading-none text-white"
           style={{ letterSpacing: "-0.025em" }}
         >
-          {fmtINR(d.netWorth)}
+          {fmtINR(netWorth)}
           <span
             className="text-[18px] font-normal"
-            style={{ color: "rgba(255,255,255,0.3)" }}
+            style={{ color: "rgba(255,255,255,0.35)" }}
           >
             .00
           </span>
@@ -45,52 +61,61 @@ export default function NetWorthCard() {
 
         <div className="flex items-center gap-2 mt-3">
           <span
-            className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-0.5 rounded-full"
+            className="inline-flex items-center gap-1 text-[12px] font-bold px-2.5 py-1 rounded-full"
             style={{
-              color:      up ? "#34c759" : "#ff3b30",
-              background: up ? "rgba(52,199,89,0.14)" : "rgba(255,59,48,0.14)",
+              color: up ? "#34c759" : "#ff3b30",
+              background: up ? "rgba(52,199,89,0.15)" : "rgba(255,59,48,0.15)",
             }}
           >
-            {up ? "▲" : "▼"} {Math.abs(d.netWorthChange)}%
+            {up ? "▲" : "▼"} {Math.abs(netWorthChange)}%
           </span>
-          <span className="text-[11.5px]" style={{ color: "rgba(255,255,255,0.28)" }}>
-            from last quarter
+          <span
+            className="text-[11.5px]"
+            style={{ color: "rgba(255,255,255,0.35)" }}
+          >
+            from last snapshot
           </span>
         </div>
       </div>
 
-      {/* Footer row */}
       <div
         className="mt-4 pt-3"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}
       >
         <div className="flex items-center justify-between">
           <div>
             <p
               className="text-[10px] font-medium uppercase mb-1"
-              style={{ color: "rgba(255,255,255,0.28)", letterSpacing: "0.1em" }}
+              style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}
             >
-              Total Assets
+              Invested
             </p>
             <p
-              className="text-[16px] font-semibold text-white"
+              className="text-[16px] font-bold text-white"
               style={{ letterSpacing: "-0.015em" }}
             >
-              {fmtINR(d.netWorth + d.liabilities)}
+              {fmtINR(invested)}
+            </p>
+            <p className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
+              {investedPctOfNetWorth}% of Net Worth
             </p>
           </div>
+
           <div className="text-right">
             <p
               className="text-[10px] font-medium uppercase mb-1"
-              style={{ color: "rgba(255,255,255,0.28)", letterSpacing: "0.1em" }}
+              style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}
             >
-              Liabilities
+              Total P&L
             </p>
             <p
-              className="text-[18px] font-semibold"
-              style={{ color: "#ff6b6b", letterSpacing: "-0.015em" }}
+              className="text-[18px] font-bold"
+              style={{ letterSpacing: "-0.015em", color: totalPnl >= 0 ? "#34c759" : "#ff3b30" }}
             >
-              {fmtINR(d.liabilities)}
+              {totalPnl >= 0 ? "+" : ""}{fmtINR(totalPnl)}
+            </p>
+            <p className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
+              {totalPnl >= 0 ? "+" : ""}{totalPnlPct}% ROI
             </p>
           </div>
         </div>

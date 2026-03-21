@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "@/lib/ThemeContext";
 
 export type AssetFormData = {
   name: string;
   currency: string;
-  shares: string;
-  avgPurchasePrice: string;
+  invested: string;
   currentValue: string;
   assetType: string;
 };
@@ -14,41 +14,39 @@ export type AssetFormData = {
 const EMPTY_FORM: AssetFormData = {
   name: "",
   currency: "INR",
-  shares: "",
-  avgPurchasePrice: "",
+  invested: "",
   currentValue: "",
   assetType: "",
 };
 
 const CURRENCIES = [
   { value: "INR", label: "₹ INR – Indian Rupee" },
+  { value: "SAR", label: "﷼ SAR – Saudi Riyal" },
   { value: "USD", label: "$ USD – US Dollar" },
-  { value: "EUR", label: "€ EUR – Euro" },
-  { value: "GBP", label: "£ GBP – British Pound" },
-  { value: "JPY", label: "¥ JPY – Japanese Yen" },
-  { value: "AED", label: "د.إ AED – UAE Dirham" },
-  { value: "SGD", label: "S$ SGD – Singapore Dollar" },
 ];
 
 const ASSET_TYPES = [
-  { value: "stocks",     label: "Stocks & ETFs" },
-  { value: "gold",       label: "Gold & Silver" },
-  { value: "fixed",      label: "Fixed Income" },
+  { value: "stocks", label: "Stocks & ETFs" },
+  { value: "gold", label: "Gold & Silver" },
+  { value: "lended", label: "Lended" },
+  { value: "fd", label: "Fixed Deposits" },
   { value: "realestate", label: "Real Estate" },
-  { value: "cash",       label: "Cash & Savings" },
-  { value: "crypto",     label: "Crypto" },
-  { value: "other",      label: "Other" },
+  { value: "cash", label: "Cash & Savings" },
+  { value: "crypto", label: "Crypto" },
+  { value: "other", label: "Other" },
 ];
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  onSave: (data: AssetFormData, addAnother: boolean) => void;
+  onSave: (data: AssetFormData, addAnother: boolean) => void | Promise<void>;
+  initialData?: AssetFormData | null;
+  mode?: "add" | "edit";
 };
 
 function XIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
       <path d="M18 6L6 18M6 6l12 12" />
     </svg>
   );
@@ -56,26 +54,31 @@ function XIcon() {
 
 function ChevronIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: "none" }}>
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: "none" }}>
       <path d="M6 9l6 6 6-6" />
     </svg>
   );
 }
 
-export default function AddAssetModal({ open, onClose, onSave }: Props) {
-  const [form, setForm] = useState<AssetFormData>(EMPTY_FORM);
-  const firstInputRef = useRef<HTMLInputElement>(null);
+export default function AddAssetModal({ open, onClose, onSave, initialData = null, mode = "add" }: Props) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const overlayRef = useRef<HTMLDivElement>(null);
+  const firstInputRef = useRef<HTMLInputElement>(null);
 
-  /* Focus first field when opened */
+  const [form, setForm] = useState<AssetFormData>(EMPTY_FORM);
+  const [sameAsInvested, setSameAsInvested] = useState(false);
+  const [errors, setErrors] = useState<{ name?: boolean; currentValue?: boolean }>({});
+
   useEffect(() => {
-    if (open) {
-      const t = setTimeout(() => firstInputRef.current?.focus(), 80);
-      return () => clearTimeout(t);
-    }
-  }, [open]);
+    if (!open) return;
+    setForm(initialData ?? { ...EMPTY_FORM });
+    setSameAsInvested(false);
+    setErrors({});
+    const t = setTimeout(() => firstInputRef.current?.focus(), 80);
+    return () => clearTimeout(t);
+  }, [open, initialData]);
 
-  /* Escape key */
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -83,7 +86,6 @@ export default function AddAssetModal({ open, onClose, onSave }: Props) {
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  /* Prevent body scroll */
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -91,244 +93,262 @@ export default function AddAssetModal({ open, onClose, onSave }: Props) {
 
   const set = (field: keyof AssetFormData) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => setForm((f) => ({ ...f, [field]: e.target.value }));
-
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === overlayRef.current) onClose();
+  ) => {
+    const value = e.target.value;
+    setForm((f) => {
+      const next = { ...f, [field]: value };
+      // If syncing and invested changes, keep currentValue in sync
+      if (field === "invested" && sameAsInvested) {
+        next.currentValue = value;
+      }
+      return next;
+    });
+    if (field === "name" && value) setErrors((e) => ({ ...e, name: false }));
+    if (field === "currentValue" && value) setErrors((e) => ({ ...e, currentValue: false }));
   };
 
-  const handleSave = (addAnother: boolean) => {
-    onSave(form, addAnother);
-    if (addAnother) setForm(EMPTY_FORM);
-    else onClose();
+  const handleCheckbox = (checked: boolean) => {
+    setSameAsInvested(checked);
+    if (checked) {
+      setForm((f) => ({ ...f, currentValue: f.invested }));
+      setErrors((e) => ({ ...e, currentValue: false }));
+    }
   };
 
-  const reset = () => setForm(EMPTY_FORM);
+  const handleSave = async () => {
+    const newErrors = {
+      name: !form.name.trim(),
+      currentValue: !form.currentValue.trim(),
+    };
+    setErrors(newErrors);
+    if (newErrors.name || newErrors.currentValue) return;
+    await onSave(form, false);
+    onClose();
+  };
+
+  // Theme tokens
+  const modalBg = isDark ? "rgba(18,18,20,0.96)" : "rgba(255,255,255,0.94)";
+  const modalBorder = isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.06)";
+  const titleColor = isDark ? "#ffffff" : "#1d1d1f";
+  const labelColor = isDark ? "rgba(235,235,245,0.45)" : "#aeaeb2";
+  const dividerColor = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)";
+  const closeBg = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
+  const closeColor = isDark ? "rgba(235,235,245,0.6)" : "#86868b";
+  const inputBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)";
+  const inputBorder = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
+  const inputColor = isDark ? "#ffffff" : "#1d1d1f";
+  const cancelBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
+  const cancelColor = isDark ? "rgba(235,235,245,0.6)" : "#86868b";
+
+  const inputStyle = (hasError?: boolean): React.CSSProperties => ({
+    width: "100%",
+    height: 42,
+    padding: "0 14px",
+    borderRadius: 12,
+    border: `1px solid ${hasError ? "#ff3b30" : inputBorder}`,
+    background: hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg,
+    fontSize: 14,
+    color: inputColor,
+    outline: "none",
+    transition: "border-color 160ms ease, box-shadow 160ms ease, background 160ms ease",
+    boxSizing: "border-box",
+  });
+
+  const onFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+    e.currentTarget.style.borderColor = "rgba(0,122,255,0.6)";
+    e.currentTarget.style.boxShadow = `0 0 0 3px ${isDark ? "rgba(0,122,255,0.2)" : "rgba(0,122,255,0.12)"}`;
+    e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.9)";
+  };
+
+  const onBlur = (hasError?: boolean) => (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+    e.currentTarget.style.borderColor = hasError ? "#ff3b30" : inputBorder;
+    e.currentTarget.style.boxShadow = "none";
+    e.currentTarget.style.background = hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg;
+  };
 
   return (
     <>
-      {/* ── Overlay ── */}
+      <style>{`
+        .mf-input::placeholder { color: ${isDark ? "rgba(235,235,245,0.28)" : "#aeaeb2"}; }
+        .mf-input option { background: ${isDark ? "#1c1c1e" : "#ffffff"}; color: ${inputColor}; }
+      `}</style>
+
       <div
         ref={overlayRef}
-        onClick={handleOverlayClick}
+        onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
         aria-modal="true"
         role="dialog"
-        aria-label="Add Asset"
         className="fixed inset-0 z-50 flex items-center justify-center px-4"
         style={{
-          background: "rgba(0,0,0,0.28)",
-          backdropFilter: "blur(6px)",
-          WebkitBackdropFilter: "blur(6px)",
+          background: isDark ? "rgba(0,0,0,0.72)" : "rgba(0,0,0,0.35)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
-          transition: "opacity 220ms cubic-bezier(0.4,0,0.2,1)",
+          transition: "opacity 200ms ease",
         }}
       >
-        {/* ── Modal panel ── */}
         <div
           style={{
-            background: "rgba(255,255,255,0.82)",
-            backdropFilter: "blur(40px) saturate(180%)",
-            WebkitBackdropFilter: "blur(40px) saturate(180%)",
+            background: modalBg,
+            backdropFilter: "blur(48px) saturate(200%)",
+            WebkitBackdropFilter: "blur(48px) saturate(200%)",
             borderRadius: 20,
-            border: "1px solid rgba(255,255,255,0.6)",
-            boxShadow:
-              "0 32px 64px rgba(0,0,0,0.14), 0 8px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)",
+            border: modalBorder,
+            boxShadow: isDark
+              ? "0 40px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05)"
+              : "0 32px 64px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.06)",
             width: "100%",
-            maxWidth: 480,
-            transform: open ? "scale(1) translateY(0)" : "scale(0.96) translateY(8px)",
+            maxWidth: 460,
+            transform: open ? "scale(1) translateY(0)" : "scale(0.97) translateY(12px)",
             opacity: open ? 1 : 0,
-            transition: "transform 240ms cubic-bezier(0.34,1.3,0.64,1), opacity 220ms cubic-bezier(0.4,0,0.2,1)",
+            transition: "transform 260ms cubic-bezier(0.34,1.2,0.64,1), opacity 200ms ease",
           }}
         >
           {/* Header */}
-          <div
-            className="flex items-center justify-between px-6 pt-5 pb-4"
-            style={{ borderBottom: "1px solid rgba(60,60,67,0.08)" }}
-          >
-            <h2 className="text-[17px] font-semibold" style={{ color: "#1d1d1f", letterSpacing: "-0.01em" }}>
-              Add Asset
-            </h2>
+          <div className="flex items-center justify-between px-6 pt-6 pb-4" style={{ borderBottom: `1px solid ${dividerColor}` }}>
+            <div>
+              <h2 className="text-[18px] font-semibold" style={{ color: titleColor, letterSpacing: "-0.02em" }}>
+                {mode === "edit" ? "Edit Asset" : "Add Asset"}
+              </h2>
+              <p className="text-[12px] mt-0.5" style={{ color: labelColor }}>
+                {mode === "edit" ? "Update asset details" : "Track a new investment"}
+              </p>
+            </div>
             <button
               onClick={onClose}
-              className="w-7 h-7 flex items-center justify-center rounded-full transition-colors"
-              style={{ background: "rgba(60,60,67,0.08)", color: "#86868b" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(60,60,67,0.14)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(60,60,67,0.08)"; }}
+              className="w-8 h-8 flex items-center justify-center rounded-full"
+              style={{ background: closeBg, color: closeColor, transition: "background 150ms ease" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.1)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = closeBg; }}
               aria-label="Close"
             >
               <XIcon />
             </button>
           </div>
 
-          {/* Body */}
+          {/* Form */}
           <div className="px-6 py-5 flex flex-col gap-4">
-            {/* Name */}
-            <Field label="Asset Name">
+            {/* Asset Name — mandatory */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: errors.name ? "#ff3b30" : labelColor }}>
+                  Asset Name
+                </label>
+                <span className="text-[#ff3b30] text-[11px] leading-none">*</span>
+              </div>
               <input
                 ref={firstInputRef}
                 type="text"
                 placeholder="e.g. HDFC Bank, Bitcoin, Gold ETF"
                 value={form.name}
                 onChange={set("name")}
-                style={inputStyle}
-                onFocus={focusStyle}
-                onBlur={blurStyle}
+                className="mf-input"
+                style={inputStyle(errors.name)}
+                onFocus={onFocus}
+                onBlur={onBlur(errors.name)}
               />
-            </Field>
-
-            {/* Currency + Asset Type side by side */}
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Currency">
-                <div className="relative">
-                  <select value={form.currency} onChange={set("currency")} style={{ ...inputStyle, paddingRight: 32, appearance: "none", WebkitAppearance: "none" }}
-                    onFocus={focusStyle} onBlur={blurStyle}>
-                    {CURRENCIES.map((c) => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "#aeaeb2" }}>
-                    <ChevronIcon />
-                  </span>
-                </div>
-              </Field>
-
-              <Field label="Asset Type">
-                <div className="relative">
-                  <select value={form.assetType} onChange={set("assetType")} style={{ ...inputStyle, paddingRight: 32, appearance: "none", WebkitAppearance: "none" }}
-                    onFocus={focusStyle} onBlur={blurStyle}>
-                    <option value="" disabled>Select type</option>
-                    {ASSET_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>{t.label}</option>
-                    ))}
-                  </select>
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "#aeaeb2" }}>
-                    <ChevronIcon />
-                  </span>
-                </div>
-              </Field>
+              {errors.name && <p className="text-[11px]" style={{ color: "#ff3b30" }}>Asset name is required</p>}
             </div>
 
-            {/* Shares */}
-            <Field label="No. of Shares / Units">
-              <input
-                type="number"
-                placeholder="0"
-                min="0"
-                value={form.shares}
-                onChange={set("shares")}
-                style={inputStyle}
-                onFocus={focusStyle}
-                onBlur={blurStyle}
-              />
-            </Field>
-
-            {/* Avg purchase price + Current value side by side */}
+            {/* Currency + Asset Type */}
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Avg Purchase Price">
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  min="0"
-                  value={form.avgPurchasePrice}
-                  onChange={set("avgPurchasePrice")}
-                  style={inputStyle}
-                  onFocus={focusStyle}
-                  onBlur={blurStyle}
-                />
-              </Field>
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Currency</label>
+                <div className="relative">
+                  <select value={form.currency} onChange={set("currency")} className="mf-input"
+                    style={{ ...inputStyle(), paddingRight: 36, appearance: "none", WebkitAppearance: "none", cursor: "pointer" }}
+                    onFocus={onFocus} onBlur={onBlur()}>
+                    {CURRENCIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  </select>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: labelColor }}><ChevronIcon /></span>
+                </div>
+              </div>
 
-              <Field label="Current Value">
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  min="0"
-                  value={form.currentValue}
-                  onChange={set("currentValue")}
-                  style={inputStyle}
-                  onFocus={focusStyle}
-                  onBlur={blurStyle}
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Asset Type</label>
+                <div className="relative">
+                  <select value={form.assetType} onChange={set("assetType")} className="mf-input"
+                    style={{ ...inputStyle(), paddingRight: 36, appearance: "none", WebkitAppearance: "none", cursor: "pointer" }}
+                    onFocus={onFocus} onBlur={onBlur()}>
+                    <option value="" disabled>Select type</option>
+                    {ASSET_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: labelColor }}><ChevronIcon /></span>
+                </div>
+              </div>
+            </div>
+
+            {/* Invested + Current Value */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Invested</label>
+                <input type="number" placeholder="0.00" min="0" value={form.invested} onChange={set("invested")}
+                  className="mf-input" style={inputStyle()} onFocus={onFocus} onBlur={onBlur()} />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: errors.currentValue ? "#ff3b30" : labelColor }}>
+                      Current Value
+                    </label>
+                    <span className="text-[#ff3b30] text-[11px] leading-none">*</span>
+                  </div>
+                  {/* Same as invested checkbox */}
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none" title="Copy invested value">
+                    <div
+                      className="w-[14px] h-[14px] rounded-[4px] flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: sameAsInvested ? "#007aff" : "transparent",
+                        border: `1.5px solid ${sameAsInvested ? "#007aff" : (isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)")}`,
+                        transition: "background 150ms ease, border-color 150ms ease",
+                      }}
+                    >
+                      {sameAsInvested && (
+                        <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
+                          <polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                      <input type="checkbox" checked={sameAsInvested} onChange={(e) => handleCheckbox(e.target.checked)} className="sr-only" />
+                    </div>
+                    <span className="text-[10px] font-medium" style={{ color: labelColor }}>= Invested</span>
+                  </label>
+                </div>
+                <input type="number" placeholder="0.00" min="0" value={form.currentValue}
+                  onChange={(e) => { setSameAsInvested(false); set("currentValue")(e); }}
+                  className="mf-input" style={inputStyle(errors.currentValue)} onFocus={onFocus} onBlur={onBlur(errors.currentValue)}
+                  readOnly={sameAsInvested}
                 />
-              </Field>
+                {errors.currentValue && <p className="text-[11px]" style={{ color: "#ff3b30" }}>Current value is required</p>}
+              </div>
             </div>
           </div>
 
           {/* Footer */}
-          <div
-            className="flex items-center justify-between px-6 pb-5 pt-4 gap-3"
-            style={{ borderTop: "1px solid rgba(60,60,67,0.08)" }}
-          >
+          <div className="flex items-center justify-between px-6 pb-6 pt-4 gap-3" style={{ borderTop: `1px solid ${dividerColor}` }}>
             <button
-              onClick={() => { reset(); onClose(); }}
-              className="h-9 px-4 rounded-[10px] text-[13px] font-medium transition-colors"
-              style={{ color: "#86868b", background: "rgba(60,60,67,0.07)" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(60,60,67,0.12)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(60,60,67,0.07)"; }}
+              onClick={onClose}
+              className="h-10 px-5 rounded-[12px] text-[13px] font-medium"
+              style={{ color: cancelColor, background: cancelBg, transition: "background 150ms ease" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.13)" : "rgba(0,0,0,0.09)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = cancelBg; }}
             >
               Cancel
             </button>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleSave(true)}
-                className="h-9 px-4 rounded-[10px] text-[13px] font-medium transition-colors"
-                style={{ color: "#007aff", background: "rgba(0,122,255,0.08)", border: "1px solid rgba(0,122,255,0.18)" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(0,122,255,0.14)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(0,122,255,0.08)"; }}
-              >
-                Save &amp; Add Another
-              </button>
-
-              <button
-                onClick={() => handleSave(false)}
-                className="h-9 px-4 rounded-[10px] text-[13px] font-semibold text-white transition-colors"
-                style={{ background: "#007aff" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#0071eb"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#007aff"; }}
-              >
-                Save Asset
-              </button>
-            </div>
+            <button
+              onClick={handleSave}
+              className="h-10 px-6 rounded-[12px] text-[13px] font-semibold text-white"
+              style={{ background: "#007aff", transition: "background 150ms ease, transform 150ms ease" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#0071eb"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#007aff"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
+            >
+              {mode === "edit" ? "Update Asset" : "Save Asset"}
+            </button>
           </div>
         </div>
       </div>
     </>
   );
-}
-
-/* ── Field wrapper ── */
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-semibold uppercase" style={{ color: "#aeaeb2", letterSpacing: "0.07em" }}>
-        {label}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-/* ── Shared input style ── */
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  height: 38,
-  padding: "0 12px",
-  borderRadius: 10,
-  border: "1px solid rgba(60,60,67,0.14)",
-  background: "rgba(255,255,255,0.7)",
-  fontSize: 13,
-  color: "#1d1d1f",
-  outline: "none",
-  transition: "border-color 160ms ease-out, box-shadow 160ms ease-out",
-  boxSizing: "border-box",
-};
-
-function focusStyle(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) {
-  e.currentTarget.style.borderColor = "rgba(0,122,255,0.5)";
-  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,122,255,0.12)";
-}
-
-function blurStyle(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) {
-  e.currentTarget.style.borderColor = "rgba(60,60,67,0.14)";
-  e.currentTarget.style.boxShadow = "none";
 }

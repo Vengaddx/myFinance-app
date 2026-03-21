@@ -1,7 +1,8 @@
 export type AssetCategory =
   | "stocks"
   | "gold"
-  | "fixed"
+  | "lended"
+  | "fd"
   | "realestate"
   | "cash"
   | "crypto"
@@ -12,8 +13,6 @@ export type Asset = {
   name: string;
   ticker: string;
   category: AssetCategory;
-  avgCost: number;
-  ltp: number;
   quantity: number;
   allocation: number;
   iconBg: string;
@@ -27,8 +26,6 @@ export const assets: Asset[] = [
     name: "Premium Land Plot #42",
     ticker: "LAND-42",
     category: "realestate",
-    avgCost: 450000,
-    ltp: 525000,
     quantity: 1,
     allocation: 36.1,
     iconBg: "#fff0e6",
@@ -40,8 +37,6 @@ export const assets: Asset[] = [
     name: "Kite — D Equities",
     ticker: "KITE-D",
     category: "stocks",
-    avgCost: 1240.40,
-    ltp: 1510.22,
     quantity: 250,
     allocation: 25.9,
     iconBg: "#e8eeff",
@@ -53,8 +48,6 @@ export const assets: Asset[] = [
     name: "Gold Physical Reserve",
     ticker: "GOLD-PHY",
     category: "gold",
-    avgCost: 2015.0,
-    ltp: 2410.5,
     quantity: 74.44,
     allocation: 12.3,
     iconBg: "#fff8e0",
@@ -66,8 +59,6 @@ export const assets: Asset[] = [
     name: "HDFC Nifty 50 Index",
     ticker: "HDFC-N50",
     category: "stocks",
-    avgCost: 180.5,
-    ltp: 245.3,
     quantity: 500,
     allocation: 8.2,
     iconBg: "#e8eeff",
@@ -79,8 +70,6 @@ export const assets: Asset[] = [
     name: "Sovereign Gold Bond 2028",
     ticker: "SGB-28",
     category: "gold",
-    avgCost: 5800,
-    ltp: 7200,
     quantity: 10,
     allocation: 4.9,
     iconBg: "#fff8e0",
@@ -92,8 +81,6 @@ export const assets: Asset[] = [
     name: "ICICI Liquid Fund",
     ticker: "ICICI-LIQ",
     category: "cash",
-    avgCost: 100,
-    ltp: 100,
     quantity: 2400,
     allocation: 4.8,
     iconBg: "#f0f0f0",
@@ -104,9 +91,7 @@ export const assets: Asset[] = [
     id: "7",
     name: "SBI Fixed Deposit",
     ticker: "SBI-FD",
-    category: "fixed",
-    avgCost: 100000,
-    ltp: 109000,
+    category: "fd",
     quantity: 1,
     allocation: 4.5,
     iconBg: "#e8f5ed",
@@ -118,8 +103,6 @@ export const assets: Asset[] = [
     name: "Bitcoin",
     ticker: "BTC",
     category: "crypto",
-    avgCost: 2800000,
-    ltp: 5600000,
     quantity: 0.08,
     allocation: 3.0,
     iconBg: "#fff3e0",
@@ -131,8 +114,6 @@ export const assets: Asset[] = [
     name: "Ethereum",
     ticker: "ETH",
     category: "crypto",
-    avgCost: 150000,
-    ltp: 290000,
     quantity: 0.5,
     allocation: 1.0,
     iconBg: "#ede8ff",
