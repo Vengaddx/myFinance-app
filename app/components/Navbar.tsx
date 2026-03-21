@@ -38,8 +38,8 @@ export default function Navbar() {
     >
       {/* Left: logo + nav (nav hidden on mobile) */}
       <div className="flex items-center gap-6 lg:gap-8">
-        <span className="text-[16.5px] font-bold tracking-tight" style={{ color: "#1d1d1f" }}>
-          myFinance
+        <span className="text-[20.5px] font-extrabold tracking-tight" style={{ color: "#1d1d1f" }}>
+          Mahfin
         </span>
 
         {/* Nav links: hidden below md */}
