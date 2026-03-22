@@ -152,16 +152,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const iconColor = (active: boolean, forTopNav = false) => {
-    if (forTopNav) {
-      return active
-        ? (scrolled ? "#ffffff" : "var(--text-primary)")
-        : (scrolled ? "rgba(255,255,255,0.55)" : "var(--text-secondary)");
-    }
-    return active
-      ? (isDark ? "#ffffff" : "#1d1d1f")
-      : (isDark ? "rgba(255,255,255,0.4)" : "rgba(60,60,67,0.45)");
-  };
 
   return (
     <>
@@ -334,40 +324,51 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* ── Floating bottom nav (mobile + tablet) ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center items-end gap-2.5 lg:hidden pointer-events-none" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}>
+      {/* ── Floating bottom nav (mobile only) ── */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center items-end gap-3 lg:hidden pointer-events-none"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
+      >
+        {/* Glass style shared between nav pill and add button */}
 
         {/* Nav pill */}
         <div
           ref={bottomNavRef}
-          className="flex items-center gap-0.5 p-1 pointer-events-auto relative"
+          className="flex items-center gap-0.5 p-[5px] pointer-events-auto relative"
           style={{
-            borderRadius: 28,
-            background: isDark ? "rgba(28,28,30,0.10)" : "rgba(255,255,255,0.14)",
-            backdropFilter: "blur(80px) saturate(300%) brightness(1.15)",
-            WebkitBackdropFilter: "blur(80px) saturate(300%) brightness(1.15)",
-            border: isDark ? "1px solid rgba(255,255,255,0.09)" : "1px solid rgba(255,255,255,0.6)",
+            borderRadius: 36,
+            background: isDark
+              ? "rgba(22, 22, 26, 0.62)"
+              : "rgba(255, 255, 255, 0.58)",
+            backdropFilter: "blur(48px) saturate(220%) brightness(1.08)",
+            WebkitBackdropFilter: "blur(48px) saturate(220%) brightness(1.08)",
+            border: isDark
+              ? "1px solid rgba(255,255,255,0.13)"
+              : "1px solid rgba(255,255,255,0.78)",
             boxShadow: isDark
-              ? "0 4px 20px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.08)"
-              : "0 4px 20px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
+              ? "0 12px 40px rgba(0,0,0,0.45), 0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.16)"
+              : "0 12px 40px rgba(0,0,0,0.12), 0 3px 10px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,1)",
           }}
         >
-          {/* Sliding pill */}
+          {/* Sliding active pill */}
           {bottomPill && (
             <span
               aria-hidden
-              className="absolute pointer-events-none rounded-[20px]"
+              className="absolute pointer-events-none"
               style={{
+                borderRadius: 28,
                 left: bottomPill.left,
                 top: bottomPill.top,
                 width: bottomPill.width,
                 height: bottomPill.height,
-                background: isDark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.07)",
+                background: isDark
+                  ? "rgba(255,255,255,0.14)"
+                  : "rgba(0,0,0,0.09)",
                 boxShadow: isDark
-                  ? "inset 0 1px 0 rgba(255,255,255,0.13)"
-                  : "inset 0 1px 0 rgba(255,255,255,0.85), 0 1px 4px rgba(0,0,0,0.07)",
+                  ? "inset 0 1px 0 rgba(255,255,255,0.22), 0 2px 10px rgba(0,0,0,0.25)"
+                  : "inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 6px rgba(0,0,0,0.1)",
                 transition: bottomPillReady
-                  ? "left 360ms cubic-bezier(0.34,1.2,0.64,1), width 360ms cubic-bezier(0.34,1.2,0.64,1)"
+                  ? "left 380ms cubic-bezier(0.34,1.2,0.64,1), width 380ms cubic-bezier(0.34,1.2,0.64,1)"
                   : "none",
               }}
             />
@@ -375,19 +376,34 @@ export default function Navbar() {
 
           {NAV_ITEMS.map((item, idx) => {
             const isActive = activeTab === item.id;
+            const activeColor  = isDark ? "#ffffff" : "#1d1d1f";
+            const inactiveColor = isDark ? "rgba(255,255,255,0.38)" : "rgba(60,60,67,0.4)";
             return (
               <button
                 key={item.id}
                 ref={(el) => { bottomBtnRefs.current[idx] = el; }}
                 onClick={() => setActiveTab(item.id)}
-                className="relative z-10 flex flex-col items-center gap-[2px] px-5 py-1.5 rounded-[20px]"
+                className="relative z-10 flex flex-col items-center gap-[3px] px-[18px] py-2 active:scale-95"
+                style={{
+                  borderRadius: 28,
+                  transition: "transform 140ms cubic-bezier(0.25,0.46,0.45,0.94)",
+                }}
               >
-                <span style={{ color: iconColor(isActive), transition: "color 250ms ease" }}>
+                <span style={{
+                  color: isActive ? activeColor : inactiveColor,
+                  transition: "color 260ms ease",
+                  transform: isActive ? "scale(1.08)" : "scale(1)",
+                  transition2: "transform 260ms cubic-bezier(0.34,1.3,0.64,1)",
+                } as React.CSSProperties}>
                   {NAV_ICONS[item.id]}
                 </span>
                 <span
-                  className="text-[10.5px] font-semibold"
-                  style={{ color: iconColor(isActive), transition: "color 250ms ease", letterSpacing: "-0.01em" }}
+                  className="text-[10px] font-semibold"
+                  style={{
+                    color: isActive ? activeColor : inactiveColor,
+                    transition: "color 260ms ease",
+                    letterSpacing: "-0.01em",
+                  }}
                 >
                   {item.label}
                 </span>
@@ -396,23 +412,28 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* Add pill */}
+        {/* Add button — same glass material, blue accent */}
         <button
           onClick={() => document.dispatchEvent(new CustomEvent("mahfin:open-add"))}
-          className="pointer-events-auto flex flex-col items-center gap-[2px] px-5 py-1.5"
+          className="pointer-events-auto flex flex-col items-center gap-[3px] px-[18px] py-2 active:scale-95"
           style={{
-            borderRadius: 28,
-            background: isDark ? "rgba(28,28,30,0.10)" : "rgba(255,255,255,0.14)",
-            backdropFilter: "blur(80px) saturate(300%) brightness(1.15)",
-            WebkitBackdropFilter: "blur(80px) saturate(300%) brightness(1.15)",
-            border: isDark ? "1px solid rgba(255,255,255,0.09)" : "1px solid rgba(255,255,255,0.6)",
+            borderRadius: 36,
+            background: isDark
+              ? "rgba(22, 22, 26, 0.62)"
+              : "rgba(255, 255, 255, 0.58)",
+            backdropFilter: "blur(48px) saturate(220%) brightness(1.08)",
+            WebkitBackdropFilter: "blur(48px) saturate(220%) brightness(1.08)",
+            border: isDark
+              ? "1px solid rgba(0,122,255,0.28)"
+              : "1px solid rgba(0,122,255,0.2)",
             boxShadow: isDark
-              ? "0 4px 20px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.08)"
-              : "0 4px 20px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
+              ? "0 12px 40px rgba(0,0,0,0.45), 0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.16)"
+              : "0 12px 40px rgba(0,0,0,0.12), 0 3px 10px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,1)",
+            transition: "transform 140ms cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 140ms ease",
           }}
         >
           <span style={{ color: "#007aff" }}><PlusIcon /></span>
-          <span className="text-[10.5px] font-semibold" style={{ color: "#007aff", letterSpacing: "-0.01em" }}>Add</span>
+          <span className="text-[10px] font-semibold" style={{ color: "#007aff", letterSpacing: "-0.01em" }}>Add</span>
         </button>
 
       </div>
