@@ -224,27 +224,27 @@ export default function AllocationCard({ allocationData, totalAssets, topHolding
 
         {/* Allocation — in normal flow, defines card height */}
         <div
-          className="flex items-center gap-4 sm:gap-6 h-full"
+          className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 h-full"
           style={{
             opacity: view === "allocation" ? 1 : 0,
             pointerEvents: view === "allocation" ? "auto" : "none",
             transition: "opacity 220ms ease",
           }}
         >
-          <div className="w-[140px] sm:w-[180px] shrink-0">
+          {/* Chart: larger on mobile (full-width row), fixed on desktop */}
+          <div className="w-[200px] sm:w-[180px] shrink-0">
             <DonutChart allocationData={allocationData} totalAssets={totalAssets} isDark={isDark} />
           </div>
-          <div className="flex flex-1 gap-3 sm:gap-5 min-w-0">
-            <div className="flex flex-1 gap-6 min-w-0">
-              <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
-                {firstColumn.map((seg) => <SegmentRow key={seg.label} {...seg} />)}
-              </div>
-              {secondColumn.length > 0 && (
-                <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
-                  {secondColumn.map((seg) => <SegmentRow key={`r-${seg.label}`} {...seg} />)}
-                </div>
-              )}
+          {/* Legend: two-column below chart on mobile, beside chart on desktop */}
+          <div className="w-full sm:flex-1 flex gap-3 sm:gap-5 min-w-0">
+            <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
+              {firstColumn.map((seg) => <SegmentRow key={seg.label} {...seg} />)}
             </div>
+            {secondColumn.length > 0 && (
+              <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
+                {secondColumn.map((seg) => <SegmentRow key={`r-${seg.label}`} {...seg} />)}
+              </div>
+            )}
           </div>
         </div>
 
