@@ -11,7 +11,7 @@ const NAV_ITEMS = [
 
 function PortfolioIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="7" width="20" height="14" rx="2" />
       <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
       <line x1="12" y1="12" x2="12" y2="16" />
@@ -22,7 +22,7 @@ function PortfolioIcon() {
 
 function StocksIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
       <polyline points="16 7 22 7 22 13" />
     </svg>
@@ -31,7 +31,7 @@ function StocksIcon() {
 
 function GoalsIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
       <circle cx="12" cy="12" r="6" />
       <circle cx="12" cy="12" r="2" />
@@ -205,22 +205,22 @@ export default function Navbar() {
       </nav>
 
       {/* ── Floating bottom nav (mobile + tablet) ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-6 lg:hidden pointer-events-none">
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-5 lg:hidden pointer-events-none">
         <div
-          className="flex items-center gap-1 p-1.5 pointer-events-auto"
+          className="flex items-center gap-0.5 p-1 pointer-events-auto"
           style={{
-            borderRadius: 32,
+            borderRadius: 28,
             background: isDark
-              ? "rgba(24,24,26,0.76)"
-              : "rgba(248,248,252,0.76)",
-            backdropFilter: "blur(48px) saturate(220%)",
-            WebkitBackdropFilter: "blur(48px) saturate(220%)",
+              ? "rgba(20,20,22,0.55)"
+              : "rgba(255,255,255,0.52)",
+            backdropFilter: "blur(60px) saturate(240%) brightness(1.08)",
+            WebkitBackdropFilter: "blur(60px) saturate(240%) brightness(1.08)",
             border: isDark
-              ? "1px solid rgba(255,255,255,0.13)"
-              : "1px solid rgba(255,255,255,0.75)",
+              ? "1px solid rgba(255,255,255,0.1)"
+              : "1px solid rgba(255,255,255,0.85)",
             boxShadow: isDark
-              ? "0 16px 48px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)"
-              : "0 16px 48px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.95)",
+              ? "0 8px 32px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.07) inset, 0 -1px 0 rgba(0,0,0,0.2) inset"
+              : "0 8px 32px rgba(0,0,0,0.1), 0 1px 0 rgba(255,255,255,1) inset",
           }}
         >
           {NAV_ITEMS.map((item) => {
@@ -229,33 +229,24 @@ export default function Navbar() {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className="flex flex-col items-center gap-[3px] px-6 py-2.5 rounded-[22px] transition-all duration-200"
+                className="flex flex-col items-center gap-[2px] px-5 py-1.5 rounded-[20px] transition-all duration-200"
                 style={{
                   background: isActive
-                    ? (isDark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.07)")
+                    ? (isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)")
                     : "transparent",
                   boxShadow: isActive
                     ? (isDark
-                        ? "inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 4px rgba(0,0,0,0.25)"
-                        : "inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 4px rgba(0,0,0,0.08)")
+                        ? "inset 0 1px 0 rgba(255,255,255,0.12)"
+                        : "inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 3px rgba(0,0,0,0.06)")
                     : "none",
                 }}
               >
-                <span
-                  style={{
-                    color: iconColor(isActive),
-                    transition: "color 200ms ease",
-                  }}
-                >
+                <span style={{ color: iconColor(isActive), transition: "color 200ms ease" }}>
                   {NAV_ICONS[item.id]}
                 </span>
                 <span
-                  className="text-[11px] font-semibold"
-                  style={{
-                    color: iconColor(isActive),
-                    transition: "color 200ms ease",
-                    letterSpacing: "-0.01em",
-                  }}
+                  className="text-[10.5px] font-semibold"
+                  style={{ color: iconColor(isActive), transition: "color 200ms ease", letterSpacing: "-0.01em" }}
                 >
                   {item.label}
                 </span>
