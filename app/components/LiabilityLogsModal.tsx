@@ -42,13 +42,6 @@ export default function LiabilityLogsModal({ open, onClose, liabilityId, liabili
   const isDark = theme === "dark";
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
   const currencySymbol = currency === "USD" ? "$" : currency === "SAR" ? "﷼" : "₹";
 
@@ -94,7 +87,7 @@ export default function LiabilityLogsModal({ open, onClose, liabilityId, liabili
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       aria-modal="true"
       role="dialog"
-      className={`fixed inset-0 z-50 flex ${isMobile ? "items-end" : "items-center justify-center px-4 py-6"}`}
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
       style={{
         background: isDark ? "rgba(0,0,0,0.72)" : "rgba(0,0,0,0.35)",
         backdropFilter: "blur(12px)",
@@ -109,26 +102,21 @@ export default function LiabilityLogsModal({ open, onClose, liabilityId, liabili
           background: modalBg,
           backdropFilter: "blur(48px) saturate(200%)",
           WebkitBackdropFilter: "blur(48px) saturate(200%)",
-          borderRadius: isMobile ? "24px 24px 0 0" : 20,
+          borderRadius: 20,
           border: modalBorder,
           boxShadow: isDark
             ? "0 40px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05)"
             : "0 32px 64px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.06)",
           width: "100%",
-          maxWidth: isMobile ? "100%" : 580,
-          maxHeight: isMobile ? "92dvh" : "calc(100vh - 48px)",
+          maxWidth: 580,
+          maxHeight: "calc(100vh - 48px)",
           display: "flex",
           flexDirection: "column",
-          transform: open ? "translateY(0)" : (isMobile ? "translateY(100%)" : "scale(0.97) translateY(12px)"),
+          transform: open ? "scale(1) translateY(0)" : "scale(0.97) translateY(12px)",
           opacity: open ? 1 : 0,
-          transition: "transform 320ms cubic-bezier(0.34,1.2,0.64,1), opacity 200ms ease",
+          transition: "transform 260ms cubic-bezier(0.34,1.2,0.64,1), opacity 200ms ease",
         }}
       >
-        {isMobile && (
-          <div className="flex justify-center pt-3 pb-1 shrink-0">
-            <div className="w-9 h-[4px] rounded-full" style={{ background: "rgba(120,120,128,0.3)" }} />
-          </div>
-        )}
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0" style={{ borderBottom: `1px solid ${dividerColor}` }}>
           <div>
