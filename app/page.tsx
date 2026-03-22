@@ -8,6 +8,7 @@ import MetricCard from "./components/MetricCard";
 import AllocationCard from "./components/AllocationCard";
 import AssetsTable from "./components/AssetsTable";
 import Footer from "./components/Footer";
+import SplashScreen from "./components/SplashScreen";
 import { supabase } from "@/lib/supabase";
 
 type DbAssetRow = {
@@ -101,6 +102,18 @@ export default function Home() {
   const [dbAssets, setDbAssets] = useState<DbAssetRow[]>([]);
   const [dbLiabilities, setDbLiabilities] = useState<{ outstanding_amount: number; status: string }[]>([]);
   const [showStickyBar, setShowStickyBar] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
+
+  useEffect(() => {
+    const mobile = window.innerWidth < 768;
+    const seen = sessionStorage.getItem("mahfin_splash");
+    if (mobile && !seen) setShowSplash(true);
+  }, []);
+
+  const handleSplashDone = () => {
+    sessionStorage.setItem("mahfin_splash", "1");
+    setShowSplash(false);
+  };
 
   useEffect(() => {
     const onScroll = () => setShowStickyBar(window.scrollY > 260);
@@ -204,6 +217,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+      {showSplash && <SplashScreen onDone={handleSplashDone} />}
       <Navbar />
 
       {/* Sticky compact summary bar */}
