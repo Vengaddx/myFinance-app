@@ -3,10 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 
 const LINES = [
-  { text: "Hey Maha,",                                                            speed: 52 },
-  { text: "Mahfin is here to help you grow your money with clarity.",             speed: 27 },
-  { text: "Track your wealth. Improve your decisions. Build better returns.",     speed: 23 },
-  { text: "Welcome.",                                                             speed: 58 },
+  { text: "Hey Maha,",                                          speed: 60 },
+  { text: "Time to manage your boyfriend's wealth the right way.", speed: 26 },
+  { text: "Welcome!",                                            speed: 62 },
 ] as const;
 
 const LINE_PAUSE    = 480;  // ms pause between lines
@@ -18,8 +17,8 @@ type Props = { onDone: () => void };
 export default function SplashScreen({ onDone }: Props) {
   const [fadeIn,      setFadeIn]      = useState(false);
   const [fadeOut,     setFadeOut]     = useState(false);
-  const [lineTexts,   setLineTexts]   = useState(LINES.map(() => ""));
-  const [lineVisible, setLineVisible] = useState(LINES.map(() => false));
+  const [lineTexts,   setLineTexts]   = useState<string[]>(LINES.map(() => ""));
+  const [lineVisible, setLineVisible] = useState<boolean[]>(LINES.map(() => false));
   const [currentLine, setCurrentLine] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -175,10 +174,9 @@ function lineStyle(i: number): React.CSSProperties {
     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
     WebkitFontSmoothing: "antialiased",
   };
-  if (i === 0) return { ...base, fontSize: 31, fontWeight: 700, color: "#ffffff",          letterSpacing: "-0.03em", lineHeight: 1.2  };
-  if (i === 1) return { ...base, fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.68)", letterSpacing: "-0.01em", lineHeight: 1.65 };
-  if (i === 2) return { ...base, fontSize: 15, fontWeight: 400, color: "rgba(255,255,255,0.42)", letterSpacing: "-0.005em",lineHeight: 1.65 };
-  return           { ...base, fontSize: 23, fontWeight: 600, color: "#AEDD00",           letterSpacing: "-0.025em",lineHeight: 1.2  };
+  if (i === 0) return { ...base, fontSize: 58, fontWeight: 800, color: "#ffffff",               letterSpacing: "-0.04em",  lineHeight: 1.05 };
+  if (i === 1) return { ...base, fontSize: 17, fontWeight: 400, color: "rgba(255,255,255,0.65)", letterSpacing: "-0.015em", lineHeight: 1.6  };
+  return           { ...base, fontSize: 26, fontWeight: 700, color: "#AEDD00",               letterSpacing: "-0.03em",  lineHeight: 1.2  };
 }
 
 function Cursor() {
