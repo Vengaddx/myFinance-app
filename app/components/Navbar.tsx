@@ -104,25 +104,31 @@ export default function Navbar() {
   const [bottomPillReady, setBottomPillReady] = useState(false);
 
   const measurePills = () => {
-    const idx = NAV_ITEMS.findIndex((i) => i.id === activeTab);
+    requestAnimationFrame(() => {
+      const idx = NAV_ITEMS.findIndex((i) => i.id === activeTab);
 
-    const dBtn = desktopBtnRefs.current[idx];
-    const dNav = desktopNavRef.current;
-    if (dBtn && dNav) {
-      const nr = dNav.getBoundingClientRect();
-      const br = dBtn.getBoundingClientRect();
-      setDesktopPill({ left: br.left - nr.left, top: br.top - nr.top, width: br.width, height: br.height });
-      setDesktopPillReady(true);
-    }
+      const dBtn = desktopBtnRefs.current[idx];
+      const dNav = desktopNavRef.current;
+      if (dBtn && dNav) {
+        const nr = dNav.getBoundingClientRect();
+        const br = dBtn.getBoundingClientRect();
+        if (br.width > 0) {
+          setDesktopPill({ left: br.left - nr.left, top: br.top - nr.top, width: br.width, height: br.height });
+          setDesktopPillReady(true);
+        }
+      }
 
-    const bBtn = bottomBtnRefs.current[idx];
-    const bNav = bottomNavRef.current;
-    if (bBtn && bNav) {
-      const nr = bNav.getBoundingClientRect();
-      const br = bBtn.getBoundingClientRect();
-      setBottomPill({ left: br.left - nr.left, top: br.top - nr.top, width: br.width, height: br.height });
-      setBottomPillReady(true);
-    }
+      const bBtn = bottomBtnRefs.current[idx];
+      const bNav = bottomNavRef.current;
+      if (bBtn && bNav) {
+        const nr = bNav.getBoundingClientRect();
+        const br = bBtn.getBoundingClientRect();
+        if (br.width > 0) {
+          setBottomPill({ left: br.left - nr.left, top: br.top - nr.top, width: br.width, height: br.height });
+          setBottomPillReady(true);
+        }
+      }
+    });
   };
 
   useEffect(() => { measurePills(); }, [activeTab]);
