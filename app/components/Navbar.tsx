@@ -334,19 +334,19 @@ export default function Navbar() {
         {/* Nav pill */}
         <div
           ref={bottomNavRef}
-          className="flex items-center gap-0.5 p-[5px] pointer-events-auto relative"
+          className="flex items-center gap-0.5 p-[3px] pointer-events-auto relative"
           style={{
             borderRadius: 36,
             background: isDark
-              ? "rgba(22, 22, 26, 0.62)"
-              : "rgba(255, 255, 255, 0.58)",
-            backdropFilter: "blur(48px) saturate(220%) brightness(1.08)",
-            WebkitBackdropFilter: "blur(48px) saturate(220%) brightness(1.08)",
+              ? "rgba(22, 22, 26, 0.44)"
+              : "rgba(255, 255, 255, 0.46)",
+            backdropFilter: "blur(52px) saturate(200%) brightness(1.06)",
+            WebkitBackdropFilter: "blur(52px) saturate(200%) brightness(1.06)",
             border: isDark
-              ? "1px solid rgba(255,255,255,0.13)"
+              ? "1px solid rgba(255,255,255,0.11)"
               : "1px solid rgba(255,255,255,0.78)",
             boxShadow: isDark
-              ? "0 12px 40px rgba(0,0,0,0.45), 0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.16)"
+              ? "0 12px 40px rgba(0,0,0,0.45), 0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.14)"
               : "0 12px 40px rgba(0,0,0,0.12), 0 3px 10px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,1)",
           }}
         >
@@ -362,10 +362,10 @@ export default function Navbar() {
                 width: bottomPill.width,
                 height: bottomPill.height,
                 background: isDark
-                  ? "rgba(255,255,255,0.14)"
-                  : "rgba(0,0,0,0.09)",
+                  ? "rgba(255,255,255,0.13)"
+                  : "rgba(0,0,0,0.08)",
                 boxShadow: isDark
-                  ? "inset 0 1px 0 rgba(255,255,255,0.22), 0 2px 10px rgba(0,0,0,0.25)"
+                  ? "inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 10px rgba(0,0,0,0.25)"
                   : "inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 6px rgba(0,0,0,0.1)",
                 transition: bottomPillReady
                   ? "left 380ms cubic-bezier(0.34,1.2,0.64,1), width 380ms cubic-bezier(0.34,1.2,0.64,1)"
@@ -376,34 +376,25 @@ export default function Navbar() {
 
           {NAV_ITEMS.map((item, idx) => {
             const isActive = activeTab === item.id;
-            const activeColor  = isDark ? "#ffffff" : "#1d1d1f";
+            const activeColor   = isDark ? "#ffffff" : "#1d1d1f";
             const inactiveColor = isDark ? "rgba(255,255,255,0.38)" : "rgba(60,60,67,0.4)";
             return (
               <button
                 key={item.id}
                 ref={(el) => { bottomBtnRefs.current[idx] = el; }}
                 onClick={() => setActiveTab(item.id)}
-                className="relative z-10 flex flex-col items-center gap-[3px] px-[18px] py-2 active:scale-95"
+                className="relative z-10 flex flex-col items-center gap-[3px] px-[18px] py-[5px] active:scale-95"
                 style={{
                   borderRadius: 28,
                   transition: "transform 140ms cubic-bezier(0.25,0.46,0.45,0.94)",
                 }}
               >
-                <span style={{
-                  color: isActive ? activeColor : inactiveColor,
-                  transition: "color 260ms ease",
-                  transform: isActive ? "scale(1.08)" : "scale(1)",
-                  transition2: "transform 260ms cubic-bezier(0.34,1.3,0.64,1)",
-                } as React.CSSProperties}>
+                <span style={{ color: isActive ? activeColor : inactiveColor, transition: "color 260ms ease" }}>
                   {NAV_ICONS[item.id]}
                 </span>
                 <span
                   className="text-[10px] font-semibold"
-                  style={{
-                    color: isActive ? activeColor : inactiveColor,
-                    transition: "color 260ms ease",
-                    letterSpacing: "-0.01em",
-                  }}
+                  style={{ color: isActive ? activeColor : inactiveColor, transition: "color 260ms ease", letterSpacing: "-0.01em" }}
                 >
                   {item.label}
                 </span>
@@ -415,21 +406,21 @@ export default function Navbar() {
         {/* Add button — same glass material, blue accent */}
         <button
           onClick={() => document.dispatchEvent(new CustomEvent("mahfin:open-add"))}
-          className="pointer-events-auto flex flex-col items-center gap-[3px] px-[18px] py-2 active:scale-95"
+          className="pointer-events-auto flex flex-col items-center gap-[3px] px-[18px] py-[8px] active:scale-95"
           style={{
             borderRadius: 36,
             background: isDark
-              ? "rgba(22, 22, 26, 0.62)"
-              : "rgba(255, 255, 255, 0.58)",
-            backdropFilter: "blur(48px) saturate(220%) brightness(1.08)",
-            WebkitBackdropFilter: "blur(48px) saturate(220%) brightness(1.08)",
+              ? "rgba(22, 22, 26, 0.44)"
+              : "rgba(255, 255, 255, 0.46)",
+            backdropFilter: "blur(52px) saturate(200%) brightness(1.06)",
+            WebkitBackdropFilter: "blur(52px) saturate(200%) brightness(1.06)",
             border: isDark
-              ? "1px solid rgba(0,122,255,0.28)"
-              : "1px solid rgba(0,122,255,0.2)",
+              ? "1px solid rgba(0,122,255,0.26)"
+              : "1px solid rgba(0,122,255,0.18)",
             boxShadow: isDark
-              ? "0 12px 40px rgba(0,0,0,0.45), 0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.16)"
+              ? "0 12px 40px rgba(0,0,0,0.45), 0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.14)"
               : "0 12px 40px rgba(0,0,0,0.12), 0 3px 10px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,1)",
-            transition: "transform 140ms cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 140ms ease",
+            transition: "transform 140ms cubic-bezier(0.25,0.46,0.45,0.94)",
           }}
         >
           <span style={{ color: "#007aff" }}><PlusIcon /></span>
