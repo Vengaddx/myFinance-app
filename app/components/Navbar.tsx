@@ -169,8 +169,50 @@ export default function Navbar() {
           transition: "background 350ms ease, border-color 350ms ease",
         }}
       >
+        {/* ── Mobile top bar ── */}
+        <div className="md:hidden flex items-center w-full">
+          {/* Left: theme toggle */}
+          <div className="flex-1 flex items-center">
+            <button
+              onClick={toggle}
+              className="icon-btn w-8 h-8 flex items-center justify-center rounded-full"
+              style={{
+                color: scrolled ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)",
+                background: scrolled ? "rgba(255,255,255,0.12)" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(60,60,67,0.06)"),
+                transition: "color 400ms ease, background 400ms ease",
+              }}
+              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {isDark ? <SunIcon /> : <MoonIcon />}
+            </button>
+          </div>
+
+          {/* Center: wordmark */}
+          <span
+            className="text-[21.5px] font-extrabold tracking-tight"
+            style={{ color: scrolled ? "#ffffff" : "var(--text-primary)", transition: "color 400ms ease" }}
+          >
+            Mah<span style={{ color: "#AEDD00" }}>fin</span>
+          </span>
+
+          {/* Right: avatar */}
+          <div className="flex-1 flex items-center justify-end">
+            <div
+              className="cursor-pointer shrink-0"
+              style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}
+            >
+              <img
+                src="/avatar.jpg"
+                alt="Profile"
+                style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Desktop top bar ── */}
         {/* Logo — left */}
-        <div className="flex-1">
+        <div className="hidden md:flex flex-1">
           <span
             className="text-[21.5px] font-extrabold tracking-tight"
             style={{ color: scrolled ? "#ffffff" : "var(--text-primary)", transition: "color 400ms ease" }}
@@ -241,8 +283,8 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* Right icons */}
-        <div className="flex-1 flex items-center justify-end gap-2 sm:gap-2.5">
+        {/* Right icons (desktop) */}
+        <div className="hidden md:flex flex-1 items-center justify-end gap-2 sm:gap-2.5">
           <button
             onClick={toggle}
             className="icon-btn w-8 h-8 flex items-center justify-center rounded-full"
