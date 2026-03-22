@@ -410,8 +410,8 @@ export default function Navbar() {
           style={{
             borderRadius: 36,
             background: isDark
-              ? "rgba(22, 22, 26, 0.44)"
-              : "rgba(255, 255, 255, 0.46)",
+              ? "rgba(22, 22, 26, 0.22)"
+              : "rgba(255, 255, 255, 0.26)",
             backdropFilter: "blur(52px) saturate(200%) brightness(1.06)",
             WebkitBackdropFilter: "blur(52px) saturate(200%) brightness(1.06)",
             border: isDark
