@@ -335,20 +335,18 @@ export default function Navbar() {
       </nav>
 
       {/* ── Floating bottom nav (mobile + tablet) ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center lg:hidden pointer-events-none" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}>
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center items-end gap-2.5 lg:hidden pointer-events-none" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}>
+
+        {/* Nav pill */}
         <div
           ref={bottomNavRef}
           className="flex items-center gap-0.5 p-1 pointer-events-auto relative"
           style={{
             borderRadius: 28,
-            background: isDark
-              ? "rgba(28,28,30,0.10)"
-              : "rgba(255,255,255,0.14)",
+            background: isDark ? "rgba(28,28,30,0.10)" : "rgba(255,255,255,0.14)",
             backdropFilter: "blur(80px) saturate(300%) brightness(1.15)",
             WebkitBackdropFilter: "blur(80px) saturate(300%) brightness(1.15)",
-            border: isDark
-              ? "1px solid rgba(255,255,255,0.09)"
-              : "1px solid rgba(255,255,255,0.6)",
+            border: isDark ? "1px solid rgba(255,255,255,0.09)" : "1px solid rgba(255,255,255,0.6)",
             boxShadow: isDark
               ? "0 4px 20px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.08)"
               : "0 4px 20px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
@@ -396,17 +394,27 @@ export default function Navbar() {
               </button>
             );
           })}
-
-          {/* Separator + Add button */}
-          <div style={{ width: 1, height: 28, background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)", margin: "0 2px", flexShrink: 0 }} />
-          <button
-            onClick={() => document.dispatchEvent(new CustomEvent("mahfin:open-add"))}
-            className="relative z-10 flex flex-col items-center gap-[2px] px-5 py-1.5 rounded-[20px]"
-          >
-            <span style={{ color: "#007aff" }}><PlusIcon /></span>
-            <span className="text-[10.5px] font-semibold" style={{ color: "#007aff", letterSpacing: "-0.01em" }}>Add</span>
-          </button>
         </div>
+
+        {/* Add pill */}
+        <button
+          onClick={() => document.dispatchEvent(new CustomEvent("mahfin:open-add"))}
+          className="pointer-events-auto flex flex-col items-center gap-[2px] px-5 py-1.5"
+          style={{
+            borderRadius: 28,
+            background: isDark ? "rgba(28,28,30,0.10)" : "rgba(255,255,255,0.14)",
+            backdropFilter: "blur(80px) saturate(300%) brightness(1.15)",
+            WebkitBackdropFilter: "blur(80px) saturate(300%) brightness(1.15)",
+            border: isDark ? "1px solid rgba(255,255,255,0.09)" : "1px solid rgba(255,255,255,0.6)",
+            boxShadow: isDark
+              ? "0 4px 20px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.08)"
+              : "0 4px 20px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
+          }}
+        >
+          <span style={{ color: "#007aff" }}><PlusIcon /></span>
+          <span className="text-[10.5px] font-semibold" style={{ color: "#007aff", letterSpacing: "-0.01em" }}>Add</span>
+        </button>
+
       </div>
     </>
   );
