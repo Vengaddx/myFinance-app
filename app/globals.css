@@ -18,19 +18,19 @@
 }
 
 html.dark {
-  --bg: #000000;
-  --surface: #000000;
-  --surface-raised: rgba(0, 0, 0, 0.92);
+  --bg: #0e0e10;
+  --surface: #1c1c1e;
+  --surface-raised: rgba(28, 28, 30, 0.92);
   --surface-secondary: rgba(255, 255, 255, 0.06);
   --text-primary: #ffffff;
   --text-secondary: rgba(235, 235, 245, 0.6);
   --text-tertiary: rgba(235, 235, 245, 0.35);
-  --separator: rgba(255, 255, 255, 0.12);
-  --separator-subtle: rgba(255, 255, 255, 0.07);
-  --nav-bg: rgba(0, 0, 0, 0.88);
+  --separator: rgba(255, 255, 255, 0.10);
+  --separator-subtle: rgba(255, 255, 255, 0.06);
+  --nav-bg: rgba(14, 14, 16, 0.88);
   --row-hover: rgba(255, 255, 255, 0.04);
-  --card-border-dark: rgba(255, 255, 255, 0.1);
-  --card-shadow-dark: 0 0 0 1px rgba(255,255,255,0.08), 0 4px 24px rgba(255,255,255,0.04);
+  --card-border-dark: rgba(255, 255, 255, 0.08);
+  --card-shadow-dark: 0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4);
 }
 
 * {
