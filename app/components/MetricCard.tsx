@@ -54,20 +54,20 @@ export default function MetricCard({
       style={{ background, border, boxShadow }}
     >
       <p
-        className="text-[10px] font-semibold uppercase mb-1"
+        className="text-[11px] font-semibold uppercase mb-1"
         style={{ color: isDanger ? "rgba(255,59,48,0.6)" : "var(--text-tertiary)", letterSpacing: "0.1em" }}
       >
         {label}
       </p>
       <p
-        className="text-[20px] font-bold leading-none"
+        className="text-[21px] font-bold leading-none"
         style={{ color: isDanger ? "#ff3b30" : "var(--text-primary)", letterSpacing: "-0.02em" }}
       >
         {value}
       </p>
       {sub && (
         <p
-          className="text-[11.5px] font-medium mt-1"
+          className="text-[12.5px] font-medium mt-1"
           style={{ color: isDanger ? "rgba(255,59,48,0.55)" : subColorMap[subColor] }}
         >
           {sub}

@@ -208,10 +208,10 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
           {/* Header */}
           <div className="flex items-center justify-between px-6 pt-6 pb-4" style={{ borderBottom: `1px solid ${dividerColor}` }}>
             <div>
-              <h2 className="text-[18px] font-semibold" style={{ color: titleColor, letterSpacing: "-0.02em" }}>
+              <h2 className="text-[19px] font-semibold" style={{ color: titleColor, letterSpacing: "-0.02em" }}>
                 {mode === "edit" ? "Edit Asset" : "Add Asset"}
               </h2>
-              <p className="text-[12px] mt-0.5" style={{ color: labelColor }}>
+              <p className="text-[13px] mt-0.5" style={{ color: labelColor }}>
                 {mode === "edit" ? "Update asset details" : "Track a new investment"}
               </p>
             </div>
@@ -232,10 +232,10 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
             {/* Asset Name — mandatory */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
-                <label className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: errors.name ? "#ff3b30" : labelColor }}>
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.name ? "#ff3b30" : labelColor }}>
                   Asset Name
                 </label>
-                <span className="text-[#ff3b30] text-[11px] leading-none">*</span>
+                <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
               </div>
               <input
                 ref={firstInputRef}
@@ -248,13 +248,13 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
                 onFocus={onFocus}
                 onBlur={onBlur(errors.name)}
               />
-              {errors.name && <p className="text-[11px]" style={{ color: "#ff3b30" }}>Asset name is required</p>}
+              {errors.name && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Asset name is required</p>}
             </div>
 
             {/* Currency + Asset Type */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Currency</label>
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Currency</label>
                 <div className="relative">
                   <select value={form.currency} onChange={set("currency")} className="mf-input"
                     style={{ ...inputStyle(), paddingRight: 36, appearance: "none", WebkitAppearance: "none", cursor: "pointer" }}
@@ -266,7 +266,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Asset Type</label>
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Asset Type</label>
                 <div className="relative">
                   <select value={form.assetType} onChange={set("assetType")} className="mf-input"
                     style={{ ...inputStyle(), paddingRight: 36, appearance: "none", WebkitAppearance: "none", cursor: "pointer" }}
@@ -282,7 +282,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
             {/* Invested + Current Value */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Invested</label>
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Invested</label>
                 <input type="number" placeholder="0.00" min="0" value={form.invested} onChange={set("invested")}
                   className="mf-input" style={inputStyle()} onFocus={onFocus} onBlur={onBlur()} />
               </div>
@@ -290,10 +290,10 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: errors.currentValue ? "#ff3b30" : labelColor }}>
+                    <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.currentValue ? "#ff3b30" : labelColor }}>
                       Current Value
                     </label>
-                    <span className="text-[#ff3b30] text-[11px] leading-none">*</span>
+                    <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
                   </div>
                   {/* Same as invested checkbox */}
                   <label className="flex items-center gap-1.5 cursor-pointer select-none" title="Copy invested value">
@@ -312,7 +312,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
                       )}
                       <input type="checkbox" checked={sameAsInvested} onChange={(e) => handleCheckbox(e.target.checked)} className="sr-only" />
                     </div>
-                    <span className="text-[10px] font-medium" style={{ color: labelColor }}>= Invested</span>
+                    <span className="text-[11px] font-medium" style={{ color: labelColor }}>= Invested</span>
                   </label>
                 </div>
                 <input type="number" placeholder="0.00" min="0" value={form.currentValue}
@@ -320,7 +320,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
                   className="mf-input" style={inputStyle(errors.currentValue)} onFocus={onFocus} onBlur={onBlur(errors.currentValue)}
                   readOnly={sameAsInvested}
                 />
-                {errors.currentValue && <p className="text-[11px]" style={{ color: "#ff3b30" }}>Current value is required</p>}
+                {errors.currentValue && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Current value is required</p>}
               </div>
             </div>
           </div>
@@ -329,7 +329,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
           <div className="flex items-center justify-between px-6 pb-6 pt-4 gap-3" style={{ borderTop: `1px solid ${dividerColor}` }}>
             <button
               onClick={onClose}
-              className="h-10 px-5 rounded-[12px] text-[13px] font-medium"
+              className="h-10 px-5 rounded-[12px] text-[14px] font-medium"
               style={{ color: cancelColor, background: cancelBg, transition: "background 150ms ease" }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.13)" : "rgba(0,0,0,0.09)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = cancelBg; }}
@@ -339,7 +339,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
 
             <button
               onClick={handleSave}
-              className="h-10 px-6 rounded-[12px] text-[13px] font-semibold text-white"
+              className="h-10 px-6 rounded-[12px] text-[14px] font-semibold text-white"
               style={{ background: "#007aff", transition: "background 150ms ease, transform 150ms ease" }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#0071eb"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#007aff"; (e.currentTarget as HTMLElement).style.transform = "none"; }}

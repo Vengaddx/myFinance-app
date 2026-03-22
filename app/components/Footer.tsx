@@ -7,14 +7,14 @@ export default function Footer() {
       <div className="max-w-[1320px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
         {/* Left */}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
-          <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>
+          <span className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>
             © 2026 Mahfin.
           </span>
           {["Privacy Policy", "Terms of Service", "Design Credits"].map((link) => (
             <a
               key={link}
               href="#"
-              className="text-[12px] transition-colors"
+              className="text-[13px] transition-colors"
               style={{ color: "var(--text-tertiary)" }}
               onMouseEnter={(e) =>
                 ((e.target as HTMLElement).style.color = "var(--text-secondary)")
@@ -29,7 +29,7 @@ export default function Footer() {
         </div>
 
         {/* Right */}
-        <p className="text-[12px] italic" style={{ color: "var(--text-tertiary)" }}>
+        <p className="text-[13px] italic" style={{ color: "var(--text-tertiary)" }}>
           This app is dedicated to Maha Lakshmi ❤️
         </p>
       </div>

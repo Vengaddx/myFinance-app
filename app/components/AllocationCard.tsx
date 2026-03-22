@@ -102,26 +102,26 @@ function DonutChart({
       {/* Center text — shows hovered segment or total */}
       {hovered ? (
         <>
-          <text x={cx} y={cy - 18} textAnchor="middle" fontSize="9" fontWeight="600"
+          <text x={cx} y={cy - 18} textAnchor="middle" fontSize="10" fontWeight="600"
             fill={hovered.color} letterSpacing="0.06em">
             {hovered.label.toUpperCase()}
           </text>
-          <text x={cx} y={cy + 2} textAnchor="middle" fontSize="15" fontWeight="700"
+          <text x={cx} y={cy + 2} textAnchor="middle" fontSize="16" fontWeight="700"
             fill={primaryFill}>
             {hovered.pct}%
           </text>
-          <text x={cx} y={cy + 18} textAnchor="middle" fontSize="10" fontWeight="500"
+          <text x={cx} y={cy + 18} textAnchor="middle" fontSize="11" fontWeight="500"
             fill={mutedFill}>
             {fmtINRShort(hovered.amount)}
           </text>
         </>
       ) : (
         <>
-          <text x={cx} y={cy - 6} textAnchor="middle" fontSize="14" fontWeight="700"
+          <text x={cx} y={cy - 6} textAnchor="middle" fontSize="15" fontWeight="700"
             fill={primaryFill}>
             {fmtINRShort(totalAssets)}
           </text>
-          <text x={cx} y={cy + 11} textAnchor="middle" fontSize="8" fontWeight="500"
+          <text x={cx} y={cy + 11} textAnchor="middle" fontSize="9" fontWeight="500"
             fill={mutedFill} letterSpacing="0.07em">
             TOTAL ASSETS
           </text>
@@ -146,11 +146,11 @@ function SegmentRow({ label, pct, amount, color }: AllocationItem) {
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
-        <span className="text-[11.5px] font-medium" style={{ color: "var(--text-secondary)" }}>
+        <span className="text-[12.5px] font-medium" style={{ color: "var(--text-secondary)" }}>
           {label}
         </span>
       </div>
-      <p className="text-[11.5px] font-semibold pl-3" style={{ color: "var(--text-primary)" }}>
+      <p className="text-[12.5px] font-semibold pl-3" style={{ color: "var(--text-primary)" }}>
         {pct}%
         <span className="font-normal ml-1.5" style={{ color: "var(--text-tertiary)" }}>
           · {fmtINRShort(amount)}
@@ -179,7 +179,7 @@ export default function AllocationCard({ allocationData, totalAssets }: Props) {
       }}
     >
       <div className="flex items-center justify-between mb-4 sm:mb-5">
-        <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)" }}>
+        <p className="text-[15px] font-semibold" style={{ color: "var(--text-primary)" }}>
           Asset Allocation
         </p>
         <button className="icon-btn" style={{ color: "var(--text-tertiary)" }}>

@@ -40,19 +40,19 @@ export default function NetWorthCard({
     >
       <div>
         <p
-          className="text-[10.5px] font-semibold uppercase mb-2"
+          className="text-[11.5px] font-semibold uppercase mb-2"
           style={{ color: "rgba(255,255,255,0.45)", letterSpacing: "0.13em" }}
         >
           Net Worth
         </p>
 
         <p
-          className="text-[30px] font-bold leading-none text-white"
+          className="text-[32px] font-bold leading-none text-white"
           style={{ letterSpacing: "-0.025em" }}
         >
           {fmtINR(netWorth)}
           <span
-            className="text-[18px] font-normal"
+            className="text-[19px] font-normal"
             style={{ color: "rgba(255,255,255,0.35)" }}
           >
             .00
@@ -61,7 +61,7 @@ export default function NetWorthCard({
 
         <div className="flex items-center gap-2 mt-3">
           <span
-            className="inline-flex items-center gap-1 text-[12px] font-bold px-2.5 py-1 rounded-full"
+            className="inline-flex items-center gap-1 text-[13px] font-bold px-2.5 py-1 rounded-full"
             style={{
               color: up ? "#34c759" : "#ff3b30",
               background: up ? "rgba(52,199,89,0.15)" : "rgba(255,59,48,0.15)",
@@ -70,7 +70,7 @@ export default function NetWorthCard({
             {up ? "▲" : "▼"} {Math.abs(netWorthChange)}%
           </span>
           <span
-            className="text-[11.5px]"
+            className="text-[12.5px]"
             style={{ color: "rgba(255,255,255,0.35)" }}
           >
             from last snapshot
@@ -85,36 +85,36 @@ export default function NetWorthCard({
         <div className="flex items-center justify-between">
           <div>
             <p
-              className="text-[10px] font-medium uppercase mb-1"
+              className="text-[11px] font-medium uppercase mb-1"
               style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}
             >
               Invested
             </p>
             <p
-              className="text-[16px] font-bold text-white"
+              className="text-[17px] font-bold text-white"
               style={{ letterSpacing: "-0.015em" }}
             >
               {fmtINR(invested)}
             </p>
-            <p className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <p className="text-[12px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
               {investedPctOfNetWorth}% of Net Worth
             </p>
           </div>
 
           <div className="text-right">
             <p
-              className="text-[10px] font-medium uppercase mb-1"
+              className="text-[11px] font-medium uppercase mb-1"
               style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}
             >
               Total P&L
             </p>
             <p
-              className="text-[18px] font-bold"
+              className="text-[19px] font-bold"
               style={{ letterSpacing: "-0.015em", color: totalPnl >= 0 ? "#34c759" : "#ff3b30" }}
             >
               {totalPnl >= 0 ? "+" : ""}{fmtINR(totalPnl)}
             </p>
-            <p className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <p className="text-[12px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
               {totalPnl >= 0 ? "+" : ""}{totalPnlPct}% ROI
             </p>
           </div>
