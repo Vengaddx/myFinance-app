@@ -44,8 +44,7 @@ body {
     system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Extend body to fill safe areas on iOS standalone mode */
-  padding-top: env(safe-area-inset-top);
+  /* Side safe areas only — top is handled by the sticky navbar */
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }

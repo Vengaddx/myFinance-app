@@ -210,7 +210,7 @@ export default function Home() {
       <div
         className="fixed left-0 right-0 z-40 flex justify-center px-4 sm:px-5 lg:px-6"
         style={{
-          top: 50,
+          top: "calc(50px + env(safe-area-inset-top))",
           transform: showStickyBar ? "translateY(0)" : "translateY(-120%)",
           opacity: showStickyBar ? 1 : 0,
           transition: "transform 380ms cubic-bezier(0.34,1.15,0.64,1), opacity 250ms ease",

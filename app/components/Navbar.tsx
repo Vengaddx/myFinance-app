@@ -158,8 +158,10 @@ export default function Navbar() {
     <>
       {/* ── Top navbar ── */}
       <nav
-        className="sticky top-0 z-50 border-b flex items-center px-4 sm:px-6 lg:px-8 h-[50px]"
+        className="sticky top-0 z-50 border-b flex items-center px-4 sm:px-6 lg:px-8"
         style={{
+          paddingTop: "env(safe-area-inset-top)",
+          height: "calc(50px + env(safe-area-inset-top))",
           background: scrolled ? "rgba(30,30,32,0.82)" : "transparent",
           backdropFilter: scrolled ? "blur(20px) saturate(160%)" : "none",
           WebkitBackdropFilter: scrolled ? "blur(20px) saturate(160%)" : "none",
