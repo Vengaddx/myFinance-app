@@ -324,7 +324,7 @@ function StatLabel({
       >
         {label}
       </p>
-      <p className="text-[14px] font-medium" style={{ color: "var(--text-primary)" }}>
+      <p className="text-[15px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
         {value}
       </p>
     </div>
@@ -1019,8 +1019,8 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="min-w-0">
                       <p
-                        className="text-[14px] font-semibold truncate"
-                        style={{ color: "var(--text-primary)" }}
+                        className="text-[16px] font-bold truncate"
+                        style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
                       >
                         {asset.name}
                       </p>
@@ -1147,8 +1147,8 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
   <td className="pl-6 pr-4 py-4">
     <div>
       <p
-        className="text-[14px] font-semibold"
-        style={{ color: "var(--text-primary)" }}
+        className="text-[15px] font-bold"
+        style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
       >
         {asset.name}
       </p>
@@ -1180,15 +1180,15 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
   </td>
 
   <td
-    className="px-4 py-4 text-right text-[14px]"
-    style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+    className="px-4 py-4 text-right text-[15px] font-medium"
+    style={{ color: "var(--text-secondary)", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}
   >
     {fmtINRFull(asset.invested)}
   </td>
 
   <td
-    className="px-4 py-4 text-right text-[14px] font-medium"
-    style={{ color: "var(--text-primary)", whiteSpace: "nowrap" }}
+    className="px-4 py-4 text-right text-[15px] font-bold"
+    style={{ color: "var(--text-primary)", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}
   >
     {fmtINRFull(asset.curVal)}
   </td>
@@ -1212,8 +1212,8 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
         />
       </div>
       <span
-        className="text-[14px] font-medium w-9 text-right"
-        style={{ color: "var(--text-primary)" }}
+        className="text-[15px] font-bold w-9 text-right"
+        style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}
       >
         {asset.allocation}%
       </span>
@@ -1266,23 +1266,23 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[14px] font-bold truncate" style={{ color: "var(--text-primary)" }}>{l.lenderName}</p>
+                      <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{l.lenderName}</p>
                       {l.name !== l.lenderName && (
-                        <p className="text-[12px] mt-0.5 truncate" style={{ color: "var(--text-secondary)" }}>{l.name}</p>
+                        <p className="text-[13px] mt-0.5 truncate" style={{ color: "var(--text-secondary)" }}>{l.name}</p>
                       )}
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <LenderTypeBadge type={l.liabilityType} />
                         <StatusBadge status={l.status} />
                         {daysSince(l.borrowedDate) != null && (
-                          <span className="text-[11px] font-medium" style={{ color: "var(--text-tertiary)" }}>
+                          <span className="text-[12px] font-semibold" style={{ color: "var(--text-tertiary)" }}>
                             {daysSince(l.borrowedDate)}d ago
                           </span>
                         )}
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-[15px] font-bold" style={{ color: "#ff3b30" }}>{fmtAmt(l.outstandingAmount, l.currency)}</p>
-                      <p className="text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>of {fmtAmt(l.originalAmount, l.currency)}</p>
+                      <p className="text-[17px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.02em" }}>{fmtAmt(l.outstandingAmount, l.currency)}</p>
+                      <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--text-tertiary)" }}>of {fmtAmt(l.originalAmount, l.currency)}</p>
                     </div>
                   </div>
 
@@ -1291,13 +1291,13 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                       {l.borrowedDate && (
                         <div>
                           <p className="text-[10px] uppercase font-semibold" style={{ color: "var(--text-tertiary)", letterSpacing: "0.07em" }}>Borrowed</p>
-                          <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>{fmtDate(l.borrowedDate)}</p>
+                          <p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>{fmtDate(l.borrowedDate)}</p>
                         </div>
                       )}
                       {l.dueDate && (
                         <div>
                           <p className="text-[10px] uppercase font-semibold" style={{ color: "var(--text-tertiary)", letterSpacing: "0.07em" }}>Due</p>
-                          <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>{fmtDate(l.dueDate)}</p>
+                          <p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>{fmtDate(l.dueDate)}</p>
                         </div>
                       )}
                     </div>
@@ -1389,28 +1389,28 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                     >
                       <td className="pl-6 pr-4 py-4">
                         <div className="flex items-center gap-2">
-                          <p className="text-[14px] font-bold" style={{ color: "var(--text-primary)" }}>{l.lenderName}</p>
+                          <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{l.lenderName}</p>
                           <LenderTypeBadge type={l.liabilityType} />
                         </div>
                         {l.name !== l.lenderName && (
-                          <p className="text-[12px] mt-0.5" style={{ color: "var(--text-secondary)" }}>{l.name}</p>
+                          <p className="text-[13px] mt-0.5" style={{ color: "var(--text-secondary)" }}>{l.name}</p>
                         )}
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <span className="text-[14px] font-bold" style={{ color: "#ff3b30" }}>{fmtAmt(l.outstandingAmount, l.currency)}</span>
+                        <span className="text-[15px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.01em" }}>{fmtAmt(l.outstandingAmount, l.currency)}</span>
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <span className="text-[14px]" style={{ color: "var(--text-secondary)" }}>{fmtAmt(l.originalAmount, l.currency)}</span>
+                        <span className="text-[15px] font-semibold" style={{ color: "var(--text-secondary)", letterSpacing: "-0.01em" }}>{fmtAmt(l.originalAmount, l.currency)}</span>
                       </td>
-                      <td className="px-4 py-4 text-[13px]" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(l.borrowedDate)}</td>
+                      <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(l.borrowedDate)}</td>
                       <td className="px-4 py-4 text-right">
                         {(() => { const d = daysSince(l.borrowedDate); return d != null ? (
-                          <span className="text-[14px] font-semibold" style={{ color: "var(--text-primary)" }}>
-                            {d}<span className="text-[11px] font-normal ml-0.5" style={{ color: "var(--text-tertiary)" }}>d</span>
+                          <span className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+                            {d}<span className="text-[12px] font-normal ml-0.5" style={{ color: "var(--text-tertiary)" }}>d</span>
                           </span>
                         ) : <span style={{ color: "var(--text-tertiary)" }}>—</span>; })()}
                       </td>
-                      <td className="px-4 py-4 text-[13px]" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(l.dueDate)}</td>
+                      <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(l.dueDate)}</td>
                       <td className="px-4 py-4"><StatusBadge status={l.status} /></td>
                       <td className="pr-6 pl-4 py-4">
                         <div className="flex items-center justify-end gap-1.5">
