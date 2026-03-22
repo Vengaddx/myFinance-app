@@ -131,57 +131,27 @@ function SegmentRow({ label, pct, amount, color }: AllocationItem) {
   );
 }
 
-function HoldingsView({ holdings, isDark }: { holdings: TopHolding[]; isDark: boolean }) {
+function HoldingRow({ holding, rank }: { holding: TopHolding; rank: number }) {
   return (
-    <div className="flex flex-col gap-0 flex-1 min-w-0">
-      {holdings.map((h, i) => (
-        <div
-          key={h.name}
-          className="flex items-center gap-3 py-2.5"
-          style={{
-            borderBottom: i < holdings.length - 1
-              ? `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}`
-              : "none",
-          }}
+    <div className="flex flex-col gap-0.5">
+      <div className="flex items-center gap-1.5">
+        <span
+          className="text-[10px] font-semibold shrink-0 w-3"
+          style={{ color: "var(--text-tertiary)" }}
         >
-          {/* Rank */}
-          <span
-            className="text-[11px] font-semibold w-4 shrink-0 text-right"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            {i + 1}
-          </span>
-
-          {/* Color dot */}
-          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: h.color }} />
-
-          {/* Name + category */}
-          <div className="flex-1 min-w-0">
-            <p
-              className="text-[13px] font-semibold truncate"
-              style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}
-            >
-              {h.name}
-            </p>
-            <p className="text-[11px] truncate" style={{ color: "var(--text-tertiary)" }}>
-              {h.categoryLabel}
-            </p>
-          </div>
-
-          {/* Value + pct */}
-          <div className="text-right shrink-0">
-            <p
-              className="text-[13px] font-bold"
-              style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}
-            >
-              {fmtINRShort(h.value)}
-            </p>
-            <p className="text-[11px] font-medium" style={{ color: "var(--text-tertiary)" }}>
-              {h.pct.toFixed(1)}%
-            </p>
-          </div>
-        </div>
-      ))}
+          {rank}
+        </span>
+        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: holding.color }} />
+        <span className="text-[12.5px] font-medium truncate" style={{ color: "var(--text-secondary)" }}>
+          {holding.name}
+        </span>
+      </div>
+      <p className="text-[12.5px] font-semibold" style={{ color: "var(--text-primary)", paddingLeft: "1.125rem" }}>
+        {fmtINRShort(holding.value)}
+        <span className="font-normal ml-1.5" style={{ color: "var(--text-tertiary)" }}>
+          · {holding.pct.toFixed(1)}%
+        </span>
+      </p>
     </div>
   );
 }
@@ -268,7 +238,20 @@ export default function AllocationCard({ allocationData, totalAssets, topHolding
           </div>
         </div>
       ) : (
-        <HoldingsView holdings={topHoldings} isDark={isDark} />
+        <div className="flex flex-1 gap-6 min-w-0">
+          <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
+            {topHoldings.slice(0, 3).map((h, i) => (
+              <HoldingRow key={h.name} holding={h} rank={i + 1} />
+            ))}
+          </div>
+          {topHoldings.length > 3 && (
+            <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
+              {topHoldings.slice(3).map((h, i) => (
+                <HoldingRow key={h.name} holding={h} rank={i + 4} />
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
