@@ -133,30 +133,46 @@ export default function Navbar() {
         </div>
 
         {/* Nav items — center (desktop only) */}
-        <div className="hidden lg:flex items-center gap-0.5">
+        <div
+          className="hidden lg:flex items-center gap-0.5 p-1 rounded-[14px]"
+          style={{
+            background: scrolled
+              ? "rgba(255,255,255,0.08)"
+              : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
+            backdropFilter: "blur(40px) saturate(200%)",
+            WebkitBackdropFilter: "blur(40px) saturate(200%)",
+            border: scrolled
+              ? "1px solid rgba(255,255,255,0.1)"
+              : (isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.06)"),
+            transition: "background 350ms ease, border-color 350ms ease",
+          }}
+        >
           {NAV_ITEMS.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className="relative px-3.5 py-1.5 text-[14px] rounded-md"
+                className="px-4 py-1.5 rounded-[10px] text-[14px] transition-all duration-200"
                 style={{
-                  color: iconColor(isActive, true),
-                  fontWeight: isActive ? 500 : 400,
-                  transition: "color 300ms ease",
+                  fontWeight: isActive ? 700 : 500,
+                  color: isActive
+                    ? (scrolled ? "#ffffff" : "var(--text-primary)")
+                    : (scrolled ? "rgba(255,255,255,0.45)" : "var(--text-tertiary)"),
+                  background: isActive
+                    ? (scrolled
+                        ? "rgba(255,255,255,0.14)"
+                        : (isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.92)"))
+                    : "transparent",
+                  boxShadow: isActive
+                    ? (isDark || scrolled
+                        ? "inset 0 1px 0 rgba(255,255,255,0.12), 0 1px 4px rgba(0,0,0,0.25)"
+                        : "0 1px 4px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)")
+                    : "none",
+                  letterSpacing: isActive ? "-0.01em" : "0",
                 }}
               >
                 {item.label}
-                {isActive && (
-                  <span
-                    className="absolute bottom-0 left-3.5 right-3.5 h-[1.5px] rounded-full"
-                    style={{
-                      background: scrolled ? "#ffffff" : "var(--text-primary)",
-                      transition: "background 400ms ease",
-                    }}
-                  />
-                )}
               </button>
             );
           })}
