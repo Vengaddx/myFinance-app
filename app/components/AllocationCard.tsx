@@ -218,9 +218,19 @@ export default function AllocationCard({ allocationData, totalAssets, topHolding
         </div>
       </div>
 
-      {/* Body */}
-      {view === "allocation" ? (
-        <div className="flex items-center gap-4 sm:gap-6 flex-1">
+      {/* Body — both views always rendered; allocation stays in flow to lock the height,
+           holdings fades in as an absolute overlay so the card never resizes */}
+      <div className="relative flex-1">
+
+        {/* Allocation — in normal flow, defines card height */}
+        <div
+          className="flex items-center gap-4 sm:gap-6 h-full"
+          style={{
+            opacity: view === "allocation" ? 1 : 0,
+            pointerEvents: view === "allocation" ? "auto" : "none",
+            transition: "opacity 220ms ease",
+          }}
+        >
           <div className="w-[140px] sm:w-[180px] shrink-0">
             <DonutChart allocationData={allocationData} totalAssets={totalAssets} isDark={isDark} />
           </div>
@@ -237,8 +247,16 @@ export default function AllocationCard({ allocationData, totalAssets, topHolding
             </div>
           </div>
         </div>
-      ) : (
-        <div className="flex flex-1 gap-6 min-w-0">
+
+        {/* Holdings — absolute overlay, fades in without affecting layout */}
+        <div
+          className="absolute inset-0 flex items-center gap-6"
+          style={{
+            opacity: view === "holdings" ? 1 : 0,
+            pointerEvents: view === "holdings" ? "auto" : "none",
+            transition: "opacity 220ms ease",
+          }}
+        >
           <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
             {topHoldings.slice(0, 3).map((h, i) => (
               <HoldingRow key={h.name} holding={h} rank={i + 1} />
@@ -252,7 +270,8 @@ export default function AllocationCard({ allocationData, totalAssets, topHolding
             </div>
           )}
         </div>
-      )}
+
+      </div>
     </div>
   );
 }
