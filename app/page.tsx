@@ -220,13 +220,13 @@ export default function Home() {
         <div
           className="w-full max-w-[1320px] flex items-center justify-between px-5 py-2.5 mt-2 rounded-[16px]"
           style={{
-            background: isDark ? "rgba(18,18,20,0.72)" : "rgba(255,255,255,0.72)",
-            backdropFilter: "blur(48px) saturate(200%)",
-            WebkitBackdropFilter: "blur(48px) saturate(200%)",
-            border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.06)",
+            background: isDark ? "rgba(18,18,20,0.28)" : "rgba(255,255,255,0.30)",
+            backdropFilter: "blur(60px) saturate(240%) brightness(1.1)",
+            WebkitBackdropFilter: "blur(60px) saturate(240%) brightness(1.1)",
+            border: isDark ? "1px solid rgba(255,255,255,0.09)" : "1px solid rgba(255,255,255,0.7)",
             boxShadow: isDark
-              ? "0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07)"
-              : "0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)",
+              ? "0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.07)"
+              : "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.95)",
           }}
         >
           {/* Net Worth — primary */}
