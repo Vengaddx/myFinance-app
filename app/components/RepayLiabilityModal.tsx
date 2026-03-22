@@ -24,6 +24,13 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
   const [remarks, setRemarks] = useState("");
   const [errors, setErrors] = useState<{ amount?: boolean; amountExceeds?: boolean }>({});
   const [saving, setSaving] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -113,7 +120,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
         onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
         aria-modal="true"
         role="dialog"
-        className="fixed inset-0 z-50 flex items-center justify-center px-4"
+        className={`fixed inset-0 z-50 flex ${isMobile ? "items-end" : "items-center justify-center px-4 py-6"}`}
         style={{
           background: isDark ? "rgba(0,0,0,0.72)" : "rgba(0,0,0,0.35)",
           backdropFilter: "blur(12px)",
@@ -128,20 +135,28 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
             background: modalBg,
             backdropFilter: "blur(48px) saturate(200%)",
             WebkitBackdropFilter: "blur(48px) saturate(200%)",
-            borderRadius: 20,
+            borderRadius: isMobile ? "24px 24px 0 0" : 20,
             border: modalBorder,
             boxShadow: isDark
               ? "0 40px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05)"
               : "0 32px 64px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.06)",
             width: "100%",
-            maxWidth: 420,
-            transform: open ? "scale(1) translateY(0)" : "scale(0.97) translateY(12px)",
+            maxWidth: isMobile ? "100%" : 420,
+            maxHeight: isMobile ? "92dvh" : "calc(100vh - 48px)",
+            display: "flex",
+            flexDirection: "column",
+            transform: open ? "translateY(0)" : (isMobile ? "translateY(100%)" : "scale(0.97) translateY(12px)"),
             opacity: open ? 1 : 0,
-            transition: "transform 260ms cubic-bezier(0.34,1.2,0.64,1), opacity 200ms ease",
+            transition: "transform 320ms cubic-bezier(0.34,1.2,0.64,1), opacity 200ms ease",
           }}
         >
+          {isMobile && (
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-9 h-[4px] rounded-full" style={{ background: "rgba(120,120,128,0.3)" }} />
+            </div>
+          )}
           {/* Header */}
-          <div className="flex items-center justify-between px-6 pt-6 pb-4" style={{ borderBottom: `1px solid ${dividerColor}` }}>
+          <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0" style={{ borderBottom: `1px solid ${dividerColor}` }}>
             <div>
               <h2 className="text-[19px] font-semibold" style={{ color: titleColor, letterSpacing: "-0.02em" }}>
                 Record Repayment
@@ -163,7 +178,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
           </div>
 
           {/* Outstanding info */}
-          <div className="px-6 pt-4 pb-1">
+          <div className="px-6 pt-4 pb-1 shrink-0">
             <div
               className="flex items-center justify-between rounded-[12px] px-4 py-3"
               style={{ background: isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.05)" }}
@@ -176,7 +191,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
           </div>
 
           {/* Form */}
-          <div className="px-6 py-4 flex flex-col gap-4">
+          <div className="overflow-y-auto flex-1 px-6 py-4 flex flex-col gap-4">
             {/* Amount */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
@@ -232,7 +247,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-6 pb-6 pt-4 gap-3" style={{ borderTop: `1px solid ${dividerColor}` }}>
+          <div className="flex items-center justify-between px-6 pb-6 pt-4 gap-3 shrink-0" style={{ borderTop: `1px solid ${dividerColor}` }}>
             <button
               onClick={onClose}
               className="h-10 px-5 rounded-[12px] text-[14px] font-medium"
