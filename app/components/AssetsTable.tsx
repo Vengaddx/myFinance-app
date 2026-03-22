@@ -9,7 +9,6 @@ import LiabilityLogsModal from "./LiabilityLogsModal";
 import { supabase } from "@/lib/supabase";
 import Toast from "./toast";
 import { useTheme } from "@/lib/ThemeContext";
-import MobileCreateFab from "./MobileCreateFab";
 
 type DbAssetRow = {
   id: string;
@@ -708,6 +707,20 @@ onDataChanged?.();
     fetchAssets();
     fetchLiabilities();
   }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      if (sectionTab === "liabilities") {
+        setEditingLiabilityId(null);
+        setEditingLiabilityData(null);
+        setLiabilityModalOpen(true);
+      } else {
+        setModalOpen(true);
+      }
+    };
+    document.addEventListener("mahfin:open-add", handler);
+    return () => document.removeEventListener("mahfin:open-add", handler);
+  }, [sectionTab]);
 
   const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
   setToastMessage(message);
@@ -1480,14 +1493,6 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
 
       </div>
 
-      <MobileCreateFab
-        onAddAsset={() => setModalOpen(true)}
-        onAddLiability={() => {
-          setEditingLiabilityId(null);
-          setEditingLiabilityData(null);
-          setLiabilityModalOpen(true);
-        }}
-      />
     </>
   );
 }

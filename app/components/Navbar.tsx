@@ -47,6 +47,15 @@ function SearchIcon() {
   );
 }
 
+function PlusIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
+
 function BellIcon() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -387,6 +396,16 @@ export default function Navbar() {
               </button>
             );
           })}
+
+          {/* Separator + Add button */}
+          <div style={{ width: 1, height: 28, background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)", margin: "0 2px", flexShrink: 0 }} />
+          <button
+            onClick={() => document.dispatchEvent(new CustomEvent("mahfin:open-add"))}
+            className="relative z-10 flex flex-col items-center gap-[2px] px-5 py-1.5 rounded-[20px]"
+          >
+            <span style={{ color: "#007aff" }}><PlusIcon /></span>
+            <span className="text-[10.5px] font-semibold" style={{ color: "#007aff", letterSpacing: "-0.01em" }}>Add</span>
+          </button>
         </div>
       </div>
     </>
