@@ -10,14 +10,23 @@ type AllocationItem = {
   color: string;
 };
 
+export type TopHolding = {
+  name: string;
+  categoryLabel: string;
+  color: string;
+  value: number;
+  pct: number; // % of total assets
+};
+
 type Props = {
   allocationData: AllocationItem[];
   totalAssets: number;
+  topHoldings: TopHolding[];
 };
 
 function fmtINRShort(n: number) {
   if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(1)} Cr`;
-  if (n >= 100_000) return `₹${(n / 100_000).toFixed(1)} L`;
+  if (n >= 100_000)    return `₹${(n / 100_000).toFixed(1)} L`;
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
@@ -48,47 +57,25 @@ function DonutChart({
     angle += degrees + gap;
     const startRad = (startAngle * Math.PI) / 180;
     const endRad = ((startAngle + degrees) * Math.PI) / 180;
-
     const x1 = cx + r * Math.cos(startRad);
     const y1 = cy + r * Math.sin(startRad);
     const x2 = cx + r * Math.cos(endRad);
     const y2 = cy + r * Math.sin(endRad);
     const largeArc = degrees > 180 ? 1 : 0;
-
-    return {
-      ...seg,
-      d: `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`,
-    };
+    return { ...seg, d: `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}` };
   });
 
   const hovered = hoveredIndex !== null ? slices[hoveredIndex] : null;
   const primaryFill = isDark ? "#ffffff" : "#1d1d1f";
-  const mutedFill = isDark ? "rgba(235,235,245,0.4)" : "#aeaeb2";
+  const mutedFill   = isDark ? "rgba(235,235,245,0.4)" : "#aeaeb2";
 
   return (
-    <svg
-      viewBox={`0 0 ${size} ${size}`}
-      className="w-full h-auto"
-      style={{ overflow: "visible" }}
-    >
-      {/* Track ring */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={r}
-        fill="none"
-        stroke={isDark ? "rgba(255,255,255,0.08)" : "#f0f0f5"}
-        strokeWidth={strokeWidth}
-      />
-
-      {/* Segments */}
+    <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-auto" style={{ overflow: "visible" }}>
+      <circle cx={cx} cy={cy} r={r} fill="none"
+        stroke={isDark ? "rgba(255,255,255,0.08)" : "#f0f0f5"} strokeWidth={strokeWidth} />
       {slices.map((s, i) =>
         s.pct > 0 ? (
-          <path
-            key={i}
-            d={s.d}
-            fill="none"
-            stroke={s.color}
+          <path key={i} d={s.d} fill="none" stroke={s.color}
             strokeWidth={hoveredIndex === i ? hoveredStrokeWidth : strokeWidth}
             strokeLinecap="round"
             opacity={hoveredIndex !== null && hoveredIndex !== i ? 0.35 : 1}
@@ -98,33 +85,21 @@ function DonutChart({
           />
         ) : null
       )}
-
-      {/* Center text — shows hovered segment or total */}
       {hovered ? (
         <>
           <text x={cx} y={cy - 18} textAnchor="middle" fontSize="10" fontWeight="600"
-            fill={hovered.color} letterSpacing="0.06em">
-            {hovered.label.toUpperCase()}
-          </text>
+            fill={hovered.color} letterSpacing="0.06em">{hovered.label.toUpperCase()}</text>
           <text x={cx} y={cy + 2} textAnchor="middle" fontSize="16" fontWeight="700"
-            fill={primaryFill}>
-            {hovered.pct}%
-          </text>
+            fill={primaryFill}>{hovered.pct}%</text>
           <text x={cx} y={cy + 18} textAnchor="middle" fontSize="11" fontWeight="500"
-            fill={mutedFill}>
-            {fmtINRShort(hovered.amount)}
-          </text>
+            fill={mutedFill}>{fmtINRShort(hovered.amount)}</text>
         </>
       ) : (
         <>
           <text x={cx} y={cy - 6} textAnchor="middle" fontSize="15" fontWeight="700"
-            fill={primaryFill}>
-            {fmtINRShort(totalAssets)}
-          </text>
+            fill={primaryFill}>{fmtINRShort(totalAssets)}</text>
           <text x={cx} y={cy + 11} textAnchor="middle" fontSize="9" fontWeight="500"
-            fill={mutedFill} letterSpacing="0.07em">
-            TOTAL ASSETS
-          </text>
+            fill={mutedFill} letterSpacing="0.07em">TOTAL ASSETS</text>
         </>
       )}
     </svg>
@@ -146,26 +121,86 @@ function SegmentRow({ label, pct, amount, color }: AllocationItem) {
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
-        <span className="text-[12.5px] font-medium" style={{ color: "var(--text-secondary)" }}>
-          {label}
-        </span>
+        <span className="text-[12.5px] font-medium" style={{ color: "var(--text-secondary)" }}>{label}</span>
       </div>
       <p className="text-[12.5px] font-semibold pl-3" style={{ color: "var(--text-primary)" }}>
         {pct}%
-        <span className="font-normal ml-1.5" style={{ color: "var(--text-tertiary)" }}>
-          · {fmtINRShort(amount)}
-        </span>
+        <span className="font-normal ml-1.5" style={{ color: "var(--text-tertiary)" }}>· {fmtINRShort(amount)}</span>
       </p>
     </div>
   );
 }
 
-export default function AllocationCard({ allocationData, totalAssets }: Props) {
+function HoldingsView({ holdings, isDark }: { holdings: TopHolding[]; isDark: boolean }) {
+  return (
+    <div className="flex flex-col gap-0 flex-1 min-w-0">
+      {holdings.map((h, i) => (
+        <div
+          key={h.name}
+          className="flex items-center gap-3 py-2.5"
+          style={{
+            borderBottom: i < holdings.length - 1
+              ? `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}`
+              : "none",
+          }}
+        >
+          {/* Rank */}
+          <span
+            className="text-[11px] font-semibold w-4 shrink-0 text-right"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            {i + 1}
+          </span>
+
+          {/* Color dot */}
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: h.color }} />
+
+          {/* Name + category */}
+          <div className="flex-1 min-w-0">
+            <p
+              className="text-[13px] font-semibold truncate"
+              style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}
+            >
+              {h.name}
+            </p>
+            <p className="text-[11px] truncate" style={{ color: "var(--text-tertiary)" }}>
+              {h.categoryLabel}
+            </p>
+          </div>
+
+          {/* Value + pct */}
+          <div className="text-right shrink-0">
+            <p
+              className="text-[13px] font-bold"
+              style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}
+            >
+              {fmtINRShort(h.value)}
+            </p>
+            <p className="text-[11px] font-medium" style={{ color: "var(--text-tertiary)" }}>
+              {h.pct.toFixed(1)}%
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type View = "allocation" | "holdings";
+
+export default function AllocationCard({ allocationData, totalAssets, topHoldings }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const [view, setView] = useState<View>("allocation");
 
   const firstColumn = allocationData.slice(0, 3);
   const secondColumn = allocationData.slice(3);
+
+  const pillBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
+  const activePillBg = isDark ? "rgba(255,255,255,0.16)" : "#ffffff";
+  const activePillShadow = isDark
+    ? "0 1px 4px rgba(0,0,0,0.4)"
+    : "0 1px 3px rgba(0,0,0,0.12)";
 
   return (
     <div
@@ -178,37 +213,63 @@ export default function AllocationCard({ allocationData, totalAssets }: Props) {
           : "0 1px 3px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03)",
       }}
     >
+      {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-5">
         <p className="text-[15px] font-semibold" style={{ color: "var(--text-primary)" }}>
-          Asset Allocation
+          {view === "allocation" ? "Asset Allocation" : "Top Holdings"}
         </p>
-        <button className="icon-btn" style={{ color: "var(--text-tertiary)" }}>
-          <InfoIcon />
-        </button>
+
+        <div className="flex items-center gap-2">
+          {/* Toggle pill */}
+          <div
+            className="flex items-center p-[3px] rounded-[10px]"
+            style={{ background: pillBg }}
+          >
+            {(["allocation", "holdings"] as View[]).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className="px-2.5 py-1 rounded-[8px] text-[11.5px] font-semibold transition-all"
+                style={{
+                  background: view === v ? activePillBg : "transparent",
+                  boxShadow: view === v ? activePillShadow : "none",
+                  color: view === v ? "var(--text-primary)" : "var(--text-tertiary)",
+                  transition: "background 180ms ease, color 180ms ease, box-shadow 180ms ease",
+                }}
+              >
+                {v === "allocation" ? "Allocation" : "Holdings"}
+              </button>
+            ))}
+          </div>
+
+          <button className="icon-btn" style={{ color: "var(--text-tertiary)" }}>
+            <InfoIcon />
+          </button>
+        </div>
       </div>
 
-      <div className="flex items-center gap-4 sm:gap-6 flex-1">
-        <div className="w-[140px] sm:w-[180px] shrink-0">
-          <DonutChart allocationData={allocationData} totalAssets={totalAssets} isDark={isDark} />
-        </div>
-
-        <div className="flex flex-1 gap-3 sm:gap-5 min-w-0">
-          <div className="flex flex-1 gap-6 min-w-0">
-            <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
-              {firstColumn.map((seg) => (
-                <SegmentRow key={seg.label} {...seg} />
-              ))}
-            </div>
-            {secondColumn.length > 0 && (
+      {/* Body */}
+      {view === "allocation" ? (
+        <div className="flex items-center gap-4 sm:gap-6 flex-1">
+          <div className="w-[140px] sm:w-[180px] shrink-0">
+            <DonutChart allocationData={allocationData} totalAssets={totalAssets} isDark={isDark} />
+          </div>
+          <div className="flex flex-1 gap-3 sm:gap-5 min-w-0">
+            <div className="flex flex-1 gap-6 min-w-0">
               <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
-                {secondColumn.map((seg) => (
-                  <SegmentRow key={`r-${seg.label}`} {...seg} />
-                ))}
+                {firstColumn.map((seg) => <SegmentRow key={seg.label} {...seg} />)}
               </div>
-            )}
+              {secondColumn.length > 0 && (
+                <div className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-w-0">
+                  {secondColumn.map((seg) => <SegmentRow key={`r-${seg.label}`} {...seg} />)}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <HoldingsView holdings={topHoldings} isDark={isDark} />
+      )}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import Navbar from "./components/Navbar";
 import NetWorthCard from "./components/NetWorthCard";
 import MetricCard from "./components/MetricCard";
-import AllocationCard from "./components/AllocationCard";
+import AllocationCard, { type TopHolding } from "./components/AllocationCard";
 import AssetsTable from "./components/AssetsTable";
 import Footer from "./components/Footer";
 import SplashScreen from "./components/SplashScreen";
@@ -202,6 +202,21 @@ export default function Home() {
       }))
       .sort((a, b) => b.amount - a.amount);
 
+    const topHoldings: TopHolding[] = [...dbAssets]
+      .sort((a, b) => Number(b.value ?? 0) - Number(a.value ?? 0))
+      .slice(0, 6)
+      .map((a) => {
+        const cat = normalizeCategory(a.type);
+        const val = Number(a.value ?? 0);
+        return {
+          name: a.name,
+          categoryLabel: allocationLabelMap[cat] ?? cat,
+          color: allocationColorMap[cat] ?? "#8E8E93",
+          value: val,
+          pct: totalAssets > 0 ? (val / totalAssets) * 100 : 0,
+        };
+      });
+
     return {
       totalAssets,
       liabilities,
@@ -211,6 +226,7 @@ export default function Home() {
       investedPctOfNetWorth,
       totalPnlPct,
       allocationData,
+      topHoldings,
     };
   }, [dbAssets, dbLiabilities]);
 
@@ -315,6 +331,7 @@ export default function Home() {
             <AllocationCard
               allocationData={summary.allocationData}
               totalAssets={summary.totalAssets}
+              topHoldings={summary.topHoldings}
             />
           </div>
         </div>
