@@ -1048,6 +1048,25 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                     align="right"
                   />
                 </div>
+
+                <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
+                  <button
+                    onClick={() => handleEdit(asset)}
+                    className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium"
+                    style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}
+                  >
+                    <EditIcon /> Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(asset.id)}
+                    className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]"
+                    style={{ color: "var(--text-tertiary)" }}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
               </div>
             );
           })}
