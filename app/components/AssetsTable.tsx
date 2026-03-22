@@ -1081,13 +1081,20 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
           )}
         </div>
 
-        <div className="hidden md:block overflow-x-auto">
+        <div className="hidden md:block" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100dvh - 280px)" }}>
           <table className="w-full">
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--separator-subtle)" }}>
+            <thead style={{
+              position: "sticky",
+              top: 0,
+              zIndex: 10,
+              boxShadow: isDark
+                ? "0 1px 0 rgba(255,255,255,0.07), 0 4px 20px rgba(0,0,0,0.4)"
+                : "0 1px 0 rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.06)",
+            }}>
+              <tr>
                 <th
-                  className="py-3 pl-6 pr-4 text-left text-[11px] font-semibold uppercase"
-                  style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}
+                  className="py-3.5 pl-6 pr-4 text-left text-[11px] font-semibold uppercase"
+                  style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}
                 >
                   ASSET NAME
                 </th>
@@ -1102,8 +1109,8 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                   return (
                     <th
                       key={col.key}
-                      className={`py-3 ${col.pad} text-right text-[11px] font-semibold uppercase cursor-pointer select-none`}
-                      style={{ color: isActive ? "var(--text-primary)" : "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}
+                      className={`py-3.5 ${col.pad} text-right text-[11px] font-semibold uppercase cursor-pointer select-none`}
+                      style={{ color: isActive ? "var(--text-primary)" : "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}
                       onClick={() => handleSort(col.key)}
                     >
                       <span className="inline-flex items-center justify-end gap-1">
@@ -1116,8 +1123,8 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                   );
                 })}
                 <th
-                  className="py-3 pr-6 pl-4 text-right text-[11px] font-semibold uppercase"
-                  style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}
+                  className="py-3.5 pr-6 pl-4 text-right text-[11px] font-semibold uppercase"
+                  style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}
                 >
                   % ALLOC.
                 </th>
@@ -1346,18 +1353,25 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
           </div>
 
           {/* Desktop liabilities table */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden md:block" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100dvh - 280px)" }}>
             <table className="w-full">
-              <thead>
-                <tr style={{ borderBottom: "1px solid var(--separator-subtle)" }}>
-                  <th className="py-3 pl-6 pr-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>LENDER / LIABILITY</th>
-                  <th className="py-3 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>OUTSTANDING</th>
-                  <th className="py-3 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>ORIGINAL</th>
-                  <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>BORROWED</th>
-                  <th className="py-3 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>DAYS</th>
-                  <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>DUE</th>
-                  <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>STATUS</th>
-                  <th className="py-3 pr-6 pl-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>ACTIONS</th>
+              <thead style={{
+                position: "sticky",
+                top: 0,
+                zIndex: 10,
+                boxShadow: isDark
+                  ? "0 1px 0 rgba(255,255,255,0.07), 0 4px 20px rgba(0,0,0,0.4)"
+                  : "0 1px 0 rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.06)",
+              }}>
+                <tr>
+                  <th className="py-3.5 pl-6 pr-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>LENDER / LIABILITY</th>
+                  <th className="py-3.5 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>OUTSTANDING</th>
+                  <th className="py-3.5 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>ORIGINAL</th>
+                  <th className="py-3.5 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>BORROWED</th>
+                  <th className="py-3.5 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>DAYS</th>
+                  <th className="py-3.5 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>DUE</th>
+                  <th className="py-3.5 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>STATUS</th>
+                  <th className="py-3.5 pr-6 pl-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
