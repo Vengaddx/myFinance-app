@@ -895,8 +895,9 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
 />
 
       <div
-        className="rounded-[16px] sm:rounded-[20px] overflow-hidden"
+        className="rounded-[16px] sm:rounded-[20px]"
         style={{
+          overflowX: "hidden",
           background: "var(--surface)",
           border: "1px solid var(--separator)",
           boxShadow: isDark
@@ -904,6 +905,17 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
             : "0 1px 3px rgba(0,0,0,0.04), 0 2px 12px rgba(0,0,0,0.04)",
         }}
       >
+        {/* Sticky controls block — sticks below navbar on mobile, static on desktop */}
+        <div
+          className="sticky md:static z-30"
+          style={{
+            top: "calc(50px + env(safe-area-inset-top))",
+            background: "var(--surface)",
+            boxShadow: isDark
+              ? "0 1px 0 rgba(255,255,255,0.06)"
+              : "0 1px 0 rgba(0,0,0,0.06)",
+          }}
+        >
         <div
           className="flex flex-col md:flex-row md:items-center md:justify-between px-4 sm:px-5 md:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 gap-3 md:gap-2"
           style={{ borderBottom: "1px solid var(--separator-subtle)" }}
@@ -993,6 +1005,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
           })}
         </div>
         )}
+        </div>{/* end sticky controls block */}
 
         {sectionTab === "assets" && (
         <FilterSummaryBanner
