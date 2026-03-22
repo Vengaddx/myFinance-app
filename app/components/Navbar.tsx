@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
 
 const NAV_ITEMS = [
@@ -92,6 +92,45 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [activeTab, setActiveTab] = useState("portfolio");
 
+  type PillRect = { left: number; top: number; width: number; height: number };
+  const desktopNavRef = useRef<HTMLDivElement>(null);
+  const desktopBtnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [desktopPill, setDesktopPill] = useState<PillRect | null>(null);
+  const [desktopPillReady, setDesktopPillReady] = useState(false);
+
+  const bottomNavRef = useRef<HTMLDivElement>(null);
+  const bottomBtnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [bottomPill, setBottomPill] = useState<PillRect | null>(null);
+  const [bottomPillReady, setBottomPillReady] = useState(false);
+
+  const measurePills = () => {
+    const idx = NAV_ITEMS.findIndex((i) => i.id === activeTab);
+
+    const dBtn = desktopBtnRefs.current[idx];
+    const dNav = desktopNavRef.current;
+    if (dBtn && dNav) {
+      const nr = dNav.getBoundingClientRect();
+      const br = dBtn.getBoundingClientRect();
+      setDesktopPill({ left: br.left - nr.left, top: br.top - nr.top, width: br.width, height: br.height });
+      setDesktopPillReady(true);
+    }
+
+    const bBtn = bottomBtnRefs.current[idx];
+    const bNav = bottomNavRef.current;
+    if (bBtn && bNav) {
+      const nr = bNav.getBoundingClientRect();
+      const br = bBtn.getBoundingClientRect();
+      setBottomPill({ left: br.left - nr.left, top: br.top - nr.top, width: br.width, height: br.height });
+      setBottomPillReady(true);
+    }
+  };
+
+  useEffect(() => { measurePills(); }, [activeTab]);
+  useEffect(() => {
+    window.addEventListener("resize", measurePills);
+    return () => window.removeEventListener("resize", measurePills);
+  }, [activeTab]);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -134,7 +173,8 @@ export default function Navbar() {
 
         {/* Nav items — center (desktop only) */}
         <div
-          className="hidden lg:flex items-center gap-0.5 p-1 rounded-[14px]"
+          ref={desktopNavRef}
+          className="hidden lg:flex items-center gap-0.5 p-1 rounded-[14px] relative"
           style={{
             background: scrolled
               ? "rgba(255,255,255,0.08)"
@@ -147,29 +187,44 @@ export default function Navbar() {
             transition: "background 350ms ease, border-color 350ms ease",
           }}
         >
-          {NAV_ITEMS.map((item) => {
+          {/* Sliding pill */}
+          {desktopPill && (
+            <span
+              aria-hidden
+              className="absolute rounded-[10px] pointer-events-none"
+              style={{
+                left: desktopPill.left,
+                top: desktopPill.top,
+                width: desktopPill.width,
+                height: desktopPill.height,
+                background: scrolled
+                  ? "rgba(255,255,255,0.15)"
+                  : (isDark ? "rgba(255,255,255,0.13)" : "rgba(255,255,255,0.92)"),
+                boxShadow: isDark || scrolled
+                  ? "inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 6px rgba(0,0,0,0.28)"
+                  : "0 2px 6px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.95)",
+                transition: desktopPillReady
+                  ? "left 360ms cubic-bezier(0.34,1.2,0.64,1), width 360ms cubic-bezier(0.34,1.2,0.64,1), background 300ms ease"
+                  : "none",
+              }}
+            />
+          )}
+
+          {NAV_ITEMS.map((item, idx) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
+                ref={(el) => { desktopBtnRefs.current[idx] = el; }}
                 onClick={() => setActiveTab(item.id)}
-                className="px-4 py-1.5 rounded-[10px] text-[14px] transition-all duration-200"
+                className="relative z-10 px-4 py-1.5 rounded-[10px] text-[14px]"
                 style={{
                   fontWeight: isActive ? 700 : 500,
+                  letterSpacing: isActive ? "-0.01em" : "0",
                   color: isActive
                     ? (scrolled ? "#ffffff" : "var(--text-primary)")
                     : (scrolled ? "rgba(255,255,255,0.45)" : "var(--text-tertiary)"),
-                  background: isActive
-                    ? (scrolled
-                        ? "rgba(255,255,255,0.14)"
-                        : (isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.92)"))
-                    : "transparent",
-                  boxShadow: isActive
-                    ? (isDark || scrolled
-                        ? "inset 0 1px 0 rgba(255,255,255,0.12), 0 1px 4px rgba(0,0,0,0.25)"
-                        : "0 1px 4px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)")
-                    : "none",
-                  letterSpacing: isActive ? "-0.01em" : "0",
+                  transition: "color 280ms ease, font-weight 0ms",
                 }}
               >
                 {item.label}
@@ -223,7 +278,8 @@ export default function Navbar() {
       {/* ── Floating bottom nav (mobile + tablet) ── */}
       <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-5 lg:hidden pointer-events-none">
         <div
-          className="flex items-center gap-0.5 p-1 pointer-events-auto"
+          ref={bottomNavRef}
+          className="flex items-center gap-0.5 p-1 pointer-events-auto relative"
           style={{
             borderRadius: 28,
             background: isDark
@@ -239,30 +295,42 @@ export default function Navbar() {
               : "0 4px 20px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
           }}
         >
-          {NAV_ITEMS.map((item) => {
+          {/* Sliding pill */}
+          {bottomPill && (
+            <span
+              aria-hidden
+              className="absolute pointer-events-none rounded-[20px]"
+              style={{
+                left: bottomPill.left,
+                top: bottomPill.top,
+                width: bottomPill.width,
+                height: bottomPill.height,
+                background: isDark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.07)",
+                boxShadow: isDark
+                  ? "inset 0 1px 0 rgba(255,255,255,0.13)"
+                  : "inset 0 1px 0 rgba(255,255,255,0.85), 0 1px 4px rgba(0,0,0,0.07)",
+                transition: bottomPillReady
+                  ? "left 360ms cubic-bezier(0.34,1.2,0.64,1), width 360ms cubic-bezier(0.34,1.2,0.64,1)"
+                  : "none",
+              }}
+            />
+          )}
+
+          {NAV_ITEMS.map((item, idx) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
+                ref={(el) => { bottomBtnRefs.current[idx] = el; }}
                 onClick={() => setActiveTab(item.id)}
-                className="flex flex-col items-center gap-[2px] px-5 py-1.5 rounded-[20px] transition-all duration-200"
-                style={{
-                  background: isActive
-                    ? (isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)")
-                    : "transparent",
-                  boxShadow: isActive
-                    ? (isDark
-                        ? "inset 0 1px 0 rgba(255,255,255,0.12)"
-                        : "inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 3px rgba(0,0,0,0.06)")
-                    : "none",
-                }}
+                className="relative z-10 flex flex-col items-center gap-[2px] px-5 py-1.5 rounded-[20px]"
               >
-                <span style={{ color: iconColor(isActive), transition: "color 200ms ease" }}>
+                <span style={{ color: iconColor(isActive), transition: "color 250ms ease" }}>
                   {NAV_ICONS[item.id]}
                 </span>
                 <span
                   className="text-[10.5px] font-semibold"
-                  style={{ color: iconColor(isActive), transition: "color 200ms ease", letterSpacing: "-0.01em" }}
+                  style={{ color: iconColor(isActive), transition: "color 250ms ease", letterSpacing: "-0.01em" }}
                 >
                   {item.label}
                 </span>
