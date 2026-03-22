@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react";
+import { useTheme } from "@/lib/ThemeContext";
 import Navbar from "./components/Navbar";
 import NetWorthCard from "./components/NetWorthCard";
 import MetricCard from "./components/MetricCard";
@@ -95,8 +96,17 @@ function normalizeCategory(value?: string | null) {
 }
 
 export default function Home() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [dbAssets, setDbAssets] = useState<DbAssetRow[]>([]);
   const [dbLiabilities, setDbLiabilities] = useState<{ outstanding_amount: number; status: string }[]>([]);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowStickyBar(window.scrollY > 260);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const fetchAssets = async () => {
     const { data, error } = await supabase
@@ -195,6 +205,59 @@ export default function Home() {
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <Navbar />
+
+      {/* Sticky compact summary bar */}
+      <div
+        className="fixed left-0 right-0 z-40 flex justify-center px-4 sm:px-5 lg:px-6"
+        style={{
+          top: 50,
+          transform: showStickyBar ? "translateY(0)" : "translateY(-120%)",
+          opacity: showStickyBar ? 1 : 0,
+          transition: "transform 380ms cubic-bezier(0.34,1.15,0.64,1), opacity 250ms ease",
+          pointerEvents: showStickyBar ? "auto" : "none",
+        }}
+      >
+        <div
+          className="w-full max-w-[1320px] flex items-center justify-between px-5 py-2.5 mt-2 rounded-[16px]"
+          style={{
+            background: isDark ? "rgba(18,18,20,0.72)" : "rgba(255,255,255,0.72)",
+            backdropFilter: "blur(48px) saturate(200%)",
+            WebkitBackdropFilter: "blur(48px) saturate(200%)",
+            border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.06)",
+            boxShadow: isDark
+              ? "0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07)"
+              : "0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)",
+          }}
+        >
+          {/* Net Worth — primary */}
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>Net Worth</p>
+            <p className="text-[17px] font-bold leading-tight" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+              {fmtINR(summary.netWorth)}
+            </p>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-5">
+            <div className="w-px h-7" style={{ background: "var(--separator)" }} />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>Total Assets</p>
+              <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)" }}>{fmtINR(summary.totalAssets)}</p>
+            </div>
+            <div className="w-px h-7" style={{ background: "var(--separator)" }} />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,59,48,0.65)" }}>Liabilities</p>
+              <p className="text-[14px] font-semibold" style={{ color: "#ff3b30" }}>{fmtINR(summary.liabilities)}</p>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>P&L</p>
+            <p className="text-[14px] font-semibold" style={{ color: summary.totalPnl >= 0 ? "#34c759" : "#ff3b30" }}>
+              {summary.totalPnl >= 0 ? "+" : ""}{fmtINR(summary.totalPnl)}
+            </p>
+          </div>
+        </div>
+      </div>
 
       <main className="max-w-[1320px] mx-auto px-4 sm:px-5 lg:px-6 py-4 sm:py-5 lg:py-6 pb-28 lg:pb-6 flex flex-col gap-3 sm:gap-4">
         <div
