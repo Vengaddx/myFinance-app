@@ -96,6 +96,7 @@ function normalizeCategory(value?: string | null) {
 
 export default function Home() {
   const [dbAssets, setDbAssets] = useState<DbAssetRow[]>([]);
+  const [dbLiabilities, setDbLiabilities] = useState<{ outstanding_amount: number; status: string }[]>([]);
 
   const fetchAssets = async () => {
     const { data, error } = await supabase
@@ -111,8 +112,19 @@ export default function Home() {
     setDbAssets((data as DbAssetRow[]) ?? []);
   };
 
+  const fetchLiabilities = async () => {
+    const { data, error } = await supabase
+      .from("liabilities")
+      .select("outstanding_amount, status");
+
+    if (!error) setDbLiabilities(data ?? []);
+  };
+
+  const refreshAll = () => { fetchAssets(); fetchLiabilities(); };
+
   useEffect(() => {
     fetchAssets();
+    fetchLiabilities();
   }, []);
 
   const summary = useMemo(() => {
@@ -147,7 +159,9 @@ export default function Home() {
       invested += Number(parsedNotes.invested ?? parsedNotes.avgPurchasePrice ?? 0);
     }
 
-    const liabilities = 0;
+    const liabilities = dbLiabilities
+      .filter((l) => l.status === "active")
+      .reduce((sum, l) => sum + Number(l.outstanding_amount ?? 0), 0);
     const netWorth = totalAssets - liabilities;
     const totalPnl = totalAssets - invested;
     const investedPctOfNetWorth =
@@ -175,14 +189,14 @@ export default function Home() {
       totalPnlPct,
       allocationData,
     };
-  }, [dbAssets]);
+  }, [dbAssets, dbLiabilities]);
 
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <Navbar />
 
-      <main className="max-w-[1320px] mx-auto px-4 sm:px-5 lg:px-6 py-4 sm:py-5 lg:py-6 flex flex-col gap-3 sm:gap-4">
+      <main className="max-w-[1320px] mx-auto px-4 sm:px-5 lg:px-6 py-4 sm:py-5 lg:py-6 pb-28 lg:pb-6 flex flex-col gap-3 sm:gap-4">
         <div
           className="
             grid gap-3 sm:gap-3.5
@@ -228,7 +242,7 @@ export default function Home() {
           </div>
         </div>
 
-        <AssetsTable onDataChanged={fetchAssets} />
+        <AssetsTable onDataChanged={refreshAll} />
       </main>
       <Footer />
     </div>

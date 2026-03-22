@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { AssetCategory } from "../data/assets";
 import AddAssetModal, { AssetFormData } from "./AddAssetModal";
+import AddLiabilityModal, { LiabilityFormData } from "./AddLiabilityModal";
+import RepayLiabilityModal from "./RepayLiabilityModal";
+import LiabilityLogsModal from "./LiabilityLogsModal";
 import { supabase } from "@/lib/supabase";
 import Toast from "./toast";
 import { useTheme } from "@/lib/ThemeContext";
@@ -97,6 +100,48 @@ function fmtINR(n?: number | string | null) {
   return `₹${value.toLocaleString("en-IN")}`;
 }
 
+function fmtINRFull(n?: number | string | null) {
+  const value = Number(n ?? 0);
+  return `₹${value.toLocaleString("en-IN")}`;
+}
+
+function fmtAmt(amount: number, currency: string = "INR") {
+  const sym = currency === "USD" ? "$" : currency === "SAR" ? "﷼" : "₹";
+  return `${sym}${amount.toLocaleString("en-IN")}`;
+}
+
+function fmtDate(d: string | null | undefined) {
+  if (!d) return "—";
+  const date = new Date(d + "T00:00:00");
+  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function daysSince(d: string | null | undefined): number | null {
+  if (!d) return null;
+  const diff = Date.now() - new Date(d + "T00:00:00").getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const isActive = status === "active";
+  return (
+    <span className="inline-flex items-center gap-1 text-[11px] font-medium" style={{ color: isActive ? "#34c759" : "#636366" }}>
+      <span className="w-[5px] h-[5px] rounded-full shrink-0" style={{ background: isActive ? "#34c759" : "#636366" }} />
+      {isActive ? "Active" : "Closed"}
+    </span>
+  );
+}
+
+function LenderTypeBadge({ type }: { type: string }) {
+  const isBank = type === "bank";
+  return (
+    <span className="inline-flex items-center gap-1 text-[11px] font-medium" style={{ color: isBank ? "#007aff" : "#ff9500" }}>
+      <span className="w-[5px] h-[5px] rounded-full shrink-0" style={{ background: isBank ? "#007aff" : "#ff9500" }} />
+      {isBank ? "Bank" : "Friend"}
+    </span>
+  );
+}
+
 function AssetIcon({ type }: { type?: string }) {
   const category = normalizeCategory(type);
 
@@ -118,7 +163,7 @@ function AssetIcon({ type }: { type?: string }) {
 
   return (
     <div
-      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-[15px] sm:text-[16px] shrink-0 font-bold select-none"
+      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-[16px] sm:text-[17px] shrink-0 font-bold select-none"
       style={{ background: icon.bg, color: icon.color }}
     >
       {icon.symbol}
@@ -132,7 +177,7 @@ function CategoryBadge({ category }: { category?: string }) {
 
   return (
     <span
-      className="inline-flex items-center gap-1 text-[10px] font-medium"
+      className="inline-flex items-center gap-1 text-[11px] font-medium"
       style={{ color: m.color }}
     >
       <span className="w-[5px] h-[5px] rounded-full shrink-0" style={{ background: m.color }} />
@@ -166,14 +211,14 @@ function PnlCell({ value, pct }: { value: number; pct: number }) {
   return (
     <div className="flex flex-col items-end gap-0.5">
       <span
-        className="text-[13px] font-semibold"
+        className="text-[14px] font-semibold"
         style={{ color: pos ? "#007aff" : "#ff3b30" }}
       >
         {pos ? "+" : ""}
-        {fmtINR(value)}
+        {fmtINRFull(value)}
       </span>
       <span
-        className="text-[11px]"
+        className="text-[12px]"
         style={{ color: pos ? "#007aff" : "#ff3b30", opacity: 0.7 }}
       >
         {pos ? "+" : ""}
@@ -274,12 +319,12 @@ function StatLabel({
       }`}
     >
       <p
-        className="text-[9.5px] font-semibold uppercase"
+        className="text-[10.5px] font-semibold uppercase"
         style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em" }}
       >
         {label}
       </p>
-      <p className="text-[13px] font-medium" style={{ color: "var(--text-primary)" }}>
+      <p className="text-[14px] font-medium" style={{ color: "var(--text-primary)" }}>
         {value}
       </p>
     </div>
@@ -314,12 +359,12 @@ function FilterSummaryBanner({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <p
-          className="text-[10px] font-semibold uppercase tracking-widest"
+          className="text-[11px] font-semibold uppercase tracking-widest"
           style={{ color: "var(--text-tertiary)", letterSpacing: "0.12em" }}
         >
           {categoryLabel}
         </p>
-        <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+        <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>
           {assets.length} asset{assets.length !== 1 ? "s" : ""}
           {totalAssets > 0 && (
             <span>
@@ -334,13 +379,13 @@ function FilterSummaryBanner({
       <div className="flex items-start gap-6 sm:gap-10">
         <div className="flex flex-col gap-0.5">
           <p
-            className="text-[9.5px] font-semibold uppercase"
+            className="text-[10.5px] font-semibold uppercase"
             style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em" }}
           >
             Invested
           </p>
           <p
-            className="text-[15px] font-semibold"
+            className="text-[16px] font-semibold"
             style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}
           >
             {fmtINR(invested)}
@@ -349,13 +394,13 @@ function FilterSummaryBanner({
 
         <div className="flex flex-col gap-0.5">
           <p
-            className="text-[9.5px] font-semibold uppercase"
+            className="text-[10.5px] font-semibold uppercase"
             style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em" }}
           >
             Current Value
           </p>
           <p
-            className="text-[15px] font-semibold"
+            className="text-[16px] font-semibold"
             style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}
           >
             {fmtINR(curVal)}
@@ -364,18 +409,18 @@ function FilterSummaryBanner({
 
         <div className="flex flex-col gap-0.5">
           <p
-            className="text-[9.5px] font-semibold uppercase"
+            className="text-[10.5px] font-semibold uppercase"
             style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em" }}
           >
             P&L
           </p>
           <p
-            className="text-[15px] font-semibold"
+            className="text-[16px] font-semibold"
             style={{ color: pos ? "#34c759" : "#ff3b30", letterSpacing: "-0.015em" }}
           >
             {pos ? "+" : ""}
             {fmtINR(pnl)}
-            <span className="text-[11px] font-medium ml-1.5" style={{ opacity: 0.75 }}>
+            <span className="text-[12px] font-medium ml-1.5" style={{ opacity: 0.75 }}>
               ({pos ? "+" : ""}{pnlPct.toFixed(1)}%)
             </span>
           </p>
@@ -399,11 +444,22 @@ export default function AssetsTable({ onDataChanged }: AssetsTableProps) {
   );
   const [modalOpen, setModalOpen] = useState(false);
   const [dbAssets, setDbAssets] = useState<DbAssetRow[]>([]);
+  const [sortKey, setSortKey] = useState<"invested" | "curVal" | "pnl" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
 const [editingFormData, setEditingFormData] = useState<AssetFormData | null>(null);
 const [toastMessage, setToastMessage] = useState("");
 const [toastType, setToastType] = useState<"success" | "error" | "info">("info");
 const [toastVisible, setToastVisible] = useState(false);
+const [liabilities, setLiabilities] = useState<any[]>([]);
+const [liabilityModalOpen, setLiabilityModalOpen] = useState(false);
+const [editingLiabilityId, setEditingLiabilityId] = useState<string | null>(null);
+const [editingLiabilityData, setEditingLiabilityData] = useState<LiabilityFormData | null>(null);
+const [repayModalOpen, setRepayModalOpen] = useState(false);
+const [repayingLiability, setRepayingLiability] = useState<{ id: string; name: string; outstanding: number; currency: string } | null>(null);
+const [logsModalOpen, setLogsModalOpen] = useState(false);
+const [viewingLogsLiabilityId, setViewingLogsLiabilityId] = useState<string | null>(null);
+const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
 
   const fetchAssets = async () => {
     const { data, error } = await supabase
@@ -417,6 +473,155 @@ const [toastVisible, setToastVisible] = useState(false);
     }
 
     setDbAssets((data as DbAssetRow[]) ?? []);
+  };
+
+  const fetchLiabilities = async () => {
+  const { data, error } = await supabase
+    .from("liabilities")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    showToast(error.message, "error");
+    return;
+  }
+
+  setLiabilities(data ?? []);
+};
+
+  const handleAddLiability = async (data: LiabilityFormData) => {
+    const today = new Date().toISOString().split("T")[0];
+    const originalAmount = Number(data.original_amount) || 0;
+    const outstandingAmount = Number(data.outstanding_amount) || 0;
+
+    const { data: inserted, error } = await supabase
+      .from("liabilities")
+      .insert([{
+        lender_name: data.lender_name,
+        lender_type: data.lender_type,
+        liability_name: data.liability_name || null,
+        original_amount: originalAmount,
+        outstanding_amount: outstandingAmount,
+        currency: data.currency,
+        borrowed_date: data.borrowed_date || null,
+        due_date: data.due_date || null,
+        notes: data.notes || null,
+        status: "active",
+      }])
+      .select()
+      .single();
+
+    if (error) { showToast(error.message, "error"); return; }
+
+    await supabase.from("liability_logs").insert([{
+      liability_id: inserted.id,
+      action_type: "created",
+      amount: originalAmount,
+      previous_outstanding: 0,
+      new_outstanding: outstandingAmount,
+      action_date: data.borrowed_date || today,
+      remarks: data.notes || null,
+    }]);
+
+    await fetchLiabilities();
+    showToast("Liability added successfully", "success");
+    onDataChanged?.();
+    setLiabilityModalOpen(false);
+  };
+
+  const handleEditLiability = async (data: LiabilityFormData) => {
+    if (!editingLiabilityId) return;
+    const today = new Date().toISOString().split("T")[0];
+    const newOutstanding = Number(data.outstanding_amount) || 0;
+    const oldLiability = liabilities.find((l) => l.id === editingLiabilityId);
+    const oldOutstanding = Number(oldLiability?.outstanding_amount ?? 0);
+    const newStatus = newOutstanding === 0 ? "closed" : "active";
+
+    const { error } = await supabase
+      .from("liabilities")
+      .update({
+        lender_name: data.lender_name,
+        lender_type: data.lender_type,
+        liability_name: data.liability_name || null,
+        original_amount: Number(data.original_amount) || 0,
+        outstanding_amount: newOutstanding,
+        currency: data.currency,
+        borrowed_date: data.borrowed_date || null,
+        due_date: data.due_date || null,
+        notes: data.notes || null,
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", editingLiabilityId);
+
+    if (error) { showToast(error.message, "error"); return; }
+
+    if (newOutstanding !== oldOutstanding) {
+      await supabase.from("liability_logs").insert([{
+        liability_id: editingLiabilityId,
+        action_type: "adjustment",
+        amount: Math.abs(newOutstanding - oldOutstanding),
+        previous_outstanding: oldOutstanding,
+        new_outstanding: newOutstanding,
+        action_date: today,
+        remarks: "Outstanding adjusted via edit",
+      }]);
+    }
+
+    await fetchLiabilities();
+    showToast("Liability updated successfully", "success");
+    onDataChanged?.();
+    setEditingLiabilityId(null);
+    setEditingLiabilityData(null);
+    setLiabilityModalOpen(false);
+  };
+
+  const handleSaveLiability = async (data: LiabilityFormData) => {
+    if (editingLiabilityId) {
+      await handleEditLiability(data);
+    } else {
+      await handleAddLiability(data);
+    }
+  };
+
+  const handleDeleteLiability = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this liability?")) return;
+    const { error } = await supabase.from("liabilities").delete().eq("id", id);
+    if (error) { showToast(error.message, "error"); return; }
+    await fetchLiabilities();
+    showToast("Liability deleted", "success");
+    onDataChanged?.();
+  };
+
+  const handleRepay = async (amount: number, date: string, remarks: string) => {
+    if (!repayingLiability) return;
+    const oldOutstanding = repayingLiability.outstanding;
+    const newOutstanding = Math.max(0, oldOutstanding - amount);
+    const newStatus = newOutstanding === 0 ? "closed" : "active";
+
+    const { error } = await supabase
+      .from("liabilities")
+      .update({ outstanding_amount: newOutstanding, status: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", repayingLiability.id);
+
+    if (error) { showToast(error.message, "error"); return; }
+
+    await supabase.from("liability_logs").insert([{
+      liability_id: repayingLiability.id,
+      action_type: "repayment",
+      amount,
+      previous_outstanding: oldOutstanding,
+      new_outstanding: newOutstanding,
+      action_date: date,
+      remarks: remarks || null,
+    }]);
+
+    await fetchLiabilities();
+    showToast("Repayment recorded", "success");
+    onDataChanged?.();
+    setRepayModalOpen(false);
+    setRepayingLiability(null);
   };
 
   const handleEdit = (asset: UiAsset) => {
@@ -500,6 +705,7 @@ onDataChanged?.();
 
   useEffect(() => {
     fetchAssets();
+    fetchLiabilities();
   }, []);
 
   const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
@@ -550,23 +756,70 @@ onDataChanged?.();
     }));
   }, [dbAssets]);
 
-  const filtered = mappedAssets.filter((a) => {
-    const matchTab = activeTab === "all" || a.category === activeTab;
-    const q = search.toLowerCase().trim();
-    const matchSearch =
-      a.name.toLowerCase().includes(q) || a.ticker.toLowerCase().includes(q);
+  const mappedLiabilities = liabilities.map((l) => ({
+  id: l.id,
+  name: l.liability_name || l.lender_name,
+  lenderName: l.lender_name,
+  liabilityType: l.lender_type,
+  originalAmount: Number(l.original_amount ?? 0),
+  outstandingAmount: Number(l.outstanding_amount ?? 0),
+  currency: l.currency || "INR",
+  borrowedDate: l.borrowed_date,
+  dueDate: l.due_date,
+  status: l.status || "active",
+  notes: l.notes || "",
+}));
 
-    return matchTab && matchSearch;
-  });
+const filteredLiabilities = mappedLiabilities.filter((l) => {
+  const q = search.toLowerCase().trim();
+  return (
+    l.name.toLowerCase().includes(q) ||
+    l.lenderName.toLowerCase().includes(q)
+  );
+});
+
+  const filtered = useMemo(() => {
+    const base = mappedAssets.filter((a) => {
+      const matchTab = activeTab === "all" || a.category === activeTab;
+      const q = search.toLowerCase().trim();
+      const matchSearch =
+        a.name.toLowerCase().includes(q) || a.ticker.toLowerCase().includes(q);
+      return matchTab && matchSearch;
+    });
+
+    if (!sortKey) return base;
+
+    return [...base].sort((a, b) => {
+      const diff = a[sortKey] - b[sortKey];
+      return sortDir === "asc" ? diff : -diff;
+    });
+  }, [mappedAssets, activeTab, search, sortKey, sortDir]);
+
+  const handleSort = (key: "invested" | "curVal" | "pnl") => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  };
 
   const addButton = (
     <button
-      onClick={() => setModalOpen(true)}
-      className="btn-lift flex items-center gap-1.5 h-[34px] px-3 sm:px-4 rounded-[10px] text-[12px] sm:text-[13px] font-semibold text-white shrink-0"
+      onClick={() => {
+        if (sectionTab === "liabilities") {
+          setEditingLiabilityId(null);
+          setEditingLiabilityData(null);
+          setLiabilityModalOpen(true);
+        } else {
+          setModalOpen(true);
+        }
+      }}
+      className="btn-lift flex items-center gap-1.5 h-[34px] px-3 sm:px-4 rounded-[10px] text-[13px] sm:text-[14px] font-semibold text-white shrink-0"
       style={{ background: "#007aff" }}
     >
       <PlusIcon />
-      <span className="hidden sm:inline">Add Asset</span>
+      <span className="hidden sm:inline">{sectionTab === "liabilities" ? "Add Liability" : "Add Asset"}</span>
       <span className="sm:hidden">Add</span>
     </button>
   );
@@ -612,6 +865,35 @@ onDataChanged?.();
   mode={editingAssetId ? "edit" : "add"}
 />
 
+      <AddLiabilityModal
+  open={liabilityModalOpen}
+  onClose={() => {
+    setLiabilityModalOpen(false);
+    setEditingLiabilityId(null);
+    setEditingLiabilityData(null);
+  }}
+  onSave={handleSaveLiability}
+  initialData={editingLiabilityData}
+  mode={editingLiabilityId ? "edit" : "add"}
+/>
+
+      <RepayLiabilityModal
+  open={repayModalOpen}
+  onClose={() => { setRepayModalOpen(false); setRepayingLiability(null); }}
+  onRepay={handleRepay}
+  liabilityName={repayingLiability?.name ?? ""}
+  outstanding={repayingLiability?.outstanding ?? 0}
+  currency={repayingLiability?.currency ?? "INR"}
+/>
+
+      <LiabilityLogsModal
+  open={logsModalOpen}
+  onClose={() => setLogsModalOpen(false)}
+  liabilityId={viewingLogsLiabilityId}
+  liabilityName={viewingLogsLiabilityName}
+  currency={mappedLiabilities.find((l) => l.id === viewingLogsLiabilityId)?.currency ?? "INR"}
+/>
+
       <div
         className="rounded-[16px] sm:rounded-[20px] overflow-hidden"
         style={{
@@ -631,7 +913,7 @@ onDataChanged?.();
               <button
                 key={t}
                 onClick={() => setSectionTab(t)}
-                className="relative pb-1 text-[13px] sm:text-[14px] font-medium transition-colors capitalize"
+                className="relative pb-1 text-[14px] sm:text-[15px] font-medium transition-colors capitalize"
                 style={{
                   color: sectionTab === t ? "var(--text-primary)" : "var(--text-tertiary)",
                   fontWeight: sectionTab === t ? 600 : 400,
@@ -663,10 +945,10 @@ onDataChanged?.();
               </span>
               <input
                 type="text"
-                placeholder="Search assets..."
+                placeholder={sectionTab === "liabilities" ? "Search liabilities..." : "Search assets..."}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="search-glass flex-1 bg-transparent text-[13px] placeholder:text-[#aeaeb2] min-w-0"
+                className="search-glass flex-1 bg-transparent text-[14px] placeholder:text-[#aeaeb2] min-w-0"
                 style={{ color: "var(--text-primary)" }}
               />
             </div>
@@ -682,6 +964,7 @@ onDataChanged?.();
           </div>
         </div>
 
+        {sectionTab === "assets" && (
         <div
           className="flex items-center gap-1 sm:gap-1.5 px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 overflow-x-auto scrollbar-hide"
           style={{ borderBottom: "1px solid var(--separator-subtle)" }}
@@ -692,7 +975,7 @@ onDataChanged?.();
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className="shrink-0 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[11.5px] sm:text-[12px] font-medium"
+                className="shrink-0 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[12.5px] sm:text-[13px] font-medium"
                 style={{
                   background: isActive
                     ? isDark ? "rgba(255,255,255,0.12)" : "#1d1d1f"
@@ -709,13 +992,17 @@ onDataChanged?.();
             );
           })}
         </div>
+        )}
 
+        {sectionTab === "assets" && (
         <FilterSummaryBanner
           assets={filtered}
           activeTab={activeTab}
           totalAssets={mappedAssets.reduce((s, a) => s + a.curVal, 0)}
         />
+        )}
 
+        {sectionTab === "assets" && (<>
         <div className="md:hidden">
           {filtered.map((asset, idx) => {
             const isLast = idx === filtered.length - 1;
@@ -732,7 +1019,7 @@ onDataChanged?.();
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="min-w-0">
                       <p
-                        className="text-[13px] font-semibold truncate"
+                        className="text-[14px] font-semibold truncate"
                         style={{ color: "var(--text-primary)" }}
                       >
                         {asset.name}
@@ -749,10 +1036,10 @@ onDataChanged?.();
                   className="flex items-start justify-between mt-3 pt-3"
                   style={{ borderTop: "1px solid var(--separator-subtle)" }}
                 >
-                  <StatLabel label="Invested" value={fmtINR(asset.invested)} />
+                  <StatLabel label="Invested" value={fmtINRFull(asset.invested)} />
                   <StatLabel
                     label="Cur. Val"
-                    value={fmtINR(asset.curVal)}
+                    value={fmtINRFull(asset.curVal)}
                     align="center"
                   />
                   <StatLabel
@@ -767,7 +1054,7 @@ onDataChanged?.();
 
           {filtered.length === 0 && (
             <div
-              className="py-14 text-center text-[13px]"
+              className="py-14 text-center text-[14px]"
               style={{ color: "var(--text-tertiary)" }}
             >
               No assets found
@@ -779,25 +1066,42 @@ onDataChanged?.();
           <table className="w-full">
             <thead>
               <tr style={{ borderBottom: "1px solid var(--separator-subtle)" }}>
-                {[
-                  { label: "ASSET NAME", align: "left", pad: "pl-6 pr-4" },
-                  { label: "INVESTED", align: "right", pad: "px-4" },
-                  { label: "CUR. VAL", align: "right", pad: "px-4" },
-                  { label: "P&L", align: "right", pad: "px-4" },
-                  { label: "% ALLOC.", align: "right", pad: "pr-6 pl-4" },
-                ].map((col) => (
-                  <th
-                    key={col.label}
-                    className={`py-3 ${col.pad} text-${col.align} text-[10px] font-semibold uppercase`}
-                    style={{
-                      color: "var(--text-tertiary)",
-                      letterSpacing: "0.08em",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {col.label}
-                  </th>
-                ))}
+                <th
+                  className="py-3 pl-6 pr-4 text-left text-[11px] font-semibold uppercase"
+                  style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}
+                >
+                  ASSET NAME
+                </th>
+                {(
+                  [
+                    { label: "INVESTED", key: "invested" as const, pad: "px-4" },
+                    { label: "CUR. VAL", key: "curVal" as const, pad: "px-4" },
+                    { label: "P&L", key: "pnl" as const, pad: "px-4" },
+                  ] as const
+                ).map((col) => {
+                  const isActive = sortKey === col.key;
+                  return (
+                    <th
+                      key={col.key}
+                      className={`py-3 ${col.pad} text-right text-[11px] font-semibold uppercase cursor-pointer select-none`}
+                      style={{ color: isActive ? "var(--text-primary)" : "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}
+                      onClick={() => handleSort(col.key)}
+                    >
+                      <span className="inline-flex items-center justify-end gap-1">
+                        {col.label}
+                        <span style={{ opacity: isActive ? 1 : 0.35, fontSize: 9 }}>
+                          {isActive && sortDir === "asc" ? "▲" : "▼"}
+                        </span>
+                      </span>
+                    </th>
+                  );
+                })}
+                <th
+                  className="py-3 pr-6 pl-4 text-right text-[11px] font-semibold uppercase"
+                  style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}
+                >
+                  % ALLOC.
+                </th>
               </tr>
             </thead>
 
@@ -824,7 +1128,7 @@ onDataChanged?.();
   <td className="pl-6 pr-4 py-4">
     <div>
       <p
-        className="text-[13px] font-semibold"
+        className="text-[14px] font-semibold"
         style={{ color: "var(--text-primary)" }}
       >
         {asset.name}
@@ -857,17 +1161,17 @@ onDataChanged?.();
   </td>
 
   <td
-    className="px-4 py-4 text-right text-[13px]"
+    className="px-4 py-4 text-right text-[14px]"
     style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}
   >
-    {fmtINR(asset.invested)}
+    {fmtINRFull(asset.invested)}
   </td>
 
   <td
-    className="px-4 py-4 text-right text-[13px] font-medium"
+    className="px-4 py-4 text-right text-[14px] font-medium"
     style={{ color: "var(--text-primary)", whiteSpace: "nowrap" }}
   >
-    {fmtINR(asset.curVal)}
+    {fmtINRFull(asset.curVal)}
   </td>
 
   <td className="px-4 py-4 text-right">
@@ -889,7 +1193,7 @@ onDataChanged?.();
         />
       </div>
       <span
-        className="text-[13px] font-medium w-9 text-right"
+        className="text-[14px] font-medium w-9 text-right"
         style={{ color: "var(--text-primary)" }}
       >
         {asset.allocation}%
@@ -904,13 +1208,242 @@ onDataChanged?.();
 
           {filtered.length === 0 && (
             <div
-              className="py-16 text-center text-[13px]"
+              className="py-16 text-center text-[14px]"
               style={{ color: "var(--text-tertiary)" }}
             >
               No assets found
             </div>
           )}
         </div>
+        </>)}
+
+        {sectionTab === "liabilities" && (<>
+          {/* Mobile liabilities */}
+          <div className="md:hidden">
+            {filteredLiabilities.map((l, idx) => {
+              const isLast = idx === filteredLiabilities.length - 1;
+              const openEditLiability = () => {
+                const raw = liabilities.find((x) => x.id === l.id);
+                if (!raw) return;
+                setEditingLiabilityId(l.id);
+                setEditingLiabilityData({
+                  lender_name: raw.lender_name,
+                  lender_type: raw.lender_type,
+                  liability_name: raw.liability_name || "",
+                  original_amount: String(raw.original_amount ?? ""),
+                  outstanding_amount: String(raw.outstanding_amount ?? ""),
+                  currency: raw.currency || "INR",
+                  borrowed_date: raw.borrowed_date || "",
+                  due_date: raw.due_date || "",
+                  notes: raw.notes || "",
+                });
+                setLiabilityModalOpen(true);
+              };
+              return (
+                <div
+                  key={l.id}
+                  className="px-4 sm:px-5 py-4"
+                  style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-bold truncate" style={{ color: "var(--text-primary)" }}>{l.lenderName}</p>
+                      {l.name !== l.lenderName && (
+                        <p className="text-[12px] mt-0.5 truncate" style={{ color: "var(--text-secondary)" }}>{l.name}</p>
+                      )}
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <LenderTypeBadge type={l.liabilityType} />
+                        <StatusBadge status={l.status} />
+                        {daysSince(l.borrowedDate) != null && (
+                          <span className="text-[11px] font-medium" style={{ color: "var(--text-tertiary)" }}>
+                            {daysSince(l.borrowedDate)}d ago
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[15px] font-bold" style={{ color: "#ff3b30" }}>{fmtAmt(l.outstandingAmount, l.currency)}</p>
+                      <p className="text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>of {fmtAmt(l.originalAmount, l.currency)}</p>
+                    </div>
+                  </div>
+
+                  {(l.borrowedDate || l.dueDate) && (
+                    <div className="flex items-center gap-4 mt-2">
+                      {l.borrowedDate && (
+                        <div>
+                          <p className="text-[10px] uppercase font-semibold" style={{ color: "var(--text-tertiary)", letterSpacing: "0.07em" }}>Borrowed</p>
+                          <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>{fmtDate(l.borrowedDate)}</p>
+                        </div>
+                      )}
+                      {l.dueDate && (
+                        <div>
+                          <p className="text-[10px] uppercase font-semibold" style={{ color: "var(--text-tertiary)", letterSpacing: "0.07em" }}>Due</p>
+                          <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>{fmtDate(l.dueDate)}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
+                    <button
+                      onClick={openEditLiability}
+                      className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium"
+                      style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}
+                    >
+                      <EditIcon /> Edit
+                    </button>
+                    {l.status === "active" && (
+                      <button
+                        onClick={() => { setRepayingLiability({ id: l.id, name: l.name, outstanding: l.outstandingAmount, currency: l.currency }); setRepayModalOpen(true); }}
+                        className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-semibold"
+                        style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}
+                      >
+                        Repay
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { setViewingLogsLiabilityId(l.id); setViewingLogsLiabilityName(l.name); setLogsModalOpen(true); }}
+                      className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium"
+                      style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}
+                    >
+                      Logs
+                    </button>
+                    <button
+                      onClick={() => handleDeleteLiability(l.id)}
+                      className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]"
+                      style={{ color: "var(--text-tertiary)" }}
+                      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")}
+                      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            {filteredLiabilities.length === 0 && (
+              <div className="py-14 text-center text-[14px]" style={{ color: "var(--text-tertiary)" }}>No liabilities found</div>
+            )}
+          </div>
+
+          {/* Desktop liabilities table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--separator-subtle)" }}>
+                  <th className="py-3 pl-6 pr-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>LENDER / LIABILITY</th>
+                  <th className="py-3 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>OUTSTANDING</th>
+                  <th className="py-3 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>ORIGINAL</th>
+                  <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>BORROWED</th>
+                  <th className="py-3 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>DAYS</th>
+                  <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>DUE</th>
+                  <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>STATUS</th>
+                  <th className="py-3 pr-6 pl-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLiabilities.map((l, idx) => {
+                  const isLast = idx === filteredLiabilities.length - 1;
+                  const openEditLiability = () => {
+                    const raw = liabilities.find((x) => x.id === l.id);
+                    if (!raw) return;
+                    setEditingLiabilityId(l.id);
+                    setEditingLiabilityData({
+                      lender_name: raw.lender_name,
+                      lender_type: raw.lender_type,
+                      liability_name: raw.liability_name || "",
+                      original_amount: String(raw.original_amount ?? ""),
+                      outstanding_amount: String(raw.outstanding_amount ?? ""),
+                      currency: raw.currency || "INR",
+                      borrowed_date: raw.borrowed_date || "",
+                      due_date: raw.due_date || "",
+                      notes: raw.notes || "",
+                    });
+                    setLiabilityModalOpen(true);
+                  };
+                  return (
+                    <tr
+                      key={l.id}
+                      style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                    >
+                      <td className="pl-6 pr-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <p className="text-[14px] font-bold" style={{ color: "var(--text-primary)" }}>{l.lenderName}</p>
+                          <LenderTypeBadge type={l.liabilityType} />
+                        </div>
+                        {l.name !== l.lenderName && (
+                          <p className="text-[12px] mt-0.5" style={{ color: "var(--text-secondary)" }}>{l.name}</p>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <span className="text-[14px] font-bold" style={{ color: "#ff3b30" }}>{fmtAmt(l.outstandingAmount, l.currency)}</span>
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <span className="text-[14px]" style={{ color: "var(--text-secondary)" }}>{fmtAmt(l.originalAmount, l.currency)}</span>
+                      </td>
+                      <td className="px-4 py-4 text-[13px]" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(l.borrowedDate)}</td>
+                      <td className="px-4 py-4 text-right">
+                        {(() => { const d = daysSince(l.borrowedDate); return d != null ? (
+                          <span className="text-[14px] font-semibold" style={{ color: "var(--text-primary)" }}>
+                            {d}<span className="text-[11px] font-normal ml-0.5" style={{ color: "var(--text-tertiary)" }}>d</span>
+                          </span>
+                        ) : <span style={{ color: "var(--text-tertiary)" }}>—</span>; })()}
+                      </td>
+                      <td className="px-4 py-4 text-[13px]" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(l.dueDate)}</td>
+                      <td className="px-4 py-4"><StatusBadge status={l.status} /></td>
+                      <td className="pr-6 pl-4 py-4">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={openEditLiability}
+                            className="icon-btn w-6 h-6 flex items-center justify-center rounded-md"
+                            style={{ color: "var(--text-tertiary)" }}
+                            title="Edit"
+                          >
+                            <EditIcon />
+                          </button>
+                          {l.status === "active" && (
+                            <button
+                              onClick={() => { setRepayingLiability({ id: l.id, name: l.name, outstanding: l.outstandingAmount, currency: l.currency }); setRepayModalOpen(true); }}
+                              className="h-6 px-2 rounded-[6px] text-[11px] font-semibold"
+                              style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}
+                              title="Repay"
+                            >
+                              Repay
+                            </button>
+                          )}
+                          <button
+                            onClick={() => { setViewingLogsLiabilityId(l.id); setViewingLogsLiabilityName(l.name); setLogsModalOpen(true); }}
+                            className="h-6 px-2 rounded-[6px] text-[11px] font-semibold"
+                            style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }}
+                            title="Logs"
+                          >
+                            Logs
+                          </button>
+                          <button
+                            onClick={() => handleDeleteLiability(l.id)}
+                            className="icon-btn w-6 h-6 flex items-center justify-center rounded-md"
+                            style={{ color: "var(--text-tertiary)" }}
+                            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")}
+                            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
+                            title="Delete"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {filteredLiabilities.length === 0 && (
+              <div className="py-16 text-center text-[14px]" style={{ color: "var(--text-tertiary)" }}>No liabilities found</div>
+            )}
+          </div>
+        </>)}
+
       </div>
     </>
   );

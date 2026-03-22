@@ -4,12 +4,40 @@ import { useEffect, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
 
 const NAV_ITEMS = [
-  { label: "Dashboard" },
-  { label: "Investments", active: true },
-  { label: "Holdings" },
-  { label: "Markets" },
-  { label: "Transfers" },
+  { label: "Portfolio", id: "portfolio" },
+  { label: "Stocks",    id: "stocks" },
+  { label: "Goals",     id: "goals" },
 ];
+
+function PortfolioIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2" />
+      <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+      <line x1="12" y1="12" x2="12" y2="16" />
+      <line x1="8" y1="14" x2="16" y2="14" />
+    </svg>
+  );
+}
+
+function StocksIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+      <polyline points="16 7 22 7 22 13" />
+    </svg>
+  );
+}
+
+function GoalsIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  );
+}
 
 function SearchIcon() {
   return (
@@ -52,10 +80,17 @@ function MoonIcon() {
   );
 }
 
+const NAV_ICONS: Record<string, React.ReactNode> = {
+  portfolio: <PortfolioIcon />,
+  stocks:    <StocksIcon />,
+  goals:     <GoalsIcon />,
+};
+
 export default function Navbar() {
   const { theme, toggle } = useTheme();
   const isDark = theme === "dark";
   const [scrolled, setScrolled] = useState(false);
+  const [activeTab, setActiveTab] = useState("portfolio");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -63,89 +98,172 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const iconColor = (active: boolean, forTopNav = false) => {
+    if (forTopNav) {
+      return active
+        ? (scrolled ? "#ffffff" : "var(--text-primary)")
+        : (scrolled ? "rgba(255,255,255,0.55)" : "var(--text-secondary)");
+    }
+    return active
+      ? (isDark ? "#ffffff" : "#1d1d1f")
+      : (isDark ? "rgba(255,255,255,0.4)" : "rgba(60,60,67,0.45)");
+  };
+
   return (
-    <nav
-      className="sticky top-0 z-50 border-b flex items-center justify-between px-4 sm:px-6 lg:px-8 h-[50px]"
-      style={{
-        background: scrolled ? "rgba(30,30,32,0.82)" : "transparent",
-        backdropFilter: scrolled ? "blur(20px) saturate(160%)" : "none",
-        WebkitBackdropFilter: scrolled ? "blur(20px) saturate(160%)" : "none",
-        borderColor: scrolled ? "rgba(255,255,255,0.08)" : "transparent",
-        transition: "background 350ms ease, border-color 350ms ease, backdrop-filter 350ms ease",
-      }}
-    >
-      {/* Left: logo + nav */}
-      <div className="flex items-center gap-6 lg:gap-8">
-        <span className="text-[20.5px] font-extrabold tracking-tight" style={{ color: scrolled ? "#ffffff" : "var(--text-primary)", transition: "color 400ms ease" }}>
-          Mah<span style={{ color: "#AEDD00" }}>fin</span>
-        </span>
-
-        <div className="hidden md:flex items-center gap-0.5">
-          {NAV_ITEMS.map((item) => (
-            <a
-              key={item.label}
-              href="#"
-              data-active={item.active ? "true" : undefined}
-              className="nav-link relative px-3 lg:px-3.5 py-1.5 text-[13px] rounded-md"
-              style={{
-                color: item.active
-                  ? (scrolled ? "#ffffff" : "var(--text-primary)")
-                  : (scrolled ? "rgba(255,255,255,0.6)" : "var(--text-secondary)"),
-                fontWeight: item.active ? 500 : 400,
-                transition: "color 400ms ease",
-              }}
-            >
-              {item.label}
-              {item.active && (
-                <span
-                  className="absolute bottom-0 left-3 lg:left-3.5 right-3 lg:right-3.5 h-[1.5px] rounded-full"
-                  style={{ background: scrolled ? "#ffffff" : "var(--text-primary)", transition: "background 400ms ease" }}
-                />
-              )}
-            </a>
-          ))}
+    <>
+      {/* ── Top navbar ── */}
+      <nav
+        className="sticky top-0 z-50 border-b flex items-center px-4 sm:px-6 lg:px-8 h-[50px]"
+        style={{
+          background: scrolled ? "rgba(30,30,32,0.82)" : "transparent",
+          backdropFilter: scrolled ? "blur(20px) saturate(160%)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(20px) saturate(160%)" : "none",
+          borderColor: scrolled ? "rgba(255,255,255,0.08)" : "transparent",
+          transition: "background 350ms ease, border-color 350ms ease",
+        }}
+      >
+        {/* Logo — left */}
+        <div className="flex-1">
+          <span
+            className="text-[21.5px] font-extrabold tracking-tight"
+            style={{ color: scrolled ? "#ffffff" : "var(--text-primary)", transition: "color 400ms ease" }}
+          >
+            Mah<span style={{ color: "#AEDD00" }}>fin</span>
+          </span>
         </div>
-      </div>
 
-      {/* Right: theme toggle + icons + avatar */}
-      <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* Theme toggle */}
-        <button
-          onClick={toggle}
-          className="icon-btn w-8 h-8 flex items-center justify-center rounded-full"
-          style={{
-            color: scrolled ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)",
-            background: scrolled ? "rgba(255,255,255,0.12)" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(60,60,67,0.06)"),
-            transition: "color 400ms ease, background 400ms ease",
-          }}
-          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-        >
-          {isDark ? <SunIcon /> : <MoonIcon />}
-        </button>
+        {/* Nav items — center (desktop only) */}
+        <div className="hidden lg:flex items-center gap-0.5">
+          {NAV_ITEMS.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className="relative px-3.5 py-1.5 text-[14px] rounded-md"
+                style={{
+                  color: iconColor(isActive, true),
+                  fontWeight: isActive ? 500 : 400,
+                  transition: "color 300ms ease",
+                }}
+              >
+                {item.label}
+                {isActive && (
+                  <span
+                    className="absolute bottom-0 left-3.5 right-3.5 h-[1.5px] rounded-full"
+                    style={{
+                      background: scrolled ? "#ffffff" : "var(--text-primary)",
+                      transition: "background 400ms ease",
+                    }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-        <button className="icon-btn w-8 h-8 flex items-center justify-center rounded-full" style={{ color: scrolled ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)", transition: "color 400ms ease" }}>
-          <SearchIcon />
-        </button>
-        <button className="icon-btn w-8 h-8 hidden sm:flex items-center justify-center rounded-full" style={{ color: scrolled ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)", transition: "color 400ms ease" }}>
-          <BellIcon />
-        </button>
+        {/* Right icons */}
+        <div className="flex-1 flex items-center justify-end gap-2 sm:gap-2.5">
+          <button
+            onClick={toggle}
+            className="icon-btn w-8 h-8 flex items-center justify-center rounded-full"
+            style={{
+              color: scrolled ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)",
+              background: scrolled ? "rgba(255,255,255,0.12)" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(60,60,67,0.06)"),
+              transition: "color 400ms ease, background 400ms ease",
+            }}
+            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {isDark ? <SunIcon /> : <MoonIcon />}
+          </button>
+
+          <button
+            className="icon-btn w-8 h-8 flex items-center justify-center rounded-full"
+            style={{ color: scrolled ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)", transition: "color 400ms ease" }}
+          >
+            <SearchIcon />
+          </button>
+
+          <button
+            className="icon-btn w-8 h-8 hidden sm:flex items-center justify-center rounded-full"
+            style={{ color: scrolled ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)", transition: "color 400ms ease" }}
+          >
+            <BellIcon />
+          </button>
+
+          <div
+            className="ml-0.5 cursor-pointer shrink-0"
+            style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}
+          >
+            <img
+              src="/avatar.jpg"
+              alt="Profile"
+              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
+            />
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Floating bottom nav (mobile + tablet) ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-6 lg:hidden pointer-events-none">
         <div
-          className="ml-0.5 cursor-pointer shrink-0"
+          className="flex items-center gap-1 p-1.5 pointer-events-auto"
           style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            overflow: "hidden",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+            borderRadius: 32,
+            background: isDark
+              ? "rgba(24,24,26,0.76)"
+              : "rgba(248,248,252,0.76)",
+            backdropFilter: "blur(48px) saturate(220%)",
+            WebkitBackdropFilter: "blur(48px) saturate(220%)",
+            border: isDark
+              ? "1px solid rgba(255,255,255,0.13)"
+              : "1px solid rgba(255,255,255,0.75)",
+            boxShadow: isDark
+              ? "0 16px 48px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)"
+              : "0 16px 48px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.95)",
           }}
         >
-          <img
-            src="/avatar.jpg"
-            alt="Profile"
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
-          />
+          {NAV_ITEMS.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className="flex flex-col items-center gap-[3px] px-6 py-2.5 rounded-[22px] transition-all duration-200"
+                style={{
+                  background: isActive
+                    ? (isDark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.07)")
+                    : "transparent",
+                  boxShadow: isActive
+                    ? (isDark
+                        ? "inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 4px rgba(0,0,0,0.25)"
+                        : "inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 4px rgba(0,0,0,0.08)")
+                    : "none",
+                }}
+              >
+                <span
+                  style={{
+                    color: iconColor(isActive),
+                    transition: "color 200ms ease",
+                  }}
+                >
+                  {NAV_ICONS[item.id]}
+                </span>
+                <span
+                  className="text-[11px] font-semibold"
+                  style={{
+                    color: iconColor(isActive),
+                    transition: "color 200ms ease",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
-    </nav>
+    </>
   );
 }
