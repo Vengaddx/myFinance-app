@@ -9,6 +9,7 @@ import LiabilityLogsModal from "./LiabilityLogsModal";
 import { supabase } from "@/lib/supabase";
 import Toast from "./toast";
 import { useTheme } from "@/lib/ThemeContext";
+import MobileCreateFab from "./MobileCreateFab";
 
 type DbAssetRow = {
   id: string;
@@ -815,7 +816,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
           setModalOpen(true);
         }
       }}
-      className="btn-lift flex items-center gap-1.5 h-[34px] px-3 sm:px-4 rounded-[10px] text-[13px] sm:text-[14px] font-semibold text-white shrink-0"
+      className="btn-lift hidden md:flex items-center gap-1.5 h-[34px] px-3 sm:px-4 rounded-[10px] text-[13px] sm:text-[14px] font-semibold text-white shrink-0"
       style={{ background: "#007aff" }}
     >
       <PlusIcon />
@@ -1478,6 +1479,15 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
         </>)}
 
       </div>
+
+      <MobileCreateFab
+        onAddAsset={() => setModalOpen(true)}
+        onAddLiability={() => {
+          setEditingLiabilityId(null);
+          setEditingLiabilityData(null);
+          setLiabilityModalOpen(true);
+        }}
+      />
     </>
   );
 }
