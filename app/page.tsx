@@ -259,7 +259,7 @@ export default function Home() {
         </div>
       </div>
 
-      <main className="max-w-[1320px] mx-auto px-4 sm:px-5 lg:px-6 py-4 sm:py-5 lg:py-6 pb-28 lg:pb-6 flex flex-col gap-3 sm:gap-4">
+      <main className="max-w-[1320px] mx-auto px-4 sm:px-5 lg:px-6 py-4 sm:py-5 lg:py-6 lg:pb-6 flex flex-col gap-3 sm:gap-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 7rem)" }}>
         <div
           className="
             grid gap-3 sm:gap-3.5

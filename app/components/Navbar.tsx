@@ -282,7 +282,7 @@ export default function Navbar() {
       </nav>
 
       {/* ── Floating bottom nav (mobile + tablet) ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-5 lg:hidden pointer-events-none">
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center lg:hidden pointer-events-none" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}>
         <div
           ref={bottomNavRef}
           className="flex items-center gap-0.5 p-1 pointer-events-auto relative"
