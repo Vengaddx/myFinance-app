@@ -211,16 +211,16 @@ export default function Navbar() {
           style={{
             borderRadius: 28,
             background: isDark
-              ? "rgba(20,20,22,0.55)"
-              : "rgba(255,255,255,0.52)",
-            backdropFilter: "blur(60px) saturate(240%) brightness(1.08)",
-            WebkitBackdropFilter: "blur(60px) saturate(240%) brightness(1.08)",
+              ? "rgba(30,30,34,0.22)"
+              : "rgba(255,255,255,0.28)",
+            backdropFilter: "blur(80px) saturate(280%) brightness(1.12)",
+            WebkitBackdropFilter: "blur(80px) saturate(280%) brightness(1.12)",
             border: isDark
-              ? "1px solid rgba(255,255,255,0.1)"
-              : "1px solid rgba(255,255,255,0.85)",
+              ? "1px solid rgba(255,255,255,0.13)"
+              : "1px solid rgba(255,255,255,0.7)",
             boxShadow: isDark
-              ? "0 8px 32px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.07) inset, 0 -1px 0 rgba(0,0,0,0.2) inset"
-              : "0 8px 32px rgba(0,0,0,0.1), 0 1px 0 rgba(255,255,255,1) inset",
+              ? "0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.15)"
+              : "0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.95)",
           }}
         >
           {NAV_ITEMS.map((item) => {
