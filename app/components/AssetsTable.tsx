@@ -971,36 +971,36 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               {sectionTab === "assets" && (<>
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Invested</p>
-                  <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>{fmtINR(inv)}</p>
+                  <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{fmtINR(inv)}</p>
                 </div>
                 {sep}
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Cur. Value</p>
-                  <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>{fmtINR(cur)}</p>
+                  <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{fmtINR(cur)}</p>
                 </div>
                 {sep}
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>P&L</p>
-                  <p className="text-[14px] font-semibold" style={{ color: pnl >= 0 ? "#34c759" : "#ff3b30", letterSpacing: "-0.015em" }}>
+                  <p className="text-[19px] font-bold" style={{ color: pnl >= 0 ? "#34c759" : "#ff3b30", letterSpacing: "-0.025em" }}>
                     {pnl >= 0 ? "+" : ""}{fmtINR(pnl)}
-                    <span className="text-[12px] font-medium ml-1.5" style={{ opacity: 0.7 }}>({pct >= 0 ? "+" : ""}{pct.toFixed(1)}%)</span>
+                    <span className="text-[13px] font-medium ml-1.5" style={{ opacity: 0.7 }}>({pct >= 0 ? "+" : ""}{pct.toFixed(1)}%)</span>
                   </p>
                 </div>
               </>)}
               {sectionTab === "liabilities" && (<>
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Outstanding</p>
-                  <p className="text-[14px] font-semibold" style={{ color: "#ff3b30", letterSpacing: "-0.015em" }}>{fmtINR(outstanding)}</p>
+                  <p className="text-[19px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.025em" }}>{fmtINR(outstanding)}</p>
                 </div>
                 {sep}
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Borrowed</p>
-                  <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>{fmtINR(totalBorrowed)}</p>
+                  <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{fmtINR(totalBorrowed)}</p>
                 </div>
                 {sep}
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Count</p>
-                  <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>{filteredLiabilities.length}</p>
+                  <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{filteredLiabilities.length}</p>
                 </div>
               </>)}
             </div>
