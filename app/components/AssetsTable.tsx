@@ -471,7 +471,7 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
 
   const handleSaveExpense = async (data: ExpenseFormData) => {
     const monthKey = data.expense_date.slice(0, 7);
-    const rate = Number(data.sar_rate) || 22.5;
+    const rate = Number(data.sar_rate) || 24.2;
     const inrAmount = data.currency === "SAR"
       ? Math.round(Number(data.amount) * rate)
       : Number(data.amount);
@@ -527,7 +527,7 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
       title: e.title,
       amount: sarAmount !== null ? String(sarAmount) : String(e.amount),
       currency: sarAmount !== null ? "SAR" : "INR",
-      sar_rate: sarRate !== null ? String(sarRate) : "22.5",
+      sar_rate: sarRate !== null ? String(sarRate) : "24.2",
       category: e.category,
       expense_date: e.expense_date,
       notes: note,
