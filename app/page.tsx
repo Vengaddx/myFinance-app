@@ -117,12 +117,16 @@ export default function Home() {
     setShowSplash(false);
   };
 
-  // Show sticky bar when assets section sentinel scrolls out of view
+  // Show sticky bar only when the sentinel has been scrolled PAST (above viewport),
+  // not when it's simply below the viewport (page not yet scrolled that far).
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      ([entry]) => {
+        const scrolledPast = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+        setStickyVisible(scrolledPast);
+      },
       { threshold: 0 }
     );
     observer.observe(el);
