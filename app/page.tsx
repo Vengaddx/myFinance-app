@@ -253,10 +253,10 @@ export default function Home() {
         className="fixed left-0 right-0 z-40 flex justify-center px-4 sm:px-5 lg:px-6"
         style={{
           top: "calc(50px + env(safe-area-inset-top))",
-          transform: (stickyVisible || stickyData?.categoryLabel !== "All Assets") ? "translateY(0)" : "translateY(-130%)",
-          opacity: (stickyVisible || stickyData?.categoryLabel !== "All Assets") ? 1 : 0,
+          transform: stickyVisible ? "translateY(0)" : "translateY(-130%)",
+          opacity: stickyVisible ? 1 : 0,
           transition: "transform 360ms cubic-bezier(0.34,1.15,0.64,1), opacity 220ms ease",
-          pointerEvents: (stickyVisible || stickyData?.categoryLabel !== "All Assets") ? "auto" : "none",
+          pointerEvents: stickyVisible ? "auto" : "none",
         }}
       >
         <div

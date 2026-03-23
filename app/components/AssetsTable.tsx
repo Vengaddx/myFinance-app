@@ -954,6 +954,59 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
         )}
 
 
+        {/* Desktop-only inline summary — always visible above the table */}
+        {(() => {
+          const inv  = filtered.reduce((s, a) => s + a.invested, 0);
+          const cur  = filtered.reduce((s, a) => s + a.curVal, 0);
+          const pnl  = cur - inv;
+          const pct  = inv > 0 ? (pnl / inv) * 100 : 0;
+          const outstanding   = filteredLiabilities.reduce((s, l) => s + l.outstandingAmount, 0);
+          const totalBorrowed = filteredLiabilities.reduce((s, l) => s + l.originalAmount, 0);
+          const sep = <div className="w-px h-6 shrink-0" style={{ background: "var(--separator)" }} />;
+          return (
+            <div
+              className="hidden md:flex items-center gap-5 px-6 py-3"
+              style={{ borderBottom: "1px solid var(--separator-subtle)", background: "var(--surface-secondary)" }}
+            >
+              {sectionTab === "assets" && (<>
+                <div>
+                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Invested</p>
+                  <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>{fmtINR(inv)}</p>
+                </div>
+                {sep}
+                <div>
+                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Cur. Value</p>
+                  <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>{fmtINR(cur)}</p>
+                </div>
+                {sep}
+                <div>
+                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>P&L</p>
+                  <p className="text-[14px] font-semibold" style={{ color: pnl >= 0 ? "#34c759" : "#ff3b30", letterSpacing: "-0.015em" }}>
+                    {pnl >= 0 ? "+" : ""}{fmtINR(pnl)}
+                    <span className="text-[12px] font-medium ml-1.5" style={{ opacity: 0.7 }}>({pct >= 0 ? "+" : ""}{pct.toFixed(1)}%)</span>
+                  </p>
+                </div>
+              </>)}
+              {sectionTab === "liabilities" && (<>
+                <div>
+                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Outstanding</p>
+                  <p className="text-[14px] font-semibold" style={{ color: "#ff3b30", letterSpacing: "-0.015em" }}>{fmtINR(outstanding)}</p>
+                </div>
+                {sep}
+                <div>
+                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Borrowed</p>
+                  <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>{fmtINR(totalBorrowed)}</p>
+                </div>
+                {sep}
+                <div>
+                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Count</p>
+                  <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>{filteredLiabilities.length}</p>
+                </div>
+              </>)}
+            </div>
+          );
+        })()}
+
         {sectionTab === "assets" && (<>
         <div className="md:hidden">
           {filtered.map((asset, idx) => {
