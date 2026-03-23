@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
 import Navbar from "./components/Navbar";
 import NetWorthCard from "./components/NetWorthCard";
 import MetricCard from "./components/MetricCard";
 import AllocationCard, { type TopHolding } from "./components/AllocationCard";
-import AssetsTable from "./components/AssetsTable";
+import AssetsTable, { type StickyBarData } from "./components/AssetsTable";
 import Footer from "./components/Footer";
 import SplashScreen from "./components/SplashScreen";
 import { supabase } from "@/lib/supabase";
@@ -101,8 +101,10 @@ export default function Home() {
   const isDark = theme === "dark";
   const [dbAssets, setDbAssets] = useState<DbAssetRow[]>([]);
   const [dbLiabilities, setDbLiabilities] = useState<{ outstanding_amount: number; status: string }[]>([]);
-  const [showStickyBar, setShowStickyBar] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
+  const [stickyVisible, setStickyVisible] = useState(false);
+  const [stickyData, setStickyData] = useState<StickyBarData | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mobile = window.innerWidth < 768;
@@ -115,10 +117,16 @@ export default function Home() {
     setShowSplash(false);
   };
 
+  // Show sticky bar when assets section sentinel scrolls out of view
   useEffect(() => {
-    const onScroll = () => setShowStickyBar(window.scrollY > 260);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   const fetchAssets = async () => {
@@ -236,56 +244,91 @@ export default function Home() {
       {showSplash && <SplashScreen onDone={handleSplashDone} />}
       <Navbar />
 
-      {/* Sticky compact summary bar */}
+      {/* Context-aware sticky summary bar */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center px-4 sm:px-5 lg:px-6"
         style={{
           top: "calc(50px + env(safe-area-inset-top))",
-          transform: showStickyBar ? "translateY(0)" : "translateY(-120%)",
-          opacity: showStickyBar ? 1 : 0,
-          transition: "transform 380ms cubic-bezier(0.34,1.15,0.64,1), opacity 250ms ease",
-          pointerEvents: showStickyBar ? "auto" : "none",
+          transform: stickyVisible ? "translateY(0)" : "translateY(-130%)",
+          opacity: stickyVisible ? 1 : 0,
+          transition: "transform 360ms cubic-bezier(0.34,1.15,0.64,1), opacity 220ms ease",
+          pointerEvents: stickyVisible ? "auto" : "none",
         }}
       >
         <div
-          className="w-full max-w-[1320px] flex items-center justify-between px-5 py-2.5 mt-2 rounded-[16px]"
+          className="w-full max-w-[1320px] flex items-center gap-4 px-4 py-2.5 mt-2 rounded-[16px]"
           style={{
-            background: isDark ? "rgba(18,18,20,0.28)" : "rgba(255,255,255,0.30)",
-            backdropFilter: "blur(60px) saturate(240%) brightness(1.1)",
-            WebkitBackdropFilter: "blur(60px) saturate(240%) brightness(1.1)",
-            border: isDark ? "1px solid rgba(255,255,255,0.09)" : "1px solid rgba(255,255,255,0.7)",
+            background: isDark ? "rgba(18,18,20,0.55)" : "rgba(255,255,255,0.62)",
+            backdropFilter: "blur(48px) saturate(220%) brightness(1.06)",
+            WebkitBackdropFilter: "blur(48px) saturate(220%) brightness(1.06)",
+            border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(255,255,255,0.78)",
             boxShadow: isDark
-              ? "0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.07)"
-              : "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.95)",
+              ? "0 8px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.1)"
+              : "0 8px 28px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)",
           }}
         >
-          {/* Net Worth — primary */}
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>Net Worth</p>
-            <p className="text-[17px] font-bold leading-tight" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
-              {fmtINR(summary.netWorth)}
-            </p>
-          </div>
+          {/* Section label */}
+          <p className="text-[13px] font-bold shrink-0" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+            {stickyData?.sectionTab === "liabilities" ? "Liabilities" : "Assets"}
+            {stickyData && stickyData.sectionTab === "assets" && stickyData.categoryLabel !== "All Assets" && (
+              <span className="ml-1.5 text-[11px] font-semibold" style={{ color: "var(--text-tertiary)" }}>
+                · {stickyData.categoryLabel}
+              </span>
+            )}
+          </p>
 
-          <div className="hidden sm:flex items-center gap-5">
-            <div className="w-px h-7" style={{ background: "var(--separator)" }} />
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>Total Assets</p>
-              <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)" }}>{fmtINR(summary.totalAssets)}</p>
-            </div>
-            <div className="w-px h-7" style={{ background: "var(--separator)" }} />
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,59,48,0.65)" }}>Liabilities</p>
-              <p className="text-[14px] font-semibold" style={{ color: "#ff3b30" }}>{fmtINR(summary.liabilities)}</p>
-            </div>
-          </div>
+          <div className="w-px h-5 shrink-0" style={{ background: "var(--separator)" }} />
 
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>P&L</p>
-            <p className="text-[14px] font-semibold" style={{ color: summary.totalPnl >= 0 ? "#34c759" : "#ff3b30" }}>
-              {summary.totalPnl >= 0 ? "+" : ""}{fmtINR(summary.totalPnl)}
-            </p>
-          </div>
+          {/* Asset metrics */}
+          {(!stickyData || stickyData.sectionTab === "assets") && (
+            <div className="flex items-center gap-4 sm:gap-6 min-w-0 overflow-x-auto scrollbar-hide">
+              <div className="shrink-0">
+                <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Invested</p>
+                <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
+                  {fmtINR(stickyData?.invested ?? 0)}
+                </p>
+              </div>
+              <div className="shrink-0">
+                <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Cur. Value</p>
+                <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
+                  {fmtINR(stickyData?.curVal ?? 0)}
+                </p>
+              </div>
+              <div className="shrink-0">
+                <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>P&L</p>
+                <p className="text-[13px] font-semibold" style={{ color: (stickyData?.pnl ?? 0) >= 0 ? "#34c759" : "#ff3b30", letterSpacing: "-0.015em" }}>
+                  {(stickyData?.pnl ?? 0) >= 0 ? "+" : ""}{fmtINR(stickyData?.pnl ?? 0)}
+                  <span className="text-[11px] font-medium ml-1" style={{ opacity: 0.75 }}>
+                    ({(stickyData?.pnlPct ?? 0) >= 0 ? "+" : ""}{(stickyData?.pnlPct ?? 0).toFixed(1)}%)
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Liability metrics */}
+          {stickyData?.sectionTab === "liabilities" && (
+            <div className="flex items-center gap-4 sm:gap-6 min-w-0 overflow-x-auto scrollbar-hide">
+              <div className="shrink-0">
+                <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Outstanding</p>
+                <p className="text-[13px] font-semibold" style={{ color: "#ff3b30", letterSpacing: "-0.015em" }}>
+                  {fmtINR(stickyData.outstanding)}
+                </p>
+              </div>
+              <div className="shrink-0">
+                <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Borrowed</p>
+                <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
+                  {fmtINR(stickyData.totalBorrowed)}
+                </p>
+              </div>
+              <div className="shrink-0">
+                <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Count</p>
+                <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
+                  {stickyData.liabilityCount}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -336,7 +379,9 @@ export default function Home() {
           </div>
         </div>
 
-        <AssetsTable onDataChanged={refreshAll} />
+        {/* Sentinel: sticky header appears when this scrolls out of view */}
+        <div ref={sentinelRef} style={{ height: 1 }} />
+        <AssetsTable onDataChanged={refreshAll} onSummaryChange={setStickyData} />
       </main>
       <Footer />
     </div>

@@ -331,110 +331,25 @@ function StatLabel({
   );
 }
 
-function FilterSummaryBanner({
-  assets,
-  activeTab,
-  totalAssets,
-}: {
-  assets: UiAsset[];
-  activeTab: string;
-  totalAssets: number;
-}) {
-  if (activeTab === "all" || assets.length === 0) return null;
-
-  const invested = assets.reduce((s, a) => s + a.invested, 0);
-  const curVal = assets.reduce((s, a) => s + a.curVal, 0);
-  const pnl = curVal - invested;
-  const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
-  const pos = pnl >= 0;
-  const categoryLabel =
-    CATEGORY_META[assets[0].category as keyof typeof CATEGORY_META]?.label ??
-    activeTab.toUpperCase();
-
-  return (
-    <div
-      className="mx-4 sm:mx-5 md:mx-6 my-3 rounded-[14px] px-4 sm:px-5 py-4"
-      style={{ background: "var(--surface-secondary)" }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <p
-          className="text-[11px] font-semibold uppercase tracking-widest"
-          style={{ color: "var(--text-tertiary)", letterSpacing: "0.12em" }}
-        >
-          {categoryLabel}
-        </p>
-        <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>
-          {assets.length} asset{assets.length !== 1 ? "s" : ""}
-          {totalAssets > 0 && (
-            <span>
-              {" · "}
-              {((curVal / totalAssets) * 100).toFixed(1)}% of portfolio
-            </span>
-          )}
-        </p>
-      </div>
-
-      {/* Metrics */}
-      <div className="flex items-start gap-6 sm:gap-10">
-        <div className="flex flex-col gap-0.5">
-          <p
-            className="text-[10.5px] font-semibold uppercase"
-            style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em" }}
-          >
-            Invested
-          </p>
-          <p
-            className="text-[16px] font-semibold"
-            style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}
-          >
-            {fmtINR(invested)}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-0.5">
-          <p
-            className="text-[10.5px] font-semibold uppercase"
-            style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em" }}
-          >
-            Current Value
-          </p>
-          <p
-            className="text-[16px] font-semibold"
-            style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}
-          >
-            {fmtINR(curVal)}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-0.5">
-          <p
-            className="text-[10.5px] font-semibold uppercase"
-            style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em" }}
-          >
-            P&L
-          </p>
-          <p
-            className="text-[16px] font-semibold"
-            style={{ color: pos ? "#34c759" : "#ff3b30", letterSpacing: "-0.015em" }}
-          >
-            {pos ? "+" : ""}
-            {fmtINR(pnl)}
-            <span className="text-[12px] font-medium ml-1.5" style={{ opacity: 0.75 }}>
-              ({pos ? "+" : ""}{pnlPct.toFixed(1)}%)
-            </span>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
+export type StickyBarData = {
+  sectionTab: "assets" | "liabilities";
+  categoryLabel: string;
+  invested: number;
+  curVal: number;
+  pnl: number;
+  pnlPct: number;
+  assetCount: number;
+  outstanding: number;
+  totalBorrowed: number;
+  liabilityCount: number;
+};
 
 type AssetsTableProps = {
   onDataChanged?: () => void;
+  onSummaryChange?: (data: StickyBarData) => void;
 };
 
-export default function AssetsTable({ onDataChanged }: AssetsTableProps) {
+export default function AssetsTable({ onDataChanged, onSummaryChange }: AssetsTableProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [activeTab, setActiveTab] = useState<AssetCategory | "all">("all");
@@ -809,6 +724,36 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
     });
   }, [mappedAssets, activeTab, search, sortKey, sortDir]);
 
+  useEffect(() => {
+    if (!onSummaryChange) return;
+    const invested = filtered.reduce((s, a) => s + a.invested, 0);
+    const curVal   = filtered.reduce((s, a) => s + a.curVal, 0);
+    const pnl      = curVal - invested;
+    const pnlPct   = invested > 0 ? (pnl / invested) * 100 : 0;
+    const mappedLibs = liabilities.map((l) => ({
+      outstanding: Number(l.outstanding_amount ?? 0),
+      original:    Number(l.original_amount ?? 0),
+    }));
+    const outstanding  = mappedLibs.reduce((s, l) => s + l.outstanding, 0);
+    const totalBorrowed = mappedLibs.reduce((s, l) => s + l.original, 0);
+    const categoryLabel =
+      activeTab === "all"
+        ? "All Assets"
+        : (CATEGORY_META[activeTab as AssetCategory]?.label ?? activeTab);
+    onSummaryChange({
+      sectionTab,
+      categoryLabel,
+      invested,
+      curVal,
+      pnl,
+      pnlPct,
+      assetCount: filtered.length,
+      outstanding,
+      totalBorrowed,
+      liabilityCount: liabilities.length,
+    });
+  }, [filtered, sectionTab, activeTab, liabilities, onSummaryChange]);
+
   const handleSort = (key: "invested" | "curVal" | "pnl") => {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -1008,13 +953,6 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
         </div>
         )}
 
-        {sectionTab === "assets" && (
-        <FilterSummaryBanner
-          assets={filtered}
-          activeTab={activeTab}
-          totalAssets={mappedAssets.reduce((s, a) => s + a.curVal, 0)}
-        />
-        )}
 
         {sectionTab === "assets" && (<>
         <div className="md:hidden">
