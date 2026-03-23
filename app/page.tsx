@@ -117,16 +117,12 @@ export default function Home() {
     setShowSplash(false);
   };
 
-  // Show sticky bar only when the sentinel has been scrolled PAST (above viewport),
-  // not when it's simply below the viewport (page not yet scrolled that far).
+  // Show sticky bar whenever any part of the assets table is visible in the viewport.
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        const scrolledPast = !entry.isIntersecting && entry.boundingClientRect.top < 0;
-        setStickyVisible(scrolledPast);
-      },
+      ([entry]) => setStickyVisible(entry.isIntersecting),
       { threshold: 0 }
     );
     observer.observe(el);
@@ -384,9 +380,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Sentinel: sticky header appears when this scrolls out of view */}
-        <div ref={sentinelRef} style={{ height: 1 }} />
-        <AssetsTable onDataChanged={refreshAll} onSummaryChange={setStickyData} />
+        <div ref={sentinelRef}>
+          <AssetsTable onDataChanged={refreshAll} onSummaryChange={setStickyData} />
+        </div>
       </main>
       <Footer />
     </div>
