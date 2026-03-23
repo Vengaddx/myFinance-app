@@ -256,7 +256,7 @@ export default function Home() {
         }}
       >
         <div
-          className="w-full max-w-[1320px] flex items-center gap-4 px-4 py-2.5 mt-2 rounded-[16px]"
+          className="w-full max-w-[1320px] flex flex-col gap-1.5 px-4 py-3 mt-2 rounded-[16px]"
           style={{
             background: isDark ? "rgba(18,18,20,0.55)" : "rgba(255,255,255,0.62)",
             backdropFilter: "blur(48px) saturate(220%) brightness(1.06)",
@@ -267,35 +267,35 @@ export default function Home() {
               : "0 8px 28px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)",
           }}
         >
-          {/* Section label */}
-          <p className="text-[13px] font-bold shrink-0" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+          {/* Row 1: Section label + category */}
+          <p className="text-[12px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
             {stickyData?.sectionTab === "liabilities" ? "Liabilities" : "Assets"}
-            {stickyData && stickyData.sectionTab === "assets" && stickyData.categoryLabel !== "All Assets" && (
+            {stickyData?.sectionTab === "assets" && stickyData.categoryLabel !== "All Assets" && (
               <span className="ml-1.5 text-[11px] font-semibold" style={{ color: "var(--text-tertiary)" }}>
                 · {stickyData.categoryLabel}
               </span>
             )}
           </p>
 
-          <div className="w-px h-5 shrink-0" style={{ background: "var(--separator)" }} />
-
-          {/* Asset metrics */}
+          {/* Row 2: Metrics */}
           {(!stickyData || stickyData.sectionTab === "assets") && (
-            <div className="flex items-center gap-4 sm:gap-6 min-w-0 overflow-x-auto scrollbar-hide">
-              <div className="shrink-0">
-                <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Invested</p>
+            <div className="flex items-center gap-5">
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Invested</p>
                 <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
                   {fmtINR(stickyData?.invested ?? 0)}
                 </p>
               </div>
-              <div className="shrink-0">
-                <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Cur. Value</p>
+              <div className="w-px h-6" style={{ background: "var(--separator)" }} />
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Cur. Value</p>
                 <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
                   {fmtINR(stickyData?.curVal ?? 0)}
                 </p>
               </div>
-              <div className="shrink-0">
-                <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>P&L</p>
+              <div className="w-px h-6" style={{ background: "var(--separator)" }} />
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>P&L</p>
                 <p className="text-[13px] font-semibold" style={{ color: (stickyData?.pnl ?? 0) >= 0 ? "#34c759" : "#ff3b30", letterSpacing: "-0.015em" }}>
                   {(stickyData?.pnl ?? 0) >= 0 ? "+" : ""}{fmtINR(stickyData?.pnl ?? 0)}
                   <span className="text-[11px] font-medium ml-1" style={{ opacity: 0.75 }}>
@@ -306,23 +306,24 @@ export default function Home() {
             </div>
           )}
 
-          {/* Liability metrics */}
           {stickyData?.sectionTab === "liabilities" && (
-            <div className="flex items-center gap-4 sm:gap-6 min-w-0 overflow-x-auto scrollbar-hide">
-              <div className="shrink-0">
-                <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Outstanding</p>
+            <div className="flex items-center gap-5">
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Outstanding</p>
                 <p className="text-[13px] font-semibold" style={{ color: "#ff3b30", letterSpacing: "-0.015em" }}>
                   {fmtINR(stickyData.outstanding)}
                 </p>
               </div>
-              <div className="shrink-0">
-                <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Borrowed</p>
+              <div className="w-px h-6" style={{ background: "var(--separator)" }} />
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Borrowed</p>
                 <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
                   {fmtINR(stickyData.totalBorrowed)}
                 </p>
               </div>
-              <div className="shrink-0">
-                <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Count</p>
+              <div className="w-px h-6" style={{ background: "var(--separator)" }} />
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Count</p>
                 <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
                   {stickyData.liabilityCount}
                 </p>
