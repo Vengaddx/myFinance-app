@@ -29,8 +29,8 @@ export default function Footer() {
         </div>
 
         {/* Right */}
-        <p className="text-[13px] italic" style={{ color: "var(--text-tertiary)" }}>
-          This app is dedicated to Maha Lakshmi ❤️
+        <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>
+          Coded with Love :)
         </p>
       </div>
     </footer>

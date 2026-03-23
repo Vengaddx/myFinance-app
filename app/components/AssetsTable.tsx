@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import * as XLSX from "xlsx";
 import { AssetCategory } from "../data/assets";
 import AddAssetModal, { AssetFormData } from "./AddAssetModal";
 import AddLiabilityModal, { LiabilityFormData } from "./AddLiabilityModal";
+import AddExpenseModal, { ExpenseFormData, EMPTY_EXPENSE_FORM, EXPENSE_CATEGORIES } from "./AddExpenseModal";
 import RepayLiabilityModal from "./RepayLiabilityModal";
 import LiabilityLogsModal from "./LiabilityLogsModal";
 import { supabase } from "@/lib/supabase";
@@ -32,6 +34,21 @@ type UiAsset = {
   allocation: number;
 };
 
+type DbExpenseRow = {
+  id: string;
+  title: string;
+  amount: number;
+  category: string;
+  expense_date: string;
+  month_key: string;
+  notes: string | null;
+  claim_eligible: boolean;
+  claim_submitted: boolean;
+  splitwise_applicable: boolean;
+  splitwise_added: boolean;
+  created_at?: string;
+};
+
 const TABS: { label: string; value: AssetCategory | "all" }[] = [
   { label: "All", value: "all" },
   { label: "Stocks & ETFs", value: "stocks" },
@@ -57,6 +74,51 @@ const CATEGORY_META: Record<
   crypto: { label: "CRYPTO", bg: "#ede8ff", color: "#5b30c0" },
   other: { label: "OTHER", bg: "#f2f2f7", color: "#636366" },
 };
+
+const EXPENSE_CATEGORY_META: Record<string, { bg: string; color: string; emoji: string }> = {
+  food:          { bg: "#fff3e0", color: "#bf5a00", emoji: "🍜" },
+  cab:           { bg: "#e3f2fd", color: "#1565c0", emoji: "🚗" },
+  groceries:     { bg: "#e8f5e9", color: "#2e7d32", emoji: "🛒" },
+  shopping:      { bg: "#f3e5f5", color: "#6a1b9a", emoji: "🛍️" },
+  bills:         { bg: "#fffde7", color: "#f57f17", emoji: "💡" },
+  travel:        { bg: "#e0f7fa", color: "#00838f", emoji: "✈️" },
+  medical:       { bg: "#fce4ec", color: "#ad1457", emoji: "💊" },
+  entertainment: { bg: "#fff0f5", color: "#c2185b", emoji: "🎬" },
+  office:        { bg: "#f5f5f5", color: "#424242", emoji: "💼" },
+  other:         { bg: "#f2f2f7", color: "#636366", emoji: "📦" },
+};
+
+function getExpenseCategoryMeta(cat: string) {
+  return EXPENSE_CATEGORY_META[cat.toLowerCase()] ?? EXPENSE_CATEGORY_META.other;
+}
+
+function parseExpenseNotes(raw: string | null): { note: string; sarAmount: number | null; sarRate: number | null } {
+  if (!raw) return { note: "", sarAmount: null, sarRate: null };
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      return {
+        note: String(parsed.note ?? ""),
+        sarAmount: parsed.sar != null ? Number(parsed.sar) : null,
+        sarRate: parsed.rate != null ? Number(parsed.rate) : null,
+      };
+    }
+  } catch { /* plain text */ }
+  return { note: raw, sarAmount: null, sarRate: null };
+}
+
+function getMonthOptions(): { key: string; label: string }[] {
+  const options: { key: string; label: string }[] = [];
+  const now = new Date();
+  // 11 past months + current + 2 future = 14 total, newest first
+  for (let offset = 2; offset >= -11; offset--) {
+    const d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
+    options.push({ key, label });
+  }
+  return options;
+}
 
 function normalizeCategory(value?: string | null): AssetCategory {
   const v = String(value ?? "").toLowerCase().trim();
@@ -245,25 +307,6 @@ function SearchIcon() {
   );
 }
 
-function UploadIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="17 8 12 3 7 8" />
-      <line x1="12" y1="3" x2="12" y2="15" />
-    </svg>
-  );
-}
-
 function DownloadIcon() {
   return (
     <svg
@@ -332,7 +375,7 @@ function StatLabel({
 }
 
 export type StickyBarData = {
-  sectionTab: "assets" | "liabilities";
+  sectionTab: "assets" | "liabilities" | "expenses";
   categoryLabel: string;
   invested: number;
   curVal: number;
@@ -342,6 +385,10 @@ export type StickyBarData = {
   outstanding: number;
   totalBorrowed: number;
   liabilityCount: number;
+  expensesTotal?: number;
+  expensesClaimEligible?: number;
+  expensesSplitPending?: number;
+  expensesCount?: number;
 };
 
 type AssetsTableProps = {
@@ -354,9 +401,17 @@ export default function AssetsTable({ onDataChanged, onSummaryChange }: AssetsTa
   const isDark = theme === "dark";
   const [activeTab, setActiveTab] = useState<AssetCategory | "all">("all");
   const [search, setSearch] = useState("");
-  const [sectionTab, setSectionTab] = useState<"assets" | "liabilities">(
-    "assets"
-  );
+  const [sectionTab, setSectionTab] = useState<"assets" | "liabilities" | "expenses">("assets");
+  const [expenses, setExpenses] = useState<DbExpenseRow[]>([]);
+  const [expenseModalOpen, setExpenseModalOpen] = useState(false);
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+  const [editingExpenseData, setEditingExpenseData] = useState<ExpenseFormData | null>(null);
+  const [expenseMonthKey, setExpenseMonthKey] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const [expenseCategoryFilter, setExpenseCategoryFilter] = useState("all");
+  const [expenseQuickFilter, setExpenseQuickFilter] = useState<"all" | "claim" | "splitwise">("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [dbAssets, setDbAssets] = useState<DbAssetRow[]>([]);
   const [sortKey, setSortKey] = useState<"invested" | "curVal" | "pnl" | null>(null);
@@ -404,6 +459,94 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
 
   setLiabilities(data ?? []);
 };
+
+  const fetchExpenses = async () => {
+    const { data, error } = await supabase
+      .from("expenses")
+      .select("*")
+      .order("expense_date", { ascending: false });
+    if (error) { console.error(error); return; }
+    setExpenses((data as DbExpenseRow[]) ?? []);
+  };
+
+  const handleSaveExpense = async (data: ExpenseFormData) => {
+    const monthKey = data.expense_date.slice(0, 7);
+    const rate = Number(data.sar_rate) || 22.5;
+    const inrAmount = data.currency === "SAR"
+      ? Math.round(Number(data.amount) * rate)
+      : Number(data.amount);
+    // Pack SAR original into notes JSON; keep plain text for INR
+    const notesValue = data.currency === "SAR"
+      ? JSON.stringify({
+          ...(data.notes.trim() ? { note: data.notes.trim() } : {}),
+          sar: Number(data.amount),
+          rate,
+        })
+      : (data.notes.trim() || null);
+
+    const payload = {
+      title: data.title.trim(),
+      amount: inrAmount,
+      category: data.category,
+      expense_date: data.expense_date,
+      month_key: monthKey,
+      notes: notesValue,
+      claim_eligible: data.claim_eligible,
+      claim_submitted: data.claim_eligible ? data.claim_submitted : false,
+      splitwise_applicable: data.splitwise_applicable,
+      splitwise_added: data.splitwise_applicable ? data.splitwise_added : false,
+    };
+
+    if (editingExpenseId) {
+      const { error } = await supabase
+        .from("expenses")
+        .update({ ...payload, updated_at: new Date().toISOString() })
+        .eq("id", editingExpenseId);
+      if (error) { showToast(error.message, "error"); return; }
+      await fetchExpenses();
+      showToast("Expense updated successfully", "success");
+      onDataChanged?.();
+      setEditingExpenseId(null);
+      setEditingExpenseData(null);
+      setExpenseModalOpen(false);
+    } else {
+      const { error } = await supabase.from("expenses").insert([payload]);
+      if (error) { showToast(error.message, "error"); return; }
+      await fetchExpenses();
+      showToast("Expense added successfully", "success");
+      onDataChanged?.();
+      setExpenseMonthKey(monthKey);
+      setExpenseModalOpen(false);
+    }
+  };
+
+  const openEditExpense = (e: DbExpenseRow) => {
+    const { note, sarAmount, sarRate } = parseExpenseNotes(e.notes);
+    setEditingExpenseId(e.id);
+    setEditingExpenseData({
+      title: e.title,
+      amount: sarAmount !== null ? String(sarAmount) : String(e.amount),
+      currency: sarAmount !== null ? "SAR" : "INR",
+      sar_rate: sarRate !== null ? String(sarRate) : "22.5",
+      category: e.category,
+      expense_date: e.expense_date,
+      notes: note,
+      claim_eligible: e.claim_eligible,
+      claim_submitted: e.claim_submitted,
+      splitwise_applicable: e.splitwise_applicable,
+      splitwise_added: e.splitwise_added,
+    });
+    setExpenseModalOpen(true);
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!confirm("Delete this expense?")) return;
+    const { error } = await supabase.from("expenses").delete().eq("id", id);
+    if (error) { showToast(error.message, "error"); return; }
+    setExpenses((prev) => prev.filter((e) => e.id !== id));
+    showToast("Expense deleted", "success");
+    onDataChanged?.();
+  };
 
   const handleAddLiability = async (data: LiabilityFormData) => {
     const today = new Date().toISOString().split("T")[0];
@@ -621,11 +764,16 @@ onDataChanged?.();
   useEffect(() => {
     fetchAssets();
     fetchLiabilities();
+    fetchExpenses();
   }, []);
 
   useEffect(() => {
     const handler = () => {
-      if (sectionTab === "liabilities") {
+      if (sectionTab === "expenses") {
+        setEditingExpenseId(null);
+        setEditingExpenseData(null);
+        setExpenseModalOpen(true);
+      } else if (sectionTab === "liabilities") {
         setEditingLiabilityId(null);
         setEditingLiabilityData(null);
         setLiabilityModalOpen(true);
@@ -707,6 +855,20 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
   );
 });
 
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter((e) => {
+      if (e.month_key !== expenseMonthKey) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase().trim();
+        if (!e.title.toLowerCase().includes(q) && !e.category.toLowerCase().includes(q)) return false;
+      }
+      if (expenseCategoryFilter !== "all" && e.category.toLowerCase() !== expenseCategoryFilter.toLowerCase()) return false;
+      if (expenseQuickFilter === "claim" && !e.claim_eligible) return false;
+      if (expenseQuickFilter === "splitwise" && !(e.splitwise_applicable && !e.splitwise_added)) return false;
+      return true;
+    });
+  }, [expenses, expenseMonthKey, search, expenseCategoryFilter, expenseQuickFilter]);
+
   const filtered = useMemo(() => {
     const base = mappedAssets.filter((a) => {
       const matchTab = activeTab === "all" || a.category === activeTab;
@@ -726,6 +888,24 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
 
   useEffect(() => {
     if (!onSummaryChange) return;
+
+    if (sectionTab === "expenses") {
+      const expensesTotal = filteredExpenses.reduce((s, e) => s + e.amount, 0);
+      const expensesClaimEligible = filteredExpenses.filter((e) => e.claim_eligible).reduce((s, e) => s + e.amount, 0);
+      const expensesSplitPending = filteredExpenses.filter((e) => e.splitwise_applicable && !e.splitwise_added).reduce((s, e) => s + e.amount, 0);
+      onSummaryChange({
+        sectionTab: "expenses",
+        categoryLabel: "Expenses",
+        invested: 0, curVal: 0, pnl: 0, pnlPct: 0, assetCount: 0,
+        outstanding: 0, totalBorrowed: 0, liabilityCount: 0,
+        expensesTotal,
+        expensesClaimEligible,
+        expensesSplitPending,
+        expensesCount: filteredExpenses.length,
+      });
+      return;
+    }
+
     const invested = filtered.reduce((s, a) => s + a.invested, 0);
     const curVal   = filtered.reduce((s, a) => s + a.curVal, 0);
     const pnl      = curVal - invested;
@@ -752,7 +932,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
       totalBorrowed,
       liabilityCount: liabilities.length,
     });
-  }, [filtered, sectionTab, activeTab, liabilities, onSummaryChange]);
+  }, [filtered, filteredExpenses, sectionTab, activeTab, liabilities, onSummaryChange]);
 
   const handleSort = (key: "invested" | "curVal" | "pnl") => {
     if (sortKey === key) {
@@ -763,10 +943,67 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
     }
   };
 
+  const handleDownload = () => {
+    let ws: XLSX.WorkSheet;
+    let fileName: string;
+
+    if (sectionTab === "assets") {
+      const rows = filtered.map((a) => ({
+        Name: a.name,
+        Category: CATEGORY_META[a.category as AssetCategory]?.label ?? a.category,
+        "Invested (₹)": a.invested,
+        "Current Value (₹)": a.curVal,
+        "P&L (₹)": a.pnl,
+        "P&L (%)": parseFloat(a.pnlPct.toFixed(2)),
+        "Allocation (%)": a.allocation,
+      }));
+      ws = XLSX.utils.json_to_sheet(rows);
+      fileName = `assets_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    } else if (sectionTab === "expenses") {
+      const rows = filteredExpenses.map((e) => ({
+        Title: e.title,
+        Category: e.category,
+        "Amount (₹)": e.amount,
+        Date: e.expense_date,
+        Month: e.month_key,
+        "Claim Eligible": e.claim_eligible ? "Yes" : "No",
+        "Claim Submitted": e.claim_submitted ? "Yes" : "No",
+        "Splitwise Applicable": e.splitwise_applicable ? "Yes" : "No",
+        "Splitwise Added": e.splitwise_added ? "Yes" : "No",
+        Notes: e.notes ?? "",
+      }));
+      ws = XLSX.utils.json_to_sheet(rows);
+      fileName = `expenses_${expenseMonthKey}.xlsx`;
+    } else {
+      const rows = filteredLiabilities.map((l) => ({
+        Name: l.name,
+        Lender: l.lenderName,
+        Type: l.liabilityType,
+        Currency: l.currency,
+        "Original Amount": l.originalAmount,
+        "Outstanding Amount": l.outstandingAmount,
+        "Borrowed Date": l.borrowedDate ?? "",
+        "Due Date": l.dueDate ?? "",
+        Status: l.status,
+        Notes: l.notes,
+      }));
+      ws = XLSX.utils.json_to_sheet(rows);
+      fileName = `liabilities_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    }
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sectionTab === "assets" ? "Assets" : "Liabilities");
+    XLSX.writeFile(wb, fileName);
+  };
+
   const addButton = (
     <button
       onClick={() => {
-        if (sectionTab === "liabilities") {
+        if (sectionTab === "expenses") {
+          setEditingExpenseId(null);
+          setEditingExpenseData(null);
+          setExpenseModalOpen(true);
+        } else if (sectionTab === "liabilities") {
           setEditingLiabilityId(null);
           setEditingLiabilityData(null);
           setLiabilityModalOpen(true);
@@ -778,7 +1015,9 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
       style={{ background: "#007aff" }}
     >
       <PlusIcon />
-      <span className="hidden sm:inline">{sectionTab === "liabilities" ? "Add Liability" : "Add Asset"}</span>
+      <span className="hidden sm:inline">
+        {sectionTab === "expenses" ? "Add Expense" : sectionTab === "liabilities" ? "Add Liability" : "Add Asset"}
+      </span>
       <span className="sm:hidden">Add</span>
     </button>
   );
@@ -836,6 +1075,18 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
   mode={editingLiabilityId ? "edit" : "add"}
 />
 
+      <AddExpenseModal
+  open={expenseModalOpen}
+  onClose={() => {
+    setExpenseModalOpen(false);
+    setEditingExpenseId(null);
+    setEditingExpenseData(null);
+  }}
+  onSave={handleSaveExpense}
+  initialData={editingExpenseData}
+  mode={editingExpenseId ? "edit" : "add"}
+/>
+
       <RepayLiabilityModal
   open={repayModalOpen}
   onClose={() => { setRepayModalOpen(false); setRepayingLiability(null); }}
@@ -868,7 +1119,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
           style={{ borderBottom: "1px solid var(--separator-subtle)" }}
         >
           <div className="flex items-center gap-5">
-            {(["assets", "liabilities"] as const).map((t) => (
+            {(["assets", "liabilities", "expenses"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setSectionTab(t)}
@@ -904,7 +1155,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               </span>
               <input
                 type="text"
-                placeholder={sectionTab === "liabilities" ? "Search liabilities..." : "Search assets..."}
+                placeholder={sectionTab === "expenses" ? "Search expenses..." : sectionTab === "liabilities" ? "Search liabilities..." : "Search assets..."}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="search-glass flex-1 bg-transparent text-[14px] placeholder:text-[#aeaeb2] min-w-0"
@@ -912,10 +1163,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               />
             </div>
 
-            <button className="icon-btn hidden md:flex w-[34px] h-[34px] items-center justify-center rounded-[10px] text-[#aeaeb2] hover:text-[#1d1d1f] hover:bg-black/5">
-              <UploadIcon />
-            </button>
-            <button className="icon-btn hidden md:flex w-[34px] h-[34px] items-center justify-center rounded-[10px] text-[#aeaeb2] hover:text-[#1d1d1f] hover:bg-black/5">
+            <button onClick={handleDownload} title="Download as Excel" className="icon-btn hidden md:flex w-[34px] h-[34px] items-center justify-center rounded-[10px] text-[#aeaeb2] hover:text-[#1d1d1f] hover:bg-black/5">
               <DownloadIcon />
             </button>
 
@@ -953,6 +1201,85 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
         </div>
         )}
 
+        {/* Expense: month selector row */}
+        {sectionTab === "expenses" && (
+          <div
+            className="flex items-center gap-1 sm:gap-1.5 px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 overflow-x-auto scrollbar-hide"
+            style={{ borderBottom: "1px solid var(--separator-subtle)" }}
+          >
+            {getMonthOptions().map((m) => {
+              const isActive = expenseMonthKey === m.key;
+              return (
+                <button
+                  key={m.key}
+                  onClick={() => setExpenseMonthKey(m.key)}
+                  className="shrink-0 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[12.5px] sm:text-[13px] font-medium"
+                  style={{
+                    background: isActive ? (isDark ? "rgba(255,255,255,0.12)" : "#1d1d1f") : "transparent",
+                    color: isActive ? "#ffffff" : "var(--text-secondary)",
+                    border: isActive && isDark ? "1px solid rgba(255,255,255,0.2)" : "1px solid transparent",
+                    transition: "background 180ms ease-out, color 180ms ease-out",
+                  }}
+                >
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Expense: category + quick filter chips */}
+        {sectionTab === "expenses" && (
+          <div
+            className="flex items-center gap-1 sm:gap-1.5 px-4 sm:px-5 md:px-6 py-2 overflow-x-auto scrollbar-hide"
+            style={{ borderBottom: "1px solid var(--separator-subtle)" }}
+          >
+            {/* Category chips */}
+            {["all", ...EXPENSE_CATEGORIES].map((cat) => {
+              const isActive = expenseCategoryFilter === cat;
+              const label = cat === "all" ? "All" : cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setExpenseCategoryFilter(cat)}
+                  className="shrink-0 px-2.5 py-1 rounded-full text-[12px] font-medium"
+                  style={{
+                    background: isActive ? (isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)") : "transparent",
+                    color: isActive ? "var(--text-primary)" : "var(--text-tertiary)",
+                    border: "1px solid transparent",
+                    transition: "background 180ms ease-out, color 180ms ease-out",
+                  }}
+                >
+                  {cat !== "all" && <span className="mr-1">{getExpenseCategoryMeta(cat).emoji}</span>}{label}
+                </button>
+              );
+            })}
+            {/* Divider */}
+            <div className="w-px h-4 shrink-0 mx-1" style={{ background: "var(--separator)" }} />
+            {/* Quick filters */}
+            {([
+              { key: "claim", label: "Claim Eligible", color: "#007aff" },
+              { key: "splitwise", label: "SW Pending", color: "#ff9500" },
+            ] as const).map((qf) => {
+              const isActive = expenseQuickFilter === qf.key;
+              return (
+                <button
+                  key={qf.key}
+                  onClick={() => setExpenseQuickFilter(isActive ? "all" : qf.key)}
+                  className="shrink-0 px-2.5 py-1 rounded-full text-[12px] font-medium"
+                  style={{
+                    background: isActive ? `${qf.color}20` : "transparent",
+                    color: isActive ? qf.color : "var(--text-tertiary)",
+                    border: isActive ? `1px solid ${qf.color}40` : "1px solid transparent",
+                    transition: "background 180ms ease-out, color 180ms ease-out",
+                  }}
+                >
+                  {qf.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Desktop-only inline summary — always visible above the table */}
         {(() => {
@@ -962,6 +1289,9 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
           const pct  = inv > 0 ? (pnl / inv) * 100 : 0;
           const outstanding   = filteredLiabilities.reduce((s, l) => s + l.outstandingAmount, 0);
           const totalBorrowed = filteredLiabilities.reduce((s, l) => s + l.originalAmount, 0);
+          const expTotal = filteredExpenses.reduce((s, e) => s + e.amount, 0);
+          const expClaim = filteredExpenses.filter((e) => e.claim_eligible).reduce((s, e) => s + e.amount, 0);
+          const expSW    = filteredExpenses.filter((e) => e.splitwise_applicable && !e.splitwise_added).reduce((s, e) => s + e.amount, 0);
           const sep = <div className="w-px h-6 shrink-0" style={{ background: "var(--separator)" }} />;
           return (
             <div
@@ -1001,6 +1331,27 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Count</p>
                   <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{filteredLiabilities.length}</p>
+                </div>
+              </>)}
+              {sectionTab === "expenses" && (<>
+                <div>
+                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Total Spent</p>
+                  <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{fmtINR(expTotal)}</p>
+                </div>
+                {sep}
+                <div>
+                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Claim Eligible</p>
+                  <p className="text-[19px] font-bold" style={{ color: "#007aff", letterSpacing: "-0.025em" }}>{fmtINR(expClaim)}</p>
+                </div>
+                {sep}
+                <div>
+                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>SW Pending</p>
+                  <p className="text-[19px] font-bold" style={{ color: "#ff9500", letterSpacing: "-0.025em" }}>{fmtINR(expSW)}</p>
+                </div>
+                {sep}
+                <div>
+                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Count</p>
+                  <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{filteredExpenses.length}</p>
                 </div>
               </>)}
             </div>
@@ -1478,6 +1829,185 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
             </table>
             {filteredLiabilities.length === 0 && (
               <div className="py-16 text-center text-[14px]" style={{ color: "var(--text-tertiary)" }}>No liabilities found</div>
+            )}
+          </div>
+        </>)}
+
+        {/* ── EXPENSES ── */}
+        {sectionTab === "expenses" && (<>
+
+          {/* Mobile expense cards */}
+          <div className="md:hidden">
+            {filteredExpenses.map((e, idx) => {
+              const isLast = idx === filteredExpenses.length - 1;
+              const meta = getExpenseCategoryMeta(e.category);
+              const { sarAmount: mSar } = parseExpenseNotes(e.notes);
+              return (
+                <div
+                  key={e.id}
+                  className="px-4 sm:px-5 py-4"
+                  style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}
+                >
+                  {/* Row 1: title + amount */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                        {e.title}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium" style={{ color: meta.color }}>
+                          <span className="w-[5px] h-[5px] rounded-full shrink-0" style={{ background: meta.color }} />
+                          {e.category.toUpperCase()}
+                        </span>
+                        <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>{fmtDate(e.expense_date)}</span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[18px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>
+                        ₹{e.amount.toLocaleString("en-IN")}
+                      </p>
+                      {mSar !== null && (
+                        <p className="text-[12px] font-medium" style={{ color: "var(--text-tertiary)" }}>﷼{mSar.toLocaleString("en-IN")}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Row 2: flags */}
+                  {(e.claim_eligible || e.splitwise_applicable) && (
+                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                      {e.claim_eligible && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                          style={{
+                            background: e.claim_submitted ? "rgba(52,199,89,0.12)" : "rgba(0,122,255,0.1)",
+                            color: e.claim_submitted ? "#34c759" : "#007aff",
+                          }}>
+                          {e.claim_submitted ? "✓ Claimed" : "Claim Pending"}
+                        </span>
+                      )}
+                      {e.splitwise_applicable && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                          style={{
+                            background: e.splitwise_added ? "rgba(52,199,89,0.12)" : "rgba(255,149,0,0.1)",
+                            color: e.splitwise_added ? "#34c759" : "#ff9500",
+                          }}>
+                          {e.splitwise_added ? "✓ SW Done" : "SW Pending"}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Row 3: actions */}
+                  <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
+                    <button onClick={() => openEditExpense(e)}
+                      className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium"
+                      style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}>
+                      <EditIcon /> Edit
+                    </button>
+                    <button onClick={() => handleDeleteExpense(e.id)}
+                      className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]"
+                      style={{ color: "var(--text-tertiary)" }}
+                      onMouseEnter={(ev) => ((ev.currentTarget as HTMLElement).style.color = "#ff3b30")}
+                      onMouseLeave={(ev) => ((ev.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}>
+                      <TrashIcon />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            {filteredExpenses.length === 0 && (
+              <div className="py-14 text-center text-[14px]" style={{ color: "var(--text-tertiary)" }}>
+                No expenses found
+              </div>
+            )}
+          </div>
+
+          {/* Desktop expense table */}
+          <div className="hidden md:block" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100dvh - 280px)" }}>
+            <table className="w-full">
+              <thead style={{
+                position: "sticky", top: 0, zIndex: 10,
+                boxShadow: isDark
+                  ? "0 1px 0 rgba(255,255,255,0.07), 0 4px 20px rgba(0,0,0,0.4)"
+                  : "0 1px 0 rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.06)",
+              }}>
+                <tr>
+                  <th className="py-3.5 pl-6 pr-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>EXPENSE</th>
+                  <th className="py-3.5 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>DATE</th>
+                  <th className="py-3.5 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>AMOUNT</th>
+                  <th className="py-3.5 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>CLAIM</th>
+                  <th className="py-3.5 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>SPLITWISE</th>
+                  <th className="py-3.5 pr-6 pl-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredExpenses.map((e, idx) => {
+                  const isLast = idx === filteredExpenses.length - 1;
+                  const meta = getExpenseCategoryMeta(e.category);
+                  const { sarAmount: dSar } = parseExpenseNotes(e.notes);
+                  return (
+                    <tr key={e.id}
+                      style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}
+                      onMouseEnter={(ev) => { (ev.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }}
+                      onMouseLeave={(ev) => { (ev.currentTarget as HTMLElement).style.background = "transparent"; }}
+                    >
+                      <td className="pl-6 pr-4 py-4">
+                        <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{e.title}</p>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium mt-0.5" style={{ color: meta.color }}>
+                          <span className="w-[5px] h-[5px] rounded-full shrink-0" style={{ background: meta.color }} />
+                          {e.category.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+                        {fmtDate(e.expense_date)}
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <span className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+                          ₹{e.amount.toLocaleString("en-IN")}
+                        </span>
+                        {dSar !== null && (
+                          <p className="text-[12px] font-medium" style={{ color: "var(--text-tertiary)" }}>﷼{dSar.toLocaleString("en-IN")}</p>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {e.claim_eligible ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                            style={{ background: e.claim_submitted ? "rgba(52,199,89,0.12)" : "rgba(0,122,255,0.1)", color: e.claim_submitted ? "#34c759" : "#007aff" }}>
+                            {e.claim_submitted ? "✓ Claimed" : "Pending"}
+                          </span>
+                        ) : <span style={{ color: "var(--text-tertiary)" }}>—</span>}
+                      </td>
+                      <td className="px-4 py-4">
+                        {e.splitwise_applicable ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                            style={{ background: e.splitwise_added ? "rgba(52,199,89,0.12)" : "rgba(255,149,0,0.1)", color: e.splitwise_added ? "#34c759" : "#ff9500" }}>
+                            {e.splitwise_added ? "✓ Added" : "Pending"}
+                          </span>
+                        ) : <span style={{ color: "var(--text-tertiary)" }}>—</span>}
+                      </td>
+                      <td className="pr-6 pl-4 py-4">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => openEditExpense(e)}
+                            className="icon-btn w-6 h-6 flex items-center justify-center rounded-md"
+                            style={{ color: "var(--text-tertiary)" }} title="Edit">
+                            <EditIcon />
+                          </button>
+                          <button onClick={() => handleDeleteExpense(e.id)}
+                            className="icon-btn w-6 h-6 flex items-center justify-center rounded-md"
+                            style={{ color: "var(--text-tertiary)" }}
+                            onMouseEnter={(ev) => ((ev.currentTarget as HTMLElement).style.color = "#ff3b30")}
+                            onMouseLeave={(ev) => ((ev.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
+                            title="Delete">
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {filteredExpenses.length === 0 && (
+              <div className="py-16 text-center text-[14px]" style={{ color: "var(--text-tertiary)" }}>No expenses found</div>
             )}
           </div>
         </>)}

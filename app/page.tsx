@@ -246,7 +246,7 @@ export default function Home() {
 
       {/* Context-aware sticky summary bar */}
       <div
-        className="fixed left-0 right-0 z-40 flex justify-center px-4 sm:px-5 lg:px-6"
+        className="md:hidden fixed left-0 right-0 z-40 flex justify-center px-4 sm:px-5 lg:px-6"
         style={{
           top: "calc(50px + env(safe-area-inset-top))",
           transform: (stickyVisible && stickyData?.categoryLabel !== "All Assets") ? "translateY(0)" : "translateY(-130%)",
@@ -269,7 +269,7 @@ export default function Home() {
         >
           {/* Row 1: Section label + category */}
           <p className="text-[12px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
-            {stickyData?.sectionTab === "liabilities" ? "Liabilities" : "Assets"}
+            {stickyData?.sectionTab === "expenses" ? "Expenses" : stickyData?.sectionTab === "liabilities" ? "Liabilities" : "Assets"}
             {stickyData?.sectionTab === "assets" && stickyData.categoryLabel !== "All Assets" && (
               <span className="ml-1.5 text-[11px] font-semibold" style={{ color: "var(--text-tertiary)" }}>
                 · {stickyData.categoryLabel}
@@ -326,6 +326,31 @@ export default function Home() {
                 <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Count</p>
                 <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
                   {stickyData.liabilityCount}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {stickyData?.sectionTab === "expenses" && (
+            <div className="flex items-center gap-5">
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Spent</p>
+                <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
+                  {fmtINR(stickyData.expensesTotal ?? 0)}
+                </p>
+              </div>
+              <div className="w-px h-6" style={{ background: "var(--separator)" }} />
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Claim Eligible</p>
+                <p className="text-[13px] font-semibold" style={{ color: "#007aff", letterSpacing: "-0.015em" }}>
+                  {fmtINR(stickyData.expensesClaimEligible ?? 0)}
+                </p>
+              </div>
+              <div className="w-px h-6" style={{ background: "var(--separator)" }} />
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>SW Pending</p>
+                <p className="text-[13px] font-semibold" style={{ color: "#ff9500", letterSpacing: "-0.015em" }}>
+                  {fmtINR(stickyData.expensesSplitPending ?? 0)}
                 </p>
               </div>
             </div>
