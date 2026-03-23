@@ -147,7 +147,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
     borderRadius: 12,
     border: `1px solid ${hasError ? "#ff3b30" : inputBorder}`,
     background: hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg,
-    fontSize: 14,
+    fontSize: 16,
     color: inputColor,
     outline: "none",
     transition: "border-color 160ms ease, box-shadow 160ms ease, background 160ms ease",
@@ -200,13 +200,16 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
               : "0 32px 64px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.06)",
             width: "100%",
             maxWidth: 460,
+            maxHeight: "calc(100dvh - 48px)",
+            display: "flex",
+            flexDirection: "column",
             transform: open ? "scale(1) translateY(0)" : "scale(0.97) translateY(12px)",
             opacity: open ? 1 : 0,
             transition: "transform 260ms cubic-bezier(0.34,1.2,0.64,1), opacity 200ms ease",
           }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 pt-6 pb-4" style={{ borderBottom: `1px solid ${dividerColor}` }}>
+          <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0" style={{ borderBottom: `1px solid ${dividerColor}` }}>
             <div>
               <h2 className="text-[19px] font-semibold" style={{ color: titleColor, letterSpacing: "-0.02em" }}>
                 {mode === "edit" ? "Edit Asset" : "Add Asset"}
@@ -228,7 +231,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
           </div>
 
           {/* Form */}
-          <div className="px-6 py-5 flex flex-col gap-4">
+          <div className="overflow-y-auto flex-1 px-6 py-5 flex flex-col gap-4">
             {/* Asset Name — mandatory */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
@@ -326,7 +329,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-6 pb-6 pt-4 gap-3" style={{ borderTop: `1px solid ${dividerColor}` }}>
+          <div className="flex items-center justify-between px-6 pb-6 pt-4 gap-3 shrink-0" style={{ borderTop: `1px solid ${dividerColor}` }}>
             <button
               onClick={onClose}
               className="h-10 px-5 rounded-[12px] text-[14px] font-medium"

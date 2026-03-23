@@ -136,7 +136,7 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
     borderRadius: 10,
     border: `1px solid ${hasError ? "#ff3b30" : inputBorder}`,
     background: hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg,
-    fontSize: 14,
+    fontSize: 16,
     color: inputColor,
     outline: "none",
     transition: "border-color 160ms ease, box-shadow 160ms ease, background 160ms ease",
@@ -306,7 +306,7 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
                   value={form.sar_rate}
                   onChange={(e) => setField("sar_rate", e.target.value)}
                   className="ef-input"
-                  style={{ width: 60, height: 28, fontSize: 13, padding: "0 8px", border: "none", background: "transparent", color: inputColor, outline: "none", boxSizing: "border-box" }}
+                  style={{ width: 64, height: 32, fontSize: 16, padding: "0 8px", border: "none", background: "transparent", color: inputColor, outline: "none", boxSizing: "border-box" }}
                 />
                 <p className="text-[12px] font-medium shrink-0" style={{ color: "#007aff" }}>₹</p>
                 {inrPreview !== null && (
