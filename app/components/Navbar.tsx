@@ -321,8 +321,21 @@ export default function Navbar() {
             my<span style={{ color: "#AEDD00" }}>Finance</span>
           </span>
 
-          {/* Right: avatar / login */}
-          <div className="flex-1 flex items-center justify-end">
+          {/* Right: donate + avatar / login */}
+          <div className="flex-1 flex items-center justify-end gap-2">
+            <button
+              onClick={() => setShowDonate(true)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:scale-95"
+              style={{
+                color: "#ff2d55",
+                background: scrolled ? "rgba(255,45,85,0.22)" : "rgba(255,45,85,0.10)",
+                border: "1px solid rgba(255,45,85,0.22)",
+                transition: "background 300ms ease",
+              }}
+            >
+              <HeartIcon />
+              Donate
+            </button>
             <div ref={mobileMenuRef} className="relative">
               <button
                 onClick={handleAvatarClick}

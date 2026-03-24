@@ -11,7 +11,7 @@ const TXN_NOTE  = "Support for student laptops";
 const PRESETS   = [100, 250, 500, 1000] as const;
 
 function buildUpiLink(amount: number): string {
-  return `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE)}&tn=${encodeURIComponent(TXN_NOTE)}&am=${amount}&cu=INR`;
+  return `tez://upi/pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE)}&tn=${encodeURIComponent(TXN_NOTE)}&am=${amount}&cu=INR`;
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -372,11 +372,11 @@ export default function DonateModal({ open, onClose }: Props) {
             onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
           >
             <HeartIcon size={17} filled />
-            Pay ₹{amount.toLocaleString("en-IN")} via UPI
+            Pay ₹{amount.toLocaleString("en-IN")} via Google Pay
           </button>
 
           <p style={{ margin: "-8px 0 0", fontSize: 12, color: "var(--text-tertiary)", textAlign: "center" }}>
-            Opens your UPI app · PhonePe, GPay, Paytm & more
+            Opens Google Pay on your device
           </p>
         </div>
       </div>
