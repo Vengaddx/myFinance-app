@@ -106,6 +106,8 @@ export default function SnapshotsPage() {
   const [takingSnapshot, setTakingSnapshot] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [noteText, setNoteText] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error" | "info">("info");
@@ -206,6 +208,22 @@ export default function SnapshotsPage() {
     } else {
       showToast("Snapshot saved!", "success");
       fetchSnapshots();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    const { error } = await supabase
+      .from("networth_snapshots")
+      .delete()
+      .eq("id", id);
+    setDeletingId(null);
+    setConfirmDeleteId(null);
+    if (error) {
+      showToast("Failed to delete snapshot", "error");
+    } else {
+      showToast("Snapshot deleted", "info");
+      setSnapshots((prev) => prev.filter((s) => s.id !== id));
     }
   };
 
@@ -685,7 +703,7 @@ export default function SnapshotsPage() {
               <div
                 className="hidden sm:grid px-5 py-2.5 text-[10.5px] font-semibold uppercase tracking-wider"
                 style={{
-                  gridTemplateColumns: "140px 1fr 1fr 1fr 1fr 1fr",
+                  gridTemplateColumns: "140px 1fr 1fr 1fr 1fr 1fr 40px",
                   borderBottom: "1px solid var(--separator-subtle)",
                   background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
                   color: "var(--text-tertiary)",
@@ -697,13 +715,14 @@ export default function SnapshotsPage() {
                 <span>Liabilities</span>
                 <span>P&L</span>
                 <span>Notes</span>
+                <span />
               </div>
 
               {/* Rows */}
               {history.map((snap, i) => (
                 <div
                   key={snap.id}
-                  className="px-5 py-4"
+                  className="group px-5 py-4"
                   style={{
                     borderBottom:
                       i < history.length - 1
@@ -731,23 +750,61 @@ export default function SnapshotsPage() {
                           {fmtINR(snap.net_worth)}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p
-                          className="text-[14px] font-semibold"
-                          style={{
-                            color: snap.total_pnl >= 0 ? "#34c759" : "#ff3b30",
-                            letterSpacing: "-0.01em",
-                          }}
-                        >
-                          {snap.total_pnl >= 0 ? "+" : ""}
-                          {fmtINR(snap.total_pnl)}
-                        </p>
-                        <p
-                          className="text-[10px] font-medium mt-0.5 uppercase tracking-wider"
-                          style={{ color: "var(--text-tertiary)" }}
-                        >
-                          P&L
-                        </p>
+                      <div className="flex items-start gap-3">
+                        <div className="text-right">
+                          <p
+                            className="text-[14px] font-semibold"
+                            style={{
+                              color: snap.total_pnl >= 0 ? "#34c759" : "#ff3b30",
+                              letterSpacing: "-0.01em",
+                            }}
+                          >
+                            {snap.total_pnl >= 0 ? "+" : ""}
+                            {fmtINR(snap.total_pnl)}
+                          </p>
+                          <p
+                            className="text-[10px] font-medium mt-0.5 uppercase tracking-wider"
+                            style={{ color: "var(--text-tertiary)" }}
+                          >
+                            P&L
+                          </p>
+                        </div>
+                        {/* Delete */}
+                        {confirmDeleteId === snap.id ? (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <button
+                              onClick={() => handleDelete(snap.id)}
+                              disabled={deletingId === snap.id}
+                              className="text-[11px] font-bold px-2.5 py-1.5 rounded-[8px]"
+                              style={{ background: "rgba(255,59,48,0.12)", color: "#ff3b30" }}
+                            >
+                              {deletingId === snap.id ? "…" : "Delete"}
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="text-[11px] font-semibold px-2.5 py-1.5 rounded-[8px]"
+                              style={{
+                                background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)",
+                                color: "var(--text-secondary)",
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteId(snap.id)}
+                            className="mt-0.5 w-7 h-7 flex items-center justify-center rounded-[8px]"
+                            style={{
+                              background: isDark ? "rgba(255,59,48,0.1)" : "rgba(255,59,48,0.08)",
+                              color: "#ff3b30",
+                            }}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                              <path d="M2 4h12M5 4V2.5A.5.5 0 0 1 5.5 2h5a.5.5 0 0 1 .5.5V4M6 7v5M10 7v5M3 4l1 9.5A.5.5 0 0 0 4.5 14h7a.5.5 0 0 0 .5-.5L13 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-5">
@@ -790,7 +847,7 @@ export default function SnapshotsPage() {
                   {/* Desktop */}
                   <div
                     className="hidden sm:grid items-center gap-2"
-                    style={{ gridTemplateColumns: "140px 1fr 1fr 1fr 1fr 1fr" }}
+                    style={{ gridTemplateColumns: "140px 1fr 1fr 1fr 1fr 1fr 40px" }}
                   >
                     <p
                       className="text-[13px] font-semibold"
@@ -831,6 +888,45 @@ export default function SnapshotsPage() {
                     >
                       {snap.notes ?? "—"}
                     </p>
+                    {/* Delete */}
+                    <div className="flex justify-end">
+                      {confirmDeleteId === snap.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleDelete(snap.id)}
+                            disabled={deletingId === snap.id}
+                            className="text-[11px] font-bold px-2 py-1 rounded-[7px]"
+                            style={{ background: "rgba(255,59,48,0.12)", color: "#ff3b30" }}
+                          >
+                            {deletingId === snap.id ? "…" : "Yes"}
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="text-[11px] font-semibold px-2 py-1 rounded-[7px]"
+                            style={{
+                              background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                              color: "var(--text-secondary)",
+                            }}
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteId(snap.id)}
+                          className="w-7 h-7 flex items-center justify-center rounded-[8px] opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{
+                            background: isDark ? "rgba(255,59,48,0.1)" : "rgba(255,59,48,0.08)",
+                            color: "#ff3b30",
+                          }}
+                          title="Delete snapshot"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                            <path d="M2 4h12M5 4V2.5A.5.5 0 0 1 5.5 2h5a.5.5 0 0 1 .5.5V4M6 7v5M10 7v5M3 4l1 9.5A.5.5 0 0 0 4.5 14h7a.5.5 0 0 0 .5-.5L13 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
