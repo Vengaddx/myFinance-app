@@ -1023,7 +1023,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
           setModalOpen(true);
         }
       }}
-      className="btn-lift hidden md:flex items-center gap-1.5 h-[34px] px-3 sm:px-4 rounded-[10px] text-[13px] sm:text-[14px] font-semibold text-white shrink-0"
+      className="btn-lift flex items-center gap-1.5 h-[34px] px-3 sm:px-4 rounded-[10px] text-[13px] sm:text-[14px] font-semibold text-white shrink-0"
       style={{ background: "#007aff" }}
     >
       <PlusIcon />
