@@ -113,9 +113,11 @@ export default function Home() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // Auth guard — redirect to login if not signed in
+  // Auth guard — redirect to login and wipe local state if not signed in
   useEffect(() => {
     if (!authLoading && !session) {
+      setDbAssets([]);
+      setDbLiabilities([]);
       router.replace("/login");
     }
   }, [authLoading, session, router]);

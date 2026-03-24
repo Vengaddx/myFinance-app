@@ -504,7 +504,8 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
       const { error } = await supabase
         .from("expenses")
         .update({ ...payload, updated_at: new Date().toISOString() })
-        .eq("id", editingExpenseId);
+        .eq("id", editingExpenseId)
+        .eq("user_id", userId);
       if (error) { showToast(error.message, "error"); return; }
       await fetchExpenses();
       showToast("Expense updated successfully", "success");
@@ -544,7 +545,7 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
 
   const handleDeleteExpense = async (id: string) => {
     if (!confirm("Delete this expense?")) return;
-    const { error } = await supabase.from("expenses").delete().eq("id", id);
+    const { error } = await supabase.from("expenses").delete().eq("id", id).eq("user_id", userId);
     if (error) { showToast(error.message, "error"); return; }
     setExpenses((prev) => prev.filter((e) => e.id !== id));
     showToast("Expense deleted", "success");
@@ -616,7 +617,8 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
         status: newStatus,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", editingLiabilityId);
+      .eq("id", editingLiabilityId)
+      .eq("user_id", userId);
 
     if (error) { showToast(error.message, "error"); return; }
 
@@ -651,7 +653,7 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
 
   const handleDeleteLiability = async (id: string) => {
     if (!confirm("Are you sure you want to delete this liability?")) return;
-    const { error } = await supabase.from("liabilities").delete().eq("id", id);
+    const { error } = await supabase.from("liabilities").delete().eq("id", id).eq("user_id", userId);
     if (error) { showToast(error.message, "error"); return; }
     await fetchLiabilities();
     showToast("Liability deleted", "success");
@@ -667,7 +669,8 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
     const { error } = await supabase
       .from("liabilities")
       .update({ outstanding_amount: newOutstanding, status: newStatus, updated_at: new Date().toISOString() })
-      .eq("id", repayingLiability.id);
+      .eq("id", repayingLiability.id)
+      .eq("user_id", userId);
 
     if (error) { showToast(error.message, "error"); return; }
 
@@ -730,7 +733,8 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
         value: Number.isFinite(cleanCurrentValue) ? cleanCurrentValue : 0,
         notes,
       })
-      .eq("id", editingAssetId);
+      .eq("id", editingAssetId)
+      .eq("user_id", userId);
 
     if (error) {
       showToast(error.message, "error");
@@ -1036,7 +1040,8 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
   const { error } = await supabase
     .from("assets")
     .delete()
-    .eq("id", id);
+    .eq("id", id)
+    .eq("user_id", userId);
 
   if (error) {
     showToast(error.message, "error");

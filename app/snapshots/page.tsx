@@ -153,6 +153,9 @@ export default function SnapshotsPage() {
 
   useEffect(() => {
     if (!authLoading && !session) {
+      setSnapshots([]);
+      setCurrentAssets([]);
+      setCurrentLiabilities([]);
       router.replace("/login");
       return;
     }
@@ -225,7 +228,8 @@ export default function SnapshotsPage() {
     const { error } = await supabase
       .from("networth_snapshots")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_id", session?.user?.id);
     setDeletingId(null);
     setConfirmDeleteId(null);
     if (error) {
