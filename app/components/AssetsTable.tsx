@@ -11,6 +11,7 @@ import LiabilityLogsModal from "./LiabilityLogsModal";
 import { supabase } from "@/lib/supabase";
 import Toast from "./toast";
 import { useTheme } from "@/lib/ThemeContext";
+import { useAuth } from "@/lib/AuthContext";
 
 type DbAssetRow = {
   id: string;
@@ -399,6 +400,8 @@ type AssetsTableProps = {
 export default function AssetsTable({ onDataChanged, onSummaryChange }: AssetsTableProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const { session } = useAuth();
+  const userId = session?.user?.id ?? "";
   const [activeTab, setActiveTab] = useState<AssetCategory | "all">("all");
   const [search, setSearch] = useState("");
   const [sectionTab, setSectionTab] = useState<"assets" | "liabilities" | "expenses">("assets");
@@ -510,7 +513,7 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
       setEditingExpenseData(null);
       setExpenseModalOpen(false);
     } else {
-      const { error } = await supabase.from("expenses").insert([payload]);
+      const { error } = await supabase.from("expenses").insert([{ ...payload, user_id: userId }]);
       if (error) { showToast(error.message, "error"); return; }
       await fetchExpenses();
       showToast("Expense added successfully", "success");
@@ -566,6 +569,7 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
         due_date: data.due_date || null,
         notes: data.notes || null,
         status: "active",
+        user_id: userId,
       }])
       .select()
       .single();
@@ -580,6 +584,7 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
       new_outstanding: outstandingAmount,
       action_date: data.borrowed_date || today,
       remarks: data.notes || null,
+      user_id: userId,
     }]);
 
     await fetchLiabilities();
@@ -624,6 +629,7 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
         new_outstanding: newOutstanding,
         action_date: today,
         remarks: "Outstanding adjusted via edit",
+        user_id: userId,
       }]);
     }
 
@@ -673,6 +679,7 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
       new_outstanding: newOutstanding,
       action_date: date,
       remarks: remarks || null,
+      user_id: userId,
     }]);
 
     await fetchLiabilities();
@@ -745,6 +752,7 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
       type: data.assetType,
       value: Number.isFinite(cleanCurrentValue) ? cleanCurrentValue : 0,
       notes,
+      user_id: userId,
     },
   ]);
 

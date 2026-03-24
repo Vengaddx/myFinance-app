@@ -12,6 +12,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/AuthContext";
 import Navbar from "@/app/components/Navbar";
 import Toast from "@/app/components/toast";
 import Footer from "@/app/components/Footer";
@@ -100,6 +101,7 @@ export default function SnapshotsPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const router = useRouter();
+  const { session, loading: authLoading } = useAuth();
 
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -150,9 +152,15 @@ export default function SnapshotsPage() {
   }, []);
 
   useEffect(() => {
-    fetchSnapshots();
-    fetchCurrentData();
-  }, [fetchSnapshots, fetchCurrentData]);
+    if (!authLoading && !session) {
+      router.replace("/login");
+      return;
+    }
+    if (session) {
+      fetchSnapshots();
+      fetchCurrentData();
+    }
+  }, [authLoading, session, router, fetchSnapshots, fetchCurrentData]);
 
   const currentSummary = useMemo(() => {
     let totalAssets = 0;
@@ -196,6 +204,7 @@ export default function SnapshotsPage() {
         invested,
         total_pnl: totalPnl,
         notes: noteText.trim() || null,
+        user_id: session?.user?.id,
       },
     ]);
 

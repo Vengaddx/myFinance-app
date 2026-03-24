@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/lib/ThemeContext";
+import { useAuth } from "@/lib/AuthContext";
 import Navbar from "./components/Navbar";
+import OnboardingFlow from "./components/OnboardingFlow";
 import NetWorthCard from "./components/NetWorthCard";
 import MetricCard from "./components/MetricCard";
 import AllocationCard, { type TopHolding } from "./components/AllocationCard";
@@ -101,12 +103,22 @@ export default function Home() {
   const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const { session, loading: authLoading } = useAuth();
   const [dbAssets, setDbAssets] = useState<DbAssetRow[]>([]);
   const [dbLiabilities, setDbLiabilities] = useState<{ outstanding_amount: number; status: string }[]>([]);
   const [showSplash, setShowSplash] = useState(false);
   const [stickyVisible, setStickyVisible] = useState(false);
   const [stickyData, setStickyData] = useState<StickyBarData | null>(null);
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Auth guard — redirect to login if not signed in
+  useEffect(() => {
+    if (!authLoading && !session) {
+      router.replace("/login");
+    }
+  }, [authLoading, session, router]);
 
   useEffect(() => {
     const mobile = window.innerWidth < 768;
@@ -142,7 +154,10 @@ export default function Home() {
       return;
     }
 
-    setDbAssets((data as DbAssetRow[]) ?? []);
+    const assets = (data as DbAssetRow[]) ?? [];
+    setDbAssets(assets);
+    setDataLoaded(true);
+    if (assets.length === 0) setShowOnboarding(true);
   };
 
   const fetchLiabilities = async () => {
@@ -241,8 +256,21 @@ export default function Home() {
   }, [dbAssets, dbLiabilities]);
 
 
+  // Blank screen while auth resolves or redirecting
+  if (authLoading || !session) {
+    return <div className="min-h-screen" style={{ background: "var(--bg)" }} />;
+  }
+
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+      {showOnboarding && (
+        <OnboardingFlow
+          onComplete={() => {
+            setShowOnboarding(false);
+            refreshAll();
+          }}
+        />
+      )}
       {showSplash && <SplashScreen onDone={handleSplashDone} />}
       <Navbar />
 
