@@ -251,7 +251,16 @@ export default function Navbar() {
 
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
   const displayName = user?.user_metadata?.name as string | undefined;
-  const initial = (displayName?.[0] ?? user?.email?.[0] ?? "?").toUpperCase();
+
+  // Two-letter initials: first letter of first + last word (e.g. "Deesh R" → "DR")
+  const initials = (() => {
+    if (displayName) {
+      const parts = displayName.trim().split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      return parts[0][0].toUpperCase();
+    }
+    return (user?.email?.[0] ?? "?").toUpperCase();
+  })();
 
 
   return (
@@ -306,8 +315,8 @@ export default function Navbar() {
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : user ? (
-                  <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#007aff", color: "#fff", fontSize: 13, fontWeight: 700 }}>
-                    {initial}
+                  <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(145deg, #636366 0%, #48484A 100%)", color: "rgba(255,255,255,0.92)", fontSize: 11, fontWeight: 500, letterSpacing: "0.04em", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif" }}>
+                    {initials}
                   </span>
                 ) : (
                   <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: isDark ? "rgba(255,255,255,0.1)" : "rgba(60,60,67,0.08)", color: "var(--text-tertiary)" }}>
@@ -433,8 +442,8 @@ export default function Navbar() {
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               ) : user ? (
-                <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#007aff", color: "#fff", fontSize: 13, fontWeight: 700 }}>
-                  {initial}
+                <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(145deg, #636366 0%, #48484A 100%)", color: "rgba(255,255,255,0.92)", fontSize: 11, fontWeight: 500, letterSpacing: "0.04em", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif" }}>
+                  {initials}
                 </span>
               ) : (
                 <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: isDark ? "rgba(255,255,255,0.1)" : "rgba(60,60,67,0.08)", color: "var(--text-tertiary)" }}>
