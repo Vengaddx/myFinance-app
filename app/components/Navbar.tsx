@@ -271,10 +271,15 @@ export default function Navbar() {
         style={{
           paddingTop: "env(safe-area-inset-top)",
           height: "calc(50px + env(safe-area-inset-top))",
-          background: isDark ? "rgba(18,18,20,0.92)" : "rgba(255,255,255,0.92)",
-          backdropFilter: "blur(20px) saturate(160%)",
-          WebkitBackdropFilter: "blur(20px) saturate(160%)",
-          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+          background: isDark
+            ? "rgba(18,18,20,0.92)"
+            : scrolled ? "rgba(28,28,32,0.78)" : "rgba(255,255,255,0.92)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          borderColor: isDark
+            ? "rgba(255,255,255,0.08)"
+            : scrolled ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
+          transition: "background 350ms ease, border-color 350ms ease",
         }}
       >
         {/* ── Mobile top bar ── */}
