@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "@/lib/ThemeContext";
 import { useAuth } from "@/lib/AuthContext";
 import type { User } from "@supabase/supabase-js";
+import DonateModal from "@/app/components/DonateModal";
 
 const NAV_ITEMS = [
   { label: "Portfolio", id: "portfolio" },
@@ -65,10 +66,12 @@ function UserDropdown({
   user,
   isDark,
   onSignOut,
+  onDonate,
 }: {
   user: User;
   isDark: boolean;
   onSignOut: () => void;
+  onDonate: () => void;
 }) {
   const name = user.user_metadata?.name as string | undefined;
   return (
@@ -103,6 +106,14 @@ function UserDropdown({
         </p>
       </div>
       <button
+        onClick={onDonate}
+        className="w-full text-left px-4 py-3 text-[13px] font-medium transition-opacity active:opacity-60 flex items-center gap-2"
+        style={{ color: "#ff2d55", borderBottom: "1px solid var(--separator)" }}
+      >
+        <HeartIcon />
+        Donate
+      </button>
+      <button
         onClick={onSignOut}
         className="w-full text-left px-4 py-3 text-[13px] font-medium transition-opacity active:opacity-60"
         style={{ color: "#ff3b30" }}
@@ -110,6 +121,14 @@ function UserDropdown({
         Sign out
       </button>
     </div>
+  );
+}
+
+function HeartIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
   );
 }
 
@@ -159,6 +178,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const { user, loading: authLoading, signOut } = useAuth();
   const [scrolled, setScrolled] = useState(false);
+  const [showDonate, setShowDonate] = useState(false);
 
   const activeTab =
     pathname === "/stocks" ? "stocks" :
@@ -322,7 +342,7 @@ export default function Navbar() {
                 )}
               </button>
               {showUserMenu && user && (
-                <UserDropdown user={user} isDark={isDark} onSignOut={handleSignOut} />
+                <UserDropdown user={user} isDark={isDark} onSignOut={handleSignOut} onDonate={() => { setShowUserMenu(false); setShowDonate(true); }} />
               )}
             </div>
           </div>
@@ -430,6 +450,21 @@ export default function Navbar() {
             <BellIcon />
           </button>
 
+          {/* Donate button (desktop) */}
+          <button
+            onClick={() => setShowDonate(true)}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold transition-all active:scale-95"
+            style={{
+              color: "#ff2d55",
+              background: scrolled ? "rgba(255,45,85,0.18)" : "rgba(255,45,85,0.10)",
+              border: "1px solid rgba(255,45,85,0.22)",
+              transition: "background 300ms ease, border-color 300ms ease",
+            }}
+          >
+            <HeartIcon />
+            Donate
+          </button>
+
           <div ref={desktopMenuRef} className="relative ml-0.5">
             <button
               onClick={handleAvatarClick}
@@ -449,11 +484,13 @@ export default function Navbar() {
               )}
             </button>
             {showUserMenu && user && (
-              <UserDropdown user={user} isDark={isDark} onSignOut={handleSignOut} />
+              <UserDropdown user={user} isDark={isDark} onSignOut={handleSignOut} onDonate={() => { setShowUserMenu(false); setShowDonate(true); }} />
             )}
           </div>
         </div>
       </nav>
+
+      <DonateModal open={showDonate} onClose={() => setShowDonate(false)} />
 
       {/* ── Floating bottom nav (mobile only) ── */}
       <div

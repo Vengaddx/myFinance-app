@@ -12,10 +12,14 @@ function CallbackHandler() {
     const code = searchParams.get("code");
     if (code) {
       supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (!error) {
+          try { sessionStorage.setItem("mf_fresh_login", "1"); } catch { /* */ }
+        }
         router.replace(error ? "/login?error=auth_failed" : "/");
       });
     } else {
       // No code — maybe a hash-based flow, just go home and let onAuthStateChange handle it
+      try { sessionStorage.setItem("mf_fresh_login", "1"); } catch { /* */ }
       router.replace("/");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
