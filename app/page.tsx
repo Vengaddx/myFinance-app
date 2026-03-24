@@ -269,7 +269,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+    <div className="min-h-screen" style={{ background: "var(--bg)", paddingTop: "calc(50px + env(safe-area-inset-top))" }}>
       {showOnboarding && (
         <OnboardingFlow
           onComplete={() => {

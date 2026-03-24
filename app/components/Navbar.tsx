@@ -267,15 +267,14 @@ export default function Navbar() {
     <>
       {/* ── Top navbar ── */}
       <nav
-        className="sticky top-0 z-50 border-b flex items-center px-4 sm:px-6 lg:px-8"
+        className="fixed top-0 left-0 right-0 z-50 border-b flex items-center px-4 sm:px-6 lg:px-8"
         style={{
           paddingTop: "env(safe-area-inset-top)",
           height: "calc(50px + env(safe-area-inset-top))",
-          background: scrolled ? "rgba(30,30,32,0.82)" : "transparent",
-          backdropFilter: scrolled ? "blur(20px) saturate(160%)" : "none",
-          WebkitBackdropFilter: scrolled ? "blur(20px) saturate(160%)" : "none",
-          borderColor: scrolled ? "rgba(255,255,255,0.08)" : "transparent",
-          transition: "background 350ms ease, border-color 350ms ease",
+          background: isDark ? "rgba(18,18,20,0.92)" : "rgba(255,255,255,0.92)",
+          backdropFilter: "blur(20px) saturate(160%)",
+          WebkitBackdropFilter: "blur(20px) saturate(160%)",
+          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
         }}
       >
         {/* ── Mobile top bar ── */}

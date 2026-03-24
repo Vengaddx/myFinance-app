@@ -21,7 +21,7 @@ export default function GoalsPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)", paddingTop: "calc(50px + env(safe-area-inset-top))" }}>
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-6">
         <div
