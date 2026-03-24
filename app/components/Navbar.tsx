@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "@/lib/ThemeContext";
 import { useAuth } from "@/lib/AuthContext";
 import type { User } from "@supabase/supabase-js";
@@ -163,9 +163,14 @@ export default function Navbar() {
   const { theme, toggle } = useTheme();
   const isDark = theme === "dark";
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading: authLoading, signOut } = useAuth();
   const [scrolled, setScrolled] = useState(false);
-  const [activeTab, setActiveTab] = useState("portfolio");
+
+  const activeTab =
+    pathname === "/stocks" ? "stocks" :
+    pathname === "/goals"  ? "goals"  :
+    "portfolio";
   const [showUserMenu, setShowUserMenu] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const desktopMenuRef = useRef<HTMLDivElement>(null);
@@ -373,7 +378,7 @@ export default function Navbar() {
               <button
                 key={item.id}
                 ref={(el) => { desktopBtnRefs.current[idx] = el; }}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => router.push(item.id === "portfolio" ? "/" : `/${item.id}`)}
                 className="relative z-10 px-4 py-1.5 rounded-[10px] text-[14px]"
                 style={{
                   fontWeight: isActive ? 700 : 500,
@@ -502,7 +507,7 @@ export default function Navbar() {
               <button
                 key={item.id}
                 ref={(el) => { bottomBtnRefs.current[idx] = el; }}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => router.push(item.id === "portfolio" ? "/" : `/${item.id}`)}
                 className="relative z-10 flex flex-col items-center gap-[3px] px-[18px] py-[5px] active:scale-95"
                 style={{
                   borderRadius: 28,
