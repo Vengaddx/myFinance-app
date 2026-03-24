@@ -458,15 +458,13 @@ export default function Navbar() {
       {/* ── Floating bottom nav (mobile only) ── */}
       <div
         className="fixed bottom-0 left-0 right-0 z-50 flex justify-center items-end lg:hidden pointer-events-none"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)", paddingLeft: 20, paddingRight: 20 }}
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }}
       >
         {/* Nav pill */}
         <div
           ref={bottomNavRef}
           className="flex items-center gap-0.5 p-[2px] pointer-events-auto relative"
           style={{
-            width: "100%",
-            maxWidth: 480,
             borderRadius: 32,
             background: isDark
               ? "rgba(22, 22, 26, 0.44)"
@@ -514,7 +512,7 @@ export default function Navbar() {
                 key={item.id}
                 ref={(el) => { bottomBtnRefs.current[idx] = el; }}
                 onClick={() => router.push(item.id === "portfolio" ? "/" : `/${item.id}`)}
-                className="relative z-10 flex flex-col items-center gap-[3px] flex-1 py-[4px] active:scale-95"
+                className="relative z-10 flex flex-col items-center gap-[3px] px-[22px] py-[4px] active:scale-95"
                 style={{
                   borderRadius: 28,
                   transition: "transform 140ms cubic-bezier(0.25,0.46,0.45,0.94)",
