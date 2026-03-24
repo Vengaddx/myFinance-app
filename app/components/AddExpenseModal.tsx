@@ -62,6 +62,18 @@ function ChevronIcon() {
   );
 }
 
+function fmtIN(raw: string): string {
+  if (!raw) return "";
+  const [int, dec] = raw.split(".");
+  const lastThree = int.length > 3 ? int.slice(-3) : int;
+  const rest = int.length > 3 ? int.slice(0, -3) : "";
+  const formatted = rest
+    ? rest.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + lastThree
+    : lastThree;
+  return dec !== undefined ? formatted + "." + dec : formatted;
+}
+function rawNum(val: string): string { return val.replace(/,/g, ""); }
+
 export default function AddExpenseModal({ open, onClose, onSave, initialData = null, mode = "add" }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -263,11 +275,11 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
             {/* Amount + Currency toggle on same row */}
             <div className="flex gap-2">
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 placeholder={`Amount (${form.currency === "SAR" ? "﷼" : "₹"}) *`}
-                min="0"
-                value={form.amount}
-                onChange={(e) => setField("amount", e.target.value)}
+                value={fmtIN(form.amount)}
+                onChange={(e) => setField("amount", rawNum(e.target.value))}
                 className="ef-input"
                 style={{ ...inputStyle(errors.amount), flex: 1 }}
                 onFocus={onFocusInput}

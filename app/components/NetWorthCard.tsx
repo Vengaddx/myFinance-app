@@ -9,6 +9,7 @@ type Props = {
   totalPnl: number;
   totalPnlPct: number;
   netWorthChange?: number;
+  onClick?: () => void;
 };
 
 function fmtINR(n: number) {
@@ -22,6 +23,7 @@ export default function NetWorthCard({
   totalPnl,
   totalPnlPct,
   netWorthChange = 0,
+  onClick,
 }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -36,15 +38,32 @@ export default function NetWorthCard({
   return (
     <div
       className="card-lift flex flex-col justify-between h-full rounded-[20px] p-6 relative overflow-hidden"
-      style={{ background: bg, border, boxShadow: shadow }}
+      style={{
+        background: bg,
+        border,
+        boxShadow: shadow,
+        cursor: onClick ? "pointer" : undefined,
+        transition: "opacity 0.15s",
+      }}
+      onClick={onClick}
     >
       <div>
-        <p
-          className="text-[11.5px] font-semibold uppercase mb-2"
-          style={{ color: "rgba(255,255,255,0.45)", letterSpacing: "0.13em" }}
-        >
-          Net Worth
-        </p>
+        <div className="flex items-center justify-between mb-2">
+          <p
+            className="text-[11.5px] font-semibold uppercase"
+            style={{ color: "rgba(255,255,255,0.45)", letterSpacing: "0.13em" }}
+          >
+            Net Worth
+          </p>
+          {onClick && (
+            <span
+              className="text-[11px] font-medium flex items-center gap-1"
+              style={{ color: "rgba(255,255,255,0.3)" }}
+            >
+              Timeline ›
+            </span>
+          )}
+        </div>
 
         <p
           className="text-[32px] font-bold leading-none text-white"

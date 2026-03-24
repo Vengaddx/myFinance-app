@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTheme } from "@/lib/ThemeContext";
 import Navbar from "./components/Navbar";
 import NetWorthCard from "./components/NetWorthCard";
@@ -97,6 +98,7 @@ function normalizeCategory(value?: string | null) {
 }
 
 export default function Home() {
+  const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [dbAssets, setDbAssets] = useState<DbAssetRow[]>([]);
@@ -376,6 +378,7 @@ export default function Home() {
               totalPnl={summary.totalPnl}
               totalPnlPct={summary.totalPnlPct}
               netWorthChange={0}
+              onClick={() => router.push("/snapshots")}
             />
           </div>
 
