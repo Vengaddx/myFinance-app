@@ -103,7 +103,7 @@ export default function Home() {
   const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, profile, profileLoading } = useAuth();
   const [dbAssets, setDbAssets] = useState<DbAssetRow[]>([]);
   const [dbLiabilities, setDbLiabilities] = useState<{ outstanding_amount: number; status: string }[]>([]);
   const [showSplash, setShowSplash] = useState(false);
@@ -121,6 +121,12 @@ export default function Home() {
       router.replace("/login");
     }
   }, [authLoading, session, router]);
+
+  // Onboarding — driven by profile.onboarding_completed, not asset count
+  useEffect(() => {
+    if (profileLoading) return;
+    setShowOnboarding(profile !== null && !profile.onboarding_completed);
+  }, [profile, profileLoading]);
 
   useEffect(() => {
     const mobile = window.innerWidth < 768;
@@ -159,7 +165,6 @@ export default function Home() {
     const assets = (data as DbAssetRow[]) ?? [];
     setDbAssets(assets);
     setDataLoaded(true);
-    if (assets.length === 0) setShowOnboarding(true);
   };
 
   const fetchLiabilities = async () => {

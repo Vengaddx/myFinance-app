@@ -6,13 +6,14 @@ import { useAuth } from "@/lib/AuthContext";
 import AddAssetModal, { AssetFormData } from "./AddAssetModal";
 import { supabase } from "@/lib/supabase";
 
+
 type Props = {
   onComplete: () => void;
 };
 
 export default function OnboardingFlow({ onComplete }: Props) {
   const { theme } = useTheme();
-  const { session } = useAuth();
+  const { session, refreshProfile } = useAuth();
   const isDark = theme === "dark";
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -42,6 +43,12 @@ export default function OnboardingFlow({ onComplete }: Props) {
     if (error) { console.error(error); return; }
 
     if (!addAnother) {
+      // Mark onboarding complete in profiles table, then refresh context
+      await supabase
+        .from("profiles")
+        .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
+        .eq("id", userId);
+      await refreshProfile();
       setShowModal(false);
       onComplete();
     }
