@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTheme } from "@/lib/ThemeContext";
+import { useAuth } from "@/lib/AuthContext";
+import type { User } from "@supabase/supabase-js";
 
 const NAV_ITEMS = [
   { label: "Portfolio", id: "portfolio" },
@@ -56,6 +59,67 @@ function PlusIcon() {
   );
 }
 
+function PersonIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function UserDropdown({
+  user,
+  isDark,
+  onSignOut,
+}: {
+  user: User;
+  isDark: boolean;
+  onSignOut: () => void;
+}) {
+  const name = user.user_metadata?.name as string | undefined;
+  return (
+    <div
+      className="absolute right-0 top-full mt-2 w-52 rounded-[16px] overflow-hidden z-[60]"
+      style={{
+        background: isDark ? "rgba(28,28,30,0.98)" : "#ffffff",
+        border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.08)",
+        boxShadow: isDark
+          ? "0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3)"
+          : "0 8px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
+        backdropFilter: "blur(20px)",
+      }}
+    >
+      <div
+        className="px-4 py-3.5"
+        style={{ borderBottom: "1px solid var(--separator)" }}
+      >
+        {name && (
+          <p
+            className="text-[13px] font-semibold truncate"
+            style={{ color: "var(--text-primary)" }}
+          >
+            {name}
+          </p>
+        )}
+        <p
+          className="text-[11px] truncate"
+          style={{ color: "var(--text-tertiary)", marginTop: name ? 2 : 0 }}
+        >
+          {user.email}
+        </p>
+      </div>
+      <button
+        onClick={onSignOut}
+        className="w-full text-left px-4 py-3 text-[13px] font-medium transition-opacity active:opacity-60"
+        style={{ color: "#ff3b30" }}
+      >
+        Sign out
+      </button>
+    </div>
+  );
+}
+
 function BellIcon() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -98,8 +162,13 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
 export default function Navbar() {
   const { theme, toggle } = useTheme();
   const isDark = theme === "dark";
+  const router = useRouter();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [activeTab, setActiveTab] = useState("portfolio");
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const desktopMenuRef = useRef<HTMLDivElement>(null);
 
   type PillRect = { left: number; top: number; width: number; height: number };
   const desktopNavRef = useRef<HTMLDivElement>(null);
@@ -152,6 +221,33 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Close user menu on outside click
+  useEffect(() => {
+    if (!showUserMenu) return;
+    const handle = (e: MouseEvent) => {
+      const inMobile = mobileMenuRef.current?.contains(e.target as Node);
+      const inDesktop = desktopMenuRef.current?.contains(e.target as Node);
+      if (!inMobile && !inDesktop) setShowUserMenu(false);
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [showUserMenu]);
+
+  const handleAvatarClick = () => {
+    if (!user && !authLoading) { router.push("/login"); return; }
+    if (user) setShowUserMenu((v) => !v);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    setShowUserMenu(false);
+    router.push("/login");
+  };
+
+  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
+  const displayName = user?.user_metadata?.name as string | undefined;
+  const initial = (displayName?.[0] ?? user?.email?.[0] ?? "?").toUpperCase();
+
 
   return (
     <>
@@ -194,17 +290,29 @@ export default function Navbar() {
             Mah<span style={{ color: "#AEDD00" }}>fin</span>
           </span>
 
-          {/* Right: avatar */}
+          {/* Right: avatar / login */}
           <div className="flex-1 flex items-center justify-end">
-            <div
-              className="cursor-pointer shrink-0"
-              style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}
-            >
-              <img
-                src="/avatar.jpg"
-                alt="Profile"
-                style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
-              />
+            <div ref={mobileMenuRef} className="relative">
+              <button
+                onClick={handleAvatarClick}
+                className="shrink-0 flex items-center justify-center"
+                style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : user ? (
+                  <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#007aff", color: "#fff", fontSize: 13, fontWeight: 700 }}>
+                    {initial}
+                  </span>
+                ) : (
+                  <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: isDark ? "rgba(255,255,255,0.1)" : "rgba(60,60,67,0.08)", color: "var(--text-tertiary)" }}>
+                    <PersonIcon />
+                  </span>
+                )}
+              </button>
+              {showUserMenu && user && (
+                <UserDropdown user={user} isDark={isDark} onSignOut={handleSignOut} />
+              )}
             </div>
           </div>
         </div>
@@ -311,15 +419,27 @@ export default function Navbar() {
             <BellIcon />
           </button>
 
-          <div
-            className="ml-0.5 cursor-pointer shrink-0"
-            style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}
-          >
-            <img
-              src="/avatar.jpg"
-              alt="Profile"
-              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
-            />
+          <div ref={desktopMenuRef} className="relative ml-0.5">
+            <button
+              onClick={handleAvatarClick}
+              className="shrink-0 flex items-center justify-center"
+              style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : user ? (
+                <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#007aff", color: "#fff", fontSize: 13, fontWeight: 700 }}>
+                  {initial}
+                </span>
+              ) : (
+                <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: isDark ? "rgba(255,255,255,0.1)" : "rgba(60,60,67,0.08)", color: "var(--text-tertiary)" }}>
+                  <PersonIcon />
+                </span>
+              )}
+            </button>
+            {showUserMenu && user && (
+              <UserDropdown user={user} isDark={isDark} onSignOut={handleSignOut} />
+            )}
           </div>
         </div>
       </nav>
