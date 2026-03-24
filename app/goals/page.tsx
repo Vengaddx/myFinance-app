@@ -703,14 +703,7 @@ export default function GoalsPage() {
             )}
 
             {/* Summary metric cards — 2×2 on mobile, 4-col on desktop */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: 10,
-                marginBottom: 16,
-              }}
-            >
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
               {(
                 [
                   {
@@ -755,49 +748,57 @@ export default function GoalsPage() {
                   style={{
                     background: "var(--surface)",
                     borderRadius: 18,
-                    padding: "14px 14px 12px",
                     border: "1px solid var(--separator)",
+                    padding: "14px 16px 13px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0,
                   }}
                 >
-                  <div
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: 9,
-                      background: card.iconBg,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginBottom: 10,
-                    }}
-                  >
-                    {card.icon}
+                  {/* Icon + label row */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 8,
+                        background: card.iconBg,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {card.icon}
+                    </div>
+                    <div
+                      style={{
+                        color: "var(--text-secondary)",
+                        fontSize: 10,
+                        fontWeight: 600,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {card.label}
+                    </div>
                   </div>
-                  <div
-                    style={{
-                      color: "var(--text-secondary)",
-                      fontSize: 10,
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    {card.label}
-                  </div>
+                  {/* Value */}
                   <div
                     style={{
                       color: card.color,
-                      fontSize: 19,
+                      fontSize: 20,
                       fontWeight: 700,
-                      margin: "4px 0 2px",
-                      letterSpacing: "-0.3px",
+                      letterSpacing: "-0.4px",
+                      lineHeight: 1,
+                      marginBottom: 4,
                     }}
                   >
                     {card.value}
                   </div>
-                  <div
-                    style={{ color: "var(--text-tertiary)", fontSize: 11 }}
-                  >
+                  {/* Sub */}
+                  <div style={{ color: "var(--text-tertiary)", fontSize: 11 }}>
                     {card.sub}
                   </div>
                 </div>
