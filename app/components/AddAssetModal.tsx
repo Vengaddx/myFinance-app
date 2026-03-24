@@ -20,9 +20,9 @@ const EMPTY_FORM: AssetFormData = {
 };
 
 const CURRENCIES = [
-  { value: "INR", label: "₹ INR – Indian Rupee" },
-  { value: "SAR", label: "﷼ SAR – Saudi Riyal" },
-  { value: "USD", label: "$ USD – US Dollar" },
+  { value: "INR", label: "₹ INR –" },
+  { value: "SAR", label: "﷼ SAR –" },
+  { value: "USD", label: "$ USD –" },
 ];
 
 const ASSET_TYPES = [
@@ -31,7 +31,7 @@ const ASSET_TYPES = [
   { value: "lended", label: "Lended" },
   { value: "fd", label: "Fixed Deposits" },
   { value: "realestate", label: "Real Estate" },
-  { value: "cash", label: "Cash & Savings" },
+  { value: "cash", label: "Cash" },
   { value: "crypto", label: "Crypto" },
   { value: "other", label: "Other" },
 ];

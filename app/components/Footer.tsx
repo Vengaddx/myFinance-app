@@ -10,7 +10,7 @@ export default function Footer() {
           <span className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>
             © 2026 myFinance.
           </span>
-          {["Privacy Policy", "Terms of Service", "Design Credits"].map((link) => (
+          {["Privacy Policy", "Design Credits"].map((link) => (
             <a
               key={link}
               href="#"
@@ -30,7 +30,7 @@ export default function Footer() {
 
         {/* Right */}
         <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>
-          Coded with Love :)
+          Donate to help for a good cause :)
         </p>
       </div>
     </footer>
