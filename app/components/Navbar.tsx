@@ -50,14 +50,6 @@ function SearchIcon() {
   );
 }
 
-function PlusIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  );
-}
 
 function PersonIcon() {
   return (
@@ -464,7 +456,7 @@ export default function Navbar() {
 
       {/* ── Floating bottom nav (mobile only) ── */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center items-end gap-3 lg:hidden pointer-events-none"
+        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center items-end lg:hidden pointer-events-none"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
       >
         {/* Glass style shared between nav pill and add button */}
@@ -540,30 +532,6 @@ export default function Navbar() {
             );
           })}
         </div>
-
-        {/* Add button — same glass material, blue accent */}
-        <button
-          onClick={() => document.dispatchEvent(new CustomEvent("mahfin:open-add"))}
-          className="pointer-events-auto flex flex-col items-center gap-[3px] px-[18px] py-[8px] active:scale-95"
-          style={{
-            borderRadius: 36,
-            background: isDark
-              ? "rgba(22, 22, 26, 0.22)"
-              : "rgba(255, 255, 255, 0.26)",
-            backdropFilter: "blur(52px) saturate(200%) brightness(1.06)",
-            WebkitBackdropFilter: "blur(52px) saturate(200%) brightness(1.06)",
-            border: isDark
-              ? "1px solid rgba(0,122,255,0.26)"
-              : "1px solid rgba(0,122,255,0.18)",
-            boxShadow: isDark
-              ? "0 12px 40px rgba(0,0,0,0.45), 0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.14)"
-              : "0 12px 40px rgba(0,0,0,0.12), 0 3px 10px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,1)",
-            transition: "transform 140ms cubic-bezier(0.25,0.46,0.45,0.94)",
-          }}
-        >
-          <span style={{ color: "#007aff" }}><PlusIcon /></span>
-          <span className="text-[10px] font-semibold" style={{ color: "#007aff", letterSpacing: "-0.01em" }}>Add</span>
-        </button>
 
       </div>
     </>

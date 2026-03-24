@@ -702,43 +702,43 @@ export default function GoalsPage() {
               </div>
             )}
 
-            {/* Summary metric cards */}
+            {/* Summary metric cards — 2×2 on mobile, 4-col on desktop */}
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-                gap: 12,
-                marginBottom: 18,
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: 10,
+                marginBottom: 16,
               }}
             >
               {(
                 [
                   {
-                    icon: <IconTrendingUp size={18} stroke="#007aff" />,
+                    icon: <IconTrendingUp size={16} stroke="#007aff" />,
                     iconBg: "rgba(0,122,255,0.10)",
-                    label: "Projected Net Worth",
+                    label: "Projected NW",
                     value: fmtINR(metrics.final),
                     sub: `in ${horizonLabel(selectedScenario.months)}`,
                     color: "#007aff",
                   },
                   {
-                    icon: <IconPlusCircle size={18} stroke="#34c759" />,
+                    icon: <IconPlusCircle size={16} stroke="#34c759" />,
                     iconBg: "rgba(52,199,89,0.10)",
-                    label: "Total Contributions",
+                    label: "Contributions",
                     value: fmtINR(metrics.totalContributions),
                     sub: `₹${fmtShort(selectedScenario.monthly_investment)}/mo`,
                     color: "#34c759",
                   },
                   {
-                    icon: <IconStar size={18} stroke="#AEDD00" />,
+                    icon: <IconStar size={16} stroke="#AEDD00" />,
                     iconBg: "rgba(174,221,0,0.10)",
-                    label: "Growth from Returns",
+                    label: "Return Growth",
                     value: fmtINR(Math.max(0, metrics.growthFromReturns)),
                     sub: `${selectedScenario.annual_return_pct}% p.a.`,
                     color: "#AEDD00",
                   },
                   {
-                    icon: <IconTag size={18} stroke={metrics.totalExpenses > 0 ? "#ff3b30" : "var(--text-tertiary)"} />,
+                    icon: <IconTag size={16} stroke={metrics.totalExpenses > 0 ? "#ff3b30" : "var(--text-tertiary)"} />,
                     iconBg: metrics.totalExpenses > 0 ? "rgba(255,59,48,0.08)" : "var(--surface-secondary)",
                     label: "Planned Expenses",
                     value: fmtINR(metrics.totalExpenses),
@@ -754,21 +754,21 @@ export default function GoalsPage() {
                   key={card.label}
                   style={{
                     background: "var(--surface)",
-                    borderRadius: 20,
-                    padding: "18px 18px 16px",
+                    borderRadius: 18,
+                    padding: "14px 14px 12px",
                     border: "1px solid var(--separator)",
                   }}
                 >
                   <div
                     style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 10,
+                      width: 30,
+                      height: 30,
+                      borderRadius: 9,
                       background: card.iconBg,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      marginBottom: 12,
+                      marginBottom: 10,
                     }}
                   >
                     {card.icon}
@@ -776,10 +776,10 @@ export default function GoalsPage() {
                   <div
                     style={{
                       color: "var(--text-secondary)",
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: 600,
                       textTransform: "uppercase",
-                      letterSpacing: "0.6px",
+                      letterSpacing: "0.5px",
                     }}
                   >
                     {card.label}
@@ -787,16 +787,16 @@ export default function GoalsPage() {
                   <div
                     style={{
                       color: card.color,
-                      fontSize: 22,
+                      fontSize: 19,
                       fontWeight: 700,
-                      margin: "5px 0 3px",
+                      margin: "4px 0 2px",
                       letterSpacing: "-0.3px",
                     }}
                   >
                     {card.value}
                   </div>
                   <div
-                    style={{ color: "var(--text-tertiary)", fontSize: 12 }}
+                    style={{ color: "var(--text-tertiary)", fontSize: 11 }}
                   >
                     {card.sub}
                   </div>
