@@ -305,7 +305,7 @@ export default function Navbar() {
             className="text-[21.5px] font-extrabold tracking-tight"
             style={{ color: scrolled ? "#ffffff" : "var(--text-primary)", transition: "color 400ms ease" }}
           >
-            Mah<span style={{ color: "#AEDD00" }}>fin</span>
+            my<span style={{ color: "#AEDD00" }}>Finance</span>
           </span>
 
           {/* Right: avatar / login */}
@@ -342,7 +342,7 @@ export default function Navbar() {
             className="text-[21.5px] font-extrabold tracking-tight"
             style={{ color: scrolled ? "#ffffff" : "var(--text-primary)", transition: "color 400ms ease" }}
           >
-            Mah<span style={{ color: "#AEDD00" }}>fin</span>
+            my<span style={{ color: "#AEDD00" }}>Finance</span>
           </span>
         </div>
 

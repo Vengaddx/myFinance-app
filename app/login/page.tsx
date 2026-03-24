@@ -79,7 +79,7 @@ export default function LoginPage() {
             className="text-[34px] font-extrabold tracking-tight"
             style={{ color: "var(--text-primary)" }}
           >
-            Mah<span style={{ color: "#AEDD00" }}>fin</span>
+            my<span style={{ color: "#AEDD00" }}>Finance</span>
           </h1>
           <p
             className="text-[14px] mt-1.5"

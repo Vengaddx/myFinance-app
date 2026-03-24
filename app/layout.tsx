@@ -22,12 +22,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Mahfin",
+  title: "myFinance",
   description: "Personal finance and investment tracker",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Mahfin",
+    title: "myFinance",
     startupImage: "/apple-touch-icon.png",
   },
   icons: {

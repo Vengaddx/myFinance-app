@@ -8,7 +8,7 @@ export default function Footer() {
         {/* Left */}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
           <span className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>
-            © 2026 Mahfin.
+            © 2026 myFinance.
           </span>
           {["Privacy Policy", "Terms of Service", "Design Credits"].map((link) => (
             <a

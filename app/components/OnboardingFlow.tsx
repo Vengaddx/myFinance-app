@@ -79,7 +79,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
               className="text-[28px] font-extrabold tracking-tight"
               style={{ color: "var(--text-primary)" }}
             >
-              Welcome to Mah<span style={{ color: "#AEDD00" }}>fin</span>
+              Welcome to my<span style={{ color: "#AEDD00" }}>Finance</span>
             </h1>
             <p
               className="text-[14px] mt-2.5 leading-relaxed"

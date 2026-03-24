@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 const LINES = [
   { text: "Hey Squad,",                          speed: 60 },
-  { text: "Thanks for testing Mahfin.",           speed: 36 },
+  { text: "Thanks for testing myFinance.",         speed: 36 },
   { text: "Your feedback means a lot 💙",         speed: 42 },
 ] as const;
 
