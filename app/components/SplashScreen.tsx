@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 
 const LINES = [
-  { text: "Hey Maha,",                                          speed: 60 },
-  { text: "Time to manage your boyfriend's wealth the right way.", speed: 26 },
-  { text: "Welcome!",                                            speed: 62 },
+  { text: "Hey Squad,",                          speed: 60 },
+  { text: "Thanks for testing Mahfin.",           speed: 36 },
+  { text: "Your feedback means a lot 💙",         speed: 42 },
 ] as const;
 
 const LINE_PAUSE    = 480;  // ms pause between lines
@@ -174,9 +174,9 @@ function lineStyle(i: number): React.CSSProperties {
     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
     WebkitFontSmoothing: "antialiased",
   };
-  if (i === 0) return { ...base, fontSize: 58, fontWeight: 800, color: "#ffffff",               letterSpacing: "-0.04em",  lineHeight: 1.05 };
+  if (i === 0) return { ...base, fontSize: 58, fontWeight: 800, color: "#AEDD00",               letterSpacing: "-0.04em",  lineHeight: 1.05 };
   if (i === 1) return { ...base, fontSize: 17, fontWeight: 400, color: "rgba(255,255,255,0.65)", letterSpacing: "-0.015em", lineHeight: 1.6  };
-  return           { ...base, fontSize: 26, fontWeight: 700, color: "#AEDD00",               letterSpacing: "-0.03em",  lineHeight: 1.2  };
+  return           { ...base, fontSize: 26, fontWeight: 700, color: "#ffffff",               letterSpacing: "-0.03em",  lineHeight: 1.2  };
 }
 
 function Cursor() {
