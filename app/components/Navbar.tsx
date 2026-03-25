@@ -346,16 +346,15 @@ export default function Navbar() {
           <div className="flex-1 flex items-center justify-end gap-2">
             <button
               onClick={() => setShowDonate(true)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:scale-95"
+              className="icon-btn w-8 h-8 flex items-center justify-center rounded-full active:scale-95"
               style={{
                 color: "#ff2d55",
-                background: scrolled ? "rgba(255,45,85,0.22)" : "rgba(255,45,85,0.10)",
-                border: "1px solid rgba(255,45,85,0.22)",
+                background: scrolled ? "rgba(255,45,85,0.18)" : "rgba(255,45,85,0.10)",
                 transition: "background 300ms ease",
               }}
+              title="Donate"
             >
               <HeartIcon />
-              Donate
             </button>
             <div ref={mobileMenuRef} className="relative">
               <button
