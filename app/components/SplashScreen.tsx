@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 
 const LINES = [
-  { text: "Hey Squad,",                          speed: 60 },
+  { text: "Hey!,",                          speed: 60 },
   { text: "Thanks for testing myFinance.",         speed: 36 },
-  { text: "Your feedback means a lot to Deesh! 💙",         speed: 42 },
+  { text: "Your feedback means a lot to Deesh! ",         speed: 42 },
 ] as const;
 
 const LINE_PAUSE    = 480;  // ms pause between lines
