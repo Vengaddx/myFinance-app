@@ -269,7 +269,7 @@ export default function SettingsPage() {
               onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
             >
               <CrownIcon size={15} />
-              Upgrade to Premium · ₹499
+              Upgrade to Premium · ₹99
             </button>
           )}
         </div>

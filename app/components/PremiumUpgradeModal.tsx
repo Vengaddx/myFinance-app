@@ -9,7 +9,8 @@ import { FREE_LIMITS, PREMIUM_LIMITS } from "@/lib/planLimits";
 const UPI_ID   = "deeshvenkat98@okicici";
 const PAYEE    = "Deesh";
 const TXN_NOTE = "MyFinance Premium Upgrade";
-const AMOUNT   = 499;
+const AMOUNT         = 99;
+const AMOUNT_STRIKE  = 299;
 
 function buildUpiLink(): string {
   return `tez://upi/pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE)}&tn=${encodeURIComponent(TXN_NOTE)}&am=${AMOUNT}&cu=INR`;
@@ -147,8 +148,10 @@ export default function PremiumUpgradeModal({ open, onClose, limitContext }: Pro
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.2 }}>
                 MyFinance Premium
               </h2>
-              <p style={{ margin: 0, fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>
-                ₹499 · Unlock expanded limits
+              <p style={{ margin: 0, fontSize: 12, color: "var(--text-secondary)", marginTop: 2, display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ textDecoration: "line-through", opacity: 0.5 }}>₹{AMOUNT_STRIKE}</span>
+                <span style={{ color: "#FF9500", fontWeight: 700 }}>₹{AMOUNT}</span>
+                <span>· Unlock expanded limits</span>
               </p>
             </div>
           </div>
@@ -245,7 +248,7 @@ export default function PremiumUpgradeModal({ open, onClose, limitContext }: Pro
 
             {/* UPI info */}
             <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 5 }}>
-              <SLabel>Pay via UPI · ₹{AMOUNT}</SLabel>
+              <SLabel>Pay via UPI · <span style={{ textDecoration: "line-through", opacity: 0.5 }}>₹{AMOUNT_STRIKE}</span> ₹{AMOUNT}</SLabel>
               <span style={{
                 fontSize: 13, color: "var(--text-primary)", fontWeight: 500,
                 fontFamily: "monospace, 'SF Mono', Menlo",
