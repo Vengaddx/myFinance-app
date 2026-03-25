@@ -10,6 +10,7 @@ import {
   isUnlocked,
   clearFreshLogin,
   markUnlocked,
+  markLocked,
   markPrompted,
   registerBio,
   authenticateBio,
@@ -363,6 +364,13 @@ function BiometricLockScreen({ bioType, onUnlocked }: LockProps) {
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
+const IDLE_MS = 60_000; // 60 seconds
+
+function isMobileDevice() {
+  if (typeof navigator === "undefined") return false;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
 export default function BiometricProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
@@ -370,6 +378,16 @@ export default function BiometricProvider({ children }: { children: React.ReactN
   const [showSetup, setShowSetup] = useState(false);
   const [showLock, setShowLock] = useState(false);
   const [bioType, setBioType] = useState<BioType>("biometric");
+
+  // Idle-lock refs — avoid stale closures in event listeners
+  const showLockRef   = useRef(false);
+  const showSetupRef  = useRef(false);
+  const idleTimer     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastActivity  = useRef(Date.now());
+
+  // Keep refs in sync with state
+  useEffect(() => { showLockRef.current  = showLock;  }, [showLock]);
+  useEffect(() => { showSetupRef.current = showSetup; }, [showSetup]);
 
   useEffect(() => {
     if (!user) {
@@ -410,6 +428,51 @@ export default function BiometricProvider({ children }: { children: React.ReactN
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
+  // ── Idle-lock effect (mobile only) ──────────────────────────────────────────
+  useEffect(() => {
+    if (!user || !isMobileDevice()) return;
+
+    function lock() {
+      if (!bioEnabled() || showLockRef.current || showSetupRef.current) return;
+      markLocked();
+      setBioType(getBioType());
+      setShowLock(true);
+    }
+
+    function scheduleIdle() {
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+      idleTimer.current = setTimeout(lock, IDLE_MS);
+    }
+
+    function onActivity() {
+      lastActivity.current = Date.now();
+      scheduleIdle();
+    }
+
+    function onVisibility() {
+      if (document.hidden) return;
+      // App foregrounded — lock if idle period has passed
+      if (Date.now() - lastActivity.current >= IDLE_MS) {
+        lock();
+      } else {
+        scheduleIdle();
+      }
+    }
+
+    const events = ["touchstart", "touchmove", "mousedown", "keydown", "scroll"] as const;
+    events.forEach((e) => document.addEventListener(e, onActivity, { passive: true }));
+    document.addEventListener("visibilitychange", onVisibility);
+
+    scheduleIdle(); // start the clock
+
+    return () => {
+      events.forEach((e) => document.removeEventListener(e, onActivity));
+      document.removeEventListener("visibilitychange", onVisibility);
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   async function handleEnable() {
     if (!user) return;
     markPrompted();
@@ -429,6 +492,8 @@ export default function BiometricProvider({ children }: { children: React.ReactN
   function handleUnlocked() {
     markUnlocked();
     setShowLock(false);
+    // Reset idle clock so the 60s starts fresh after each unlock
+    lastActivity.current = Date.now();
   }
 
   return (

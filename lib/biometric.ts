@@ -39,6 +39,7 @@ export const isUnlocked   = () => ssg(S.UNLOCKED) === "1";
 
 export function clearFreshLogin() { try { sessionStorage.removeItem(S.FRESH); } catch { /* */ } }
 export function markUnlocked()    { try { sessionStorage.setItem(S.UNLOCKED, "1"); } catch { /* */ } }
+export function markLocked()      { try { sessionStorage.removeItem(S.UNLOCKED);      } catch { /* */ } }
 export function markPrompted()    { ls(() => localStorage.setItem(K.PROMPTED, "1")); }
 
 export function storedBioUser(): { email: string; name: string } | null {
