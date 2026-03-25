@@ -1,6 +1,6 @@
 {
-  "name": "Mahfin",
-  "short_name": "Mahfin",
+  "name": "myFinance",
+  "short_name": "myFinance",
   "description": "Personal finance and investment tracker",
   "start_url": "/",
   "display": "standalone",
