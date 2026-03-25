@@ -451,12 +451,8 @@ export default function BiometricProvider({ children }: { children: React.ReactN
 
     function onVisibility() {
       if (document.hidden) return;
-      // App foregrounded — lock if idle period has passed
-      if (Date.now() - lastActivity.current >= IDLE_MS) {
-        lock();
-      } else {
-        scheduleIdle();
-      }
+      // Always lock when app comes to foreground — matches native iOS/Android behaviour
+      lock();
     }
 
     const events = ["touchstart", "touchmove", "mousedown", "keydown", "scroll"] as const;
