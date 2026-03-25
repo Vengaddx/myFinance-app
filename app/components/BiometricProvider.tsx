@@ -6,7 +6,6 @@ import {
   bioAvailable,
   bioEnabled,
   bioPrompted,
-  isFreshLogin,
   isUnlocked,
   clearFreshLogin,
   markUnlocked,
@@ -411,14 +410,14 @@ export default function BiometricProvider({ children }: { children: React.ReactN
         return;
       }
 
-      // Not enrolled yet
-      if (available && isFreshLogin() && !bioPrompted()) {
-        // First login after enrolling — ask to enable
-        clearFreshLogin();
+      // Not enrolled yet — offer setup on any launch if available and not yet prompted.
+      // Note: isFreshLogin() is only set via the OAuth callback, so silent session
+      // restores on iOS PWA would never show the prompt. We remove that gate so
+      // the user is offered Face ID / Fingerprint on the first launch that has it.
+      clearFreshLogin();
+      if (available && !bioPrompted()) {
         setBioType(getBioType());
         setShowSetup(true);
-      } else {
-        clearFreshLogin();
       }
 
       setReady(true);
@@ -455,15 +454,23 @@ export default function BiometricProvider({ children }: { children: React.ReactN
       lock();
     }
 
+    // pageshow fires on every page display including bfcache restores (iOS PWA).
+    // persisted=true means the page was restored from cache, not a fresh load.
+    function onPageShow(e: PageTransitionEvent) {
+      if (e.persisted) lock();
+    }
+
     const events = ["touchstart", "touchmove", "mousedown", "keydown", "scroll"] as const;
     events.forEach((e) => document.addEventListener(e, onActivity, { passive: true }));
     document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pageshow", onPageShow);
 
     scheduleIdle(); // start the clock
 
     return () => {
       events.forEach((e) => document.removeEventListener(e, onActivity));
       document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pageshow", onPageShow);
       if (idleTimer.current) clearTimeout(idleTimer.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
