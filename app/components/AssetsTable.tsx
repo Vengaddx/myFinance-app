@@ -12,6 +12,8 @@ import { supabase } from "@/lib/supabase";
 import Toast from "./toast";
 import { useTheme } from "@/lib/ThemeContext";
 import { useAuth } from "@/lib/AuthContext";
+import { getLimits, isPremium } from "@/lib/planLimits";
+import PremiumUpgradeModal from "./PremiumUpgradeModal";
 
 type DbAssetRow = {
   id: string;
@@ -400,7 +402,7 @@ type AssetsTableProps = {
 export default function AssetsTable({ onDataChanged, onSummaryChange }: AssetsTableProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const userId = session?.user?.id ?? "";
   const [activeTab, setActiveTab] = useState<AssetCategory | "all">("all");
   const [search, setSearch] = useState("");
@@ -433,6 +435,8 @@ const [repayingLiability, setRepayingLiability] = useState<{ id: string; name: s
 const [logsModalOpen, setLogsModalOpen] = useState(false);
 const [viewingLogsLiabilityId, setViewingLogsLiabilityId] = useState<string | null>(null);
 const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
+const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+const [upgradeContext, setUpgradeContext] = useState<string | undefined>(undefined);
 
   const fetchAssets = async () => {
     const { data, error } = await supabase
@@ -1008,21 +1012,50 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
     XLSX.writeFile(wb, fileName);
   };
 
+  const handleAddClick = () => {
+    const limits = getLimits(profile?.plan_type);
+    const premium = isPremium(profile?.plan_type);
+
+    const showUpgrade = (context: string) => {
+      if (!premium) {
+        setUpgradeContext(context);
+        setUpgradeModalOpen(true);
+      } else {
+        showToast(context, "error");
+      }
+    };
+
+    if (sectionTab === "expenses") {
+      const now = new Date();
+      const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const thisMonthCount = expenses.filter((e) => e.month_key === currentMonthKey).length;
+      if (thisMonthCount >= limits.expensesPerMonth) {
+        showUpgrade(`You've reached the ${premium ? "premium" : "free"} limit of ${limits.expensesPerMonth} expenses this month.`);
+        return;
+      }
+      setEditingExpenseId(null);
+      setEditingExpenseData(null);
+      setExpenseModalOpen(true);
+    } else if (sectionTab === "liabilities") {
+      if (liabilities.length >= limits.liabilities) {
+        showUpgrade(`You've reached the ${premium ? "premium" : "free"} limit of ${limits.liabilities} liabilities.`);
+        return;
+      }
+      setEditingLiabilityId(null);
+      setEditingLiabilityData(null);
+      setLiabilityModalOpen(true);
+    } else {
+      if (dbAssets.length >= limits.assets) {
+        showUpgrade(`You've reached the ${premium ? "premium" : "free"} limit of ${limits.assets} assets.`);
+        return;
+      }
+      setModalOpen(true);
+    }
+  };
+
   const addButton = (
     <button
-      onClick={() => {
-        if (sectionTab === "expenses") {
-          setEditingExpenseId(null);
-          setEditingExpenseData(null);
-          setExpenseModalOpen(true);
-        } else if (sectionTab === "liabilities") {
-          setEditingLiabilityId(null);
-          setEditingLiabilityData(null);
-          setLiabilityModalOpen(true);
-        } else {
-          setModalOpen(true);
-        }
-      }}
+      onClick={handleAddClick}
       className="btn-lift flex items-center gap-1.5 h-[34px] px-3 sm:px-4 rounded-[10px] text-[13px] sm:text-[14px] font-semibold text-white shrink-0"
       style={{ background: "#007aff" }}
     >
@@ -1064,6 +1097,11 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
     type={toastType}
     visible={toastVisible}
   />
+      <PremiumUpgradeModal
+        open={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        limitContext={upgradeContext}
+      />
       <AddAssetModal
   open={modalOpen}
   onClose={() => {

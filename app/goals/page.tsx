@@ -17,6 +17,8 @@ import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import ScenarioModal from "@/app/components/ScenarioModal";
 import ProjectionEventModal from "@/app/components/ProjectionEventModal";
+import PremiumUpgradeModal from "@/app/components/PremiumUpgradeModal";
+import { getLimits, isPremium } from "@/lib/planLimits";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Icons (Apple SF Symbol style — stroke, no fill)
@@ -265,7 +267,7 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: any[] }
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function GoalsPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, profile } = useAuth();
   const router = useRouter();
 
   const [scenarios, setScenarios] = useState<ProjectionScenario[]>([]);
@@ -286,6 +288,7 @@ export default function GoalsPage() {
     msg: string;
     type: "success" | "error";
   } | null>(null);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   // ── Auth guard ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -562,7 +565,18 @@ export default function GoalsPage() {
             );
           })}
           <button
-            onClick={() => setScenarioModal({ open: true })}
+            onClick={() => {
+              const limits = getLimits(profile?.plan_type);
+              if (scenarios.length >= limits.scenarios) {
+                if (!isPremium(profile?.plan_type)) {
+                  setUpgradeModalOpen(true);
+                } else {
+                  showToast(`You've reached the premium limit of ${limits.scenarios} scenarios.`, "error");
+                }
+                return;
+              }
+              setScenarioModal({ open: true });
+            }}
             style={{
               padding: "7px 16px",
               borderRadius: 20,
@@ -1308,6 +1322,12 @@ export default function GoalsPage() {
       <Footer />
 
       {/* ── Modals ─────────────────────────────────────────────────────────── */}
+      <PremiumUpgradeModal
+        open={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        limitContext={`You've reached the free limit of ${getLimits(profile?.plan_type).scenarios} scenario${getLimits(profile?.plan_type).scenarios === 1 ? "" : "s"}. Upgrade to add up to ${15} scenarios.`}
+      />
+
       {scenarioModal.open && (
         <ScenarioModal
           open={scenarioModal.open}

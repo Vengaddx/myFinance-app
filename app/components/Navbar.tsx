@@ -6,6 +6,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { useAuth } from "@/lib/AuthContext";
 import type { User } from "@supabase/supabase-js";
 import DonateModal from "@/app/components/DonateModal";
+import Link from "next/link";
 
 const NAV_ITEMS = [
   { label: "Portfolio", id: "portfolio" },
@@ -62,16 +63,27 @@ function PersonIcon() {
   );
 }
 
+function SettingsIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
 function UserDropdown({
   user,
   isDark,
   onSignOut,
   onDonate,
+  onClose,
 }: {
   user: User;
   isDark: boolean;
   onSignOut: () => void;
   onDonate: () => void;
+  onClose: () => void;
 }) {
   const name = user.user_metadata?.name as string | undefined;
   return (
@@ -105,6 +117,15 @@ function UserDropdown({
           {user.email}
         </p>
       </div>
+      <Link
+        href="/settings"
+        onClick={onClose}
+        className="w-full text-left px-4 py-3 text-[13px] font-medium transition-opacity active:opacity-60 flex items-center gap-2"
+        style={{ color: "var(--text-primary)", borderBottom: "1px solid var(--separator)", display: "flex" }}
+      >
+        <SettingsIcon />
+        Settings
+      </Link>
       <button
         onClick={onDonate}
         className="w-full text-left px-4 py-3 text-[13px] font-medium transition-opacity active:opacity-60 flex items-center gap-2"
@@ -355,7 +376,7 @@ export default function Navbar() {
                 )}
               </button>
               {showUserMenu && user && (
-                <UserDropdown user={user} isDark={isDark} onSignOut={handleSignOut} onDonate={() => { setShowUserMenu(false); setShowDonate(true); }} />
+                <UserDropdown user={user} isDark={isDark} onSignOut={handleSignOut} onDonate={() => { setShowUserMenu(false); setShowDonate(true); }} onClose={() => setShowUserMenu(false)} />
               )}
             </div>
           </div>
@@ -497,7 +518,7 @@ export default function Navbar() {
               )}
             </button>
             {showUserMenu && user && (
-              <UserDropdown user={user} isDark={isDark} onSignOut={handleSignOut} onDonate={() => { setShowUserMenu(false); setShowDonate(true); }} />
+              <UserDropdown user={user} isDark={isDark} onSignOut={handleSignOut} onDonate={() => { setShowUserMenu(false); setShowDonate(true); }} onClose={() => setShowUserMenu(false)} />
             )}
           </div>
         </div>

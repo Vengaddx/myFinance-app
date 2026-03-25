@@ -10,6 +10,9 @@ export type Profile = {
   full_name: string | null;
   avatar_url: string | null;
   onboarding_completed: boolean;
+  plan_type: "free" | "premium";
+  premium_since: string | null;
+  payment_note: string | null;
   created_at: string;
   updated_at: string;
 };
