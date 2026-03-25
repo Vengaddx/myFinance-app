@@ -398,6 +398,12 @@ export default function BiometricProvider({ children }: { children: React.ReactN
     }
 
     async function init() {
+      // Biometric auth is mobile-only (iOS / Android PWA)
+      if (!isMobileDevice()) {
+        setReady(true);
+        return;
+      }
+
       const available = await bioAvailable();
 
       if (bioEnabled()) {
@@ -411,9 +417,6 @@ export default function BiometricProvider({ children }: { children: React.ReactN
       }
 
       // Not enrolled yet — offer setup on any launch if available and not yet prompted.
-      // Note: isFreshLogin() is only set via the OAuth callback, so silent session
-      // restores on iOS PWA would never show the prompt. We remove that gate so
-      // the user is offered Face ID / Fingerprint on the first launch that has it.
       clearFreshLogin();
       if (available && !bioPrompted()) {
         setBioType(getBioType());
