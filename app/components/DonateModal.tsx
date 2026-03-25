@@ -194,26 +194,27 @@ export default function DonateModal({ open, onClose }: Props) {
         </div>
 
         {/* Content */}
-        <div style={{ padding: "20px 24px 0", display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ padding: "14px 20px 0", display: "flex", flexDirection: "column", gap: 14 }}>
 
-          {/* Message */}
-          <p style={{
-            margin: 0,
-            fontSize: 15,
-            color: "var(--text-secondary)",
-            lineHeight: 1.55,
-            padding: "14px 16px",
+          {/* Message — compact inline strip */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "9px 12px",
             background: "rgba(255,45,85,0.06)",
-            borderRadius: 14,
+            borderRadius: 12,
             border: "1px solid rgba(255,45,85,0.12)",
           }}>
-            This contribution will be used to help buy laptops for needy students.
-          </p>
+            <span style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.45 }}>
+              Contributions help buy laptops for needy students.
+            </span>
+          </div>
 
           {/* Amount presets */}
           <div>
             <Label>Choose Amount</Label>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 7, marginTop: 8 }}>
               {PRESETS.map((p) => {
                 const active = selected === p && custom === "";
                 return (
@@ -221,18 +222,18 @@ export default function DonateModal({ open, onClose }: Props) {
                     key={p}
                     onClick={() => handlePresetClick(p)}
                     style={{
-                      padding: "12px 6px",
-                      borderRadius: 14,
+                      padding: "9px 4px",
+                      borderRadius: 12,
                       border: "1px solid",
                       borderColor: active ? "#ff2d55" : "var(--separator)",
                       background: active ? "rgba(255,45,85,0.08)" : "var(--surface-secondary)",
                       color: active ? "#ff2d55" : "var(--text-primary)",
                       fontWeight: active ? 700 : 500,
-                      fontSize: 15,
+                      fontSize: 14,
                       cursor: "pointer",
                       fontFamily: "inherit",
                       transition: "all 140ms ease",
-                      boxShadow: active ? "0 2px 10px rgba(255,45,85,0.18)" : "none",
+                      boxShadow: active ? "0 2px 8px rgba(255,45,85,0.18)" : "none",
                     }}
                   >
                     ₹{p}
@@ -242,13 +243,13 @@ export default function DonateModal({ open, onClose }: Props) {
             </div>
 
             {/* Custom amount */}
-            <div style={{ position: "relative", marginTop: 10 }}>
+            <div style={{ position: "relative", marginTop: 7 }}>
               <span style={{
                 position: "absolute",
-                left: 14,
+                left: 12,
                 top: "50%",
                 transform: "translateY(-50%)",
-                fontSize: 15,
+                fontSize: 14,
                 color: "var(--text-secondary)",
                 pointerEvents: "none",
               }}>₹</span>
@@ -262,12 +263,12 @@ export default function DonateModal({ open, onClose }: Props) {
                 placeholder="Custom amount"
                 style={{
                   width: "100%",
-                  padding: "11px 14px 11px 26px",
-                  borderRadius: 14,
+                  padding: "9px 12px 9px 24px",
+                  borderRadius: 12,
                   border: `1px solid ${custom ? "#ff2d55" : "var(--separator)"}`,
                   background: custom ? "rgba(255,45,85,0.06)" : "var(--surface-secondary)",
                   color: "var(--text-primary)",
-                  fontSize: 15,
+                  fontSize: 14,
                   outline: "none",
                   boxSizing: "border-box",
                   fontFamily: "inherit",
@@ -277,74 +278,75 @@ export default function DonateModal({ open, onClose }: Props) {
             </div>
           </div>
 
-          {/* Divider */}
-          <div style={{ height: 1, background: "var(--separator)", margin: "0 -4px" }} />
-
-          {/* UPI ID */}
-          <div>
-            <Label>UPI ID</Label>
+          {/* QR + UPI side by side */}
+          <div style={{
+            display: "flex",
+            gap: 14,
+            alignItems: "center",
+            padding: "14px",
+            background: "var(--surface-secondary)",
+            borderRadius: 16,
+            border: "1px solid var(--separator)",
+          }}>
+            {/* QR code */}
             <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "12px 14px",
-              borderRadius: 14,
-              background: "var(--surface-secondary)",
-              border: "1px solid var(--separator)",
-              marginTop: 10,
-              gap: 10,
-            }}>
-              <span style={{ fontSize: 15, color: "var(--text-primary)", fontWeight: 500, letterSpacing: "0.01em", fontFamily: "monospace, 'SF Mono', Menlo" }}>
-                {UPI_ID}
-              </span>
-              <button
-                onClick={handleCopy}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "6px 12px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: copied ? "rgba(52,199,89,0.12)" : "rgba(0,122,255,0.10)",
-                  color: copied ? "#34c759" : "#007aff",
-                  fontWeight: 600,
-                  fontSize: 13,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "all 180ms ease",
-                  flexShrink: 0,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {copied ? <CheckIcon size={13} /> : <CopyIcon size={13} />}
-                {copied ? "Copied!" : "Copy"}
-              </button>
-            </div>
-          </div>
-
-          {/* QR Code */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-            <Label style={{ alignSelf: "flex-start" }}>Scan to Pay</Label>
-            <div style={{
-              marginTop: 6,
-              padding: 16,
+              padding: 10,
               background: "#ffffff",
-              borderRadius: 20,
-              boxShadow: "0 2px 16px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)",
-              display: "inline-flex",
+              borderRadius: 14,
+              boxShadow: "0 1px 8px rgba(0,0,0,0.10)",
+              flexShrink: 0,
+              display: "flex",
             }}>
               <QRCodeSVG
                 value={upiLink}
-                size={168}
+                size={108}
                 level="M"
                 bgColor="#ffffff"
                 fgColor="#1d1d1f"
               />
             </div>
-            <p style={{ margin: 0, fontSize: 12, color: "var(--text-tertiary)", textAlign: "center" }}>
-              ₹{amount.toLocaleString("en-IN")} · Scan with any UPI app
-            </p>
+
+            {/* UPI info */}
+            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+              <Label>UPI ID</Label>
+              <span style={{
+                fontSize: 13,
+                color: "var(--text-primary)",
+                fontWeight: 500,
+                fontFamily: "monospace, 'SF Mono', Menlo",
+                wordBreak: "break-all",
+                lineHeight: 1.4,
+              }}>
+                {UPI_ID}
+              </span>
+              <button
+                onClick={handleCopy}
+                style={{
+                  alignSelf: "flex-start",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "5px 11px",
+                  borderRadius: 9,
+                  border: "none",
+                  background: copied ? "rgba(52,199,89,0.12)" : "rgba(0,122,255,0.10)",
+                  color: copied ? "#34c759" : "#007aff",
+                  fontWeight: 600,
+                  fontSize: 12,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  transition: "all 180ms ease",
+                  whiteSpace: "nowrap",
+                  marginTop: 2,
+                }}
+              >
+                {copied ? <CheckIcon size={12} /> : <CopyIcon size={12} />}
+                {copied ? "Copied!" : "Copy ID"}
+              </button>
+              <span style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>
+                ₹{amount.toLocaleString("en-IN")} · Scan or copy to pay
+              </span>
+            </div>
           </div>
 
           {/* Pay button */}
@@ -352,13 +354,13 @@ export default function DonateModal({ open, onClose }: Props) {
             onClick={handlePay}
             style={{
               width: "100%",
-              padding: "15px",
+              padding: "14px",
               borderRadius: 16,
               background: "linear-gradient(135deg, #ff2d55 0%, #ff6b35 100%)",
               border: "none",
               color: "#fff",
               fontWeight: 700,
-              fontSize: 16,
+              fontSize: 15,
               cursor: "pointer",
               fontFamily: "inherit",
               boxShadow: "0 4px 20px rgba(255,45,85,0.35)",
@@ -371,13 +373,9 @@ export default function DonateModal({ open, onClose }: Props) {
             onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.98)"; }}
             onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
           >
-            <HeartIcon size={17} filled />
+            <HeartIcon size={16} filled />
             Pay ₹{amount.toLocaleString("en-IN")} via Google Pay
           </button>
-
-          <p style={{ margin: "-8px 0 0", fontSize: 12, color: "var(--text-tertiary)", textAlign: "center" }}>
-            Opens Google Pay on your device
-          </p>
         </div>
       </div>
 
