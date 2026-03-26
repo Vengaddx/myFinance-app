@@ -1,5 +1,5 @@
 /**
- * Generates app icons from an inline SVG using sharp.
+ * Generates app icons — credit card on deep-navy gradient.
  * Run: node scripts/gen-icons.mjs
  */
 import sharp from "sharp";
@@ -12,67 +12,87 @@ const publicDir = path.join(__dirname, "../public");
 const appDir    = path.join(__dirname, "../app");
 
 // ─── Icon SVG ─────────────────────────────────────────────────────────────────
-// Designed on a 100×100 viewBox, scaled to any size via width/height attrs.
-// Flat, minimal: 4 bars (short→tall) + zig-up trend line + arrowhead, all #AEDD00.
+// Apple design principles applied:
+//   • Single focal icon — the filled credit card glyph
+//   • Deep navy-to-midnight gradient background — financial trust, premium feel
+//   • White icon at ~56% canvas width for optical balance
+//   • Subtle top-radial highlight — Apple-style soft light source
+//   • No border-radius in SVG (iOS/Android apply their own squircle mask)
 
-function makeSvg(size) {
-  const r = Math.round(size * 0.18);
-  const green = "#AEDD00";
-  const bg    = "#FFFFFF";
+function makeIconSvg(size) {
+  // Scale the 24×24 credit-card path to 56% of canvas
+  const targetPx = size * 0.56;
+  const scale    = targetPx / 24;
+  const offset   = size / 2;
 
-  // All coordinates on a 100×100 grid — sharp scales them via width/height.
-  // Bars: baseline y=88, left-pad x=9, barW=13, gap=4
-  //   bar1: h=22 (short)   bar2: h=34   bar3: h=46   bar4: h=59 (tallest)
-  // Trend line: kink shape starting mid-left, dips, then shoots top-right
-  // Arrow tip: (89, 11) — well above bar4 top (29) and clear of bars
-
-  return `<svg xmlns="http://www.w3.org/2000/svg"
-  width="${size}" height="${size}" viewBox="0 0 100 100">
-
-  <rect width="100" height="100" rx="${(r * 100 / size).toFixed(1)}" fill="${bg}"/>
-
-  <!-- Bar 1 -->
-  <rect x="9"  y="66" width="13" height="22" rx="2.2" fill="${green}"/>
-  <!-- Bar 2 -->
-  <rect x="26" y="54" width="13" height="34" rx="2.2" fill="${green}"/>
-  <!-- Bar 3 -->
-  <rect x="43" y="42" width="13" height="46" rx="2.2" fill="${green}"/>
-  <!-- Bar 4 -->
-  <rect x="60" y="29" width="13" height="59" rx="2.2" fill="${green}"/>
-
-  <!-- Trend line: start(7,61) → kink-low(26,71) → rise(50,49) → pre-tip(74,17) -->
-  <polyline
-    points="7,61 26,71 50,49 74,17"
-    fill="none" stroke="${green}" stroke-width="5.8"
-    stroke-linecap="round" stroke-linejoin="round"/>
-
-  <!-- Arrow head at (90,9) pointing ~NE — larger triangle -->
-  <!-- tip=90,9   left-base=72,23  right-base=82,31 -->
-  <polygon points="90,9 72,23 82,31" fill="${green}"/>
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B1628"/>
+      <stop offset="100%" stop-color="#0E3060"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="0%" r="70%">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="${size}" height="${size}" fill="url(#bg)"/>
+  <rect width="${size}" height="${size}" fill="url(#glow)"/>
+  <g transform="translate(${offset},${offset}) scale(${scale}) translate(-12,-12)">
+    <path fill-rule="evenodd" clip-rule="evenodd"
+      d="M2.00174 10H21.9983C21.9862 7.82497 21.8897 6.64706 21.1213 5.87868C20.2426 5 18.8284 5 16 5H8C5.17157 5 3.75736 5 2.87868 5.87868C2.1103 6.64706 2.01384 7.82497 2.00174 10ZM22 12H2V14C2 16.8284 2 18.2426 2.87868 19.1213C3.75736 20 5.17157 20 8 20H16C18.8284 20 20.2426 20 21.1213 19.1213C22 18.2426 22 16.8284 22 14V12ZM7 15C6.44772 15 6 15.4477 6 16C6 16.5523 6.44772 17 7 17H7.01C7.56228 17 8.01 16.5523 8.01 16C8.01 15.4477 7.56228 15 7.01 15H7Z"
+      fill="white" opacity="0.95"/>
+  </g>
 </svg>`;
 }
 
-async function svgToPng(svgString, outputPath, size) {
-  const buf = Buffer.from(svgString);
-  await sharp(buf, { density: 300 })
+// Favicon: rounded square (browser tabs render their own shape on most OSes)
+function makeFaviconSvg(size) {
+  const r      = Math.round(size * 0.2);
+  const target = size * 0.58;
+  const scale  = target / 24;
+  const offset = size / 2;
+
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B1628"/>
+      <stop offset="100%" stop-color="#0E3060"/>
+    </linearGradient>
+  </defs>
+  <rect width="${size}" height="${size}" rx="${r}" fill="url(#bg)"/>
+  <g transform="translate(${offset},${offset}) scale(${scale}) translate(-12,-12)">
+    <path fill-rule="evenodd" clip-rule="evenodd"
+      d="M2.00174 10H21.9983C21.9862 7.82497 21.8897 6.64706 21.1213 5.87868C20.2426 5 18.8284 5 16 5H8C5.17157 5 3.75736 5 2.87868 5.87868C2.1103 6.64706 2.01384 7.82497 2.00174 10ZM22 12H2V14C2 16.8284 2 18.2426 2.87868 19.1213C3.75736 20 5.17157 20 8 20H16C18.8284 20 20.2426 20 21.1213 19.1213C22 18.2426 22 16.8284 22 14V12ZM7 15C6.44772 15 6 15.4477 6 16C6 16.5523 6.44772 17 7 17H7.01C7.56228 17 8.01 16.5523 8.01 16C8.01 15.4477 7.56228 15 7.01 15H7Z"
+      fill="white"/>
+  </g>
+</svg>`;
+}
+
+async function render(svgString, outputPath, size) {
+  await sharp(Buffer.from(svgString), { density: 300 })
     .resize(size, size)
-    .png()
+    .png({ compressionLevel: 9 })
     .toFile(outputPath);
-  console.log(`✓  ${outputPath}`);
+  console.log(`✓  ${path.basename(outputPath)}  (${size}×${size})`);
 }
 
 // ─── Generate all sizes ───────────────────────────────────────────────────────
 
-await svgToPng(makeSvg(512), path.join(publicDir, "icon-512.png"),        512);
-await svgToPng(makeSvg(192), path.join(publicDir, "icon-192.png"),        192);
-await svgToPng(makeSvg(180), path.join(publicDir, "apple-touch-icon.png"),180);
+await render(makeIconSvg(512),  path.join(publicDir, "icon-512.png"),         512);
+await render(makeIconSvg(192),  path.join(publicDir, "icon-192.png"),         192);
+await render(makeIconSvg(180),  path.join(publicDir, "apple-touch-icon.png"), 180);
+await render(makeIconSvg(1024), path.join(publicDir, "icon-1024.png"),        1024);
 
-// favicon: 32×32 PNG saved as .ico (browsers accept PNG-in-ICO)
-const faviconPng = await sharp(Buffer.from(makeSvg(64)), { density: 300 })
+// favicon.ico as 32×32 PNG (all modern browsers accept PNG-in-ICO)
+const favBuf = await sharp(Buffer.from(makeFaviconSvg(64)), { density: 300 })
   .resize(32, 32)
   .png()
   .toBuffer();
-writeFileSync(path.join(appDir, "favicon.ico"), faviconPng);
-console.log(`✓  app/favicon.ico  (32×32 PNG)`);
+writeFileSync(path.join(appDir, "favicon.ico"), favBuf);
+console.log(`✓  favicon.ico  (32×32)`);
 
-console.log("\nAll icons generated.");
+// Also write a 32×32 PNG for explicit <link> reference
+await render(makeFaviconSvg(64), path.join(publicDir, "favicon-32.png"), 32);
+
+console.log("\nAll icons generated successfully.");
