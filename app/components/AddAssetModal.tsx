@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 export type AssetFormData = {
   name: string;
@@ -87,8 +88,9 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
   }, [open, onClose]);
 
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (!open) return;
+    lockScroll();
+    return () => unlockScroll();
   }, [open]);
 
   const set = (field: keyof AssetFormData) => (

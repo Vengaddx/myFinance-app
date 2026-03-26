@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -63,13 +64,11 @@ export default function DonateModal({ open, onClose }: Props) {
   // Animate in/out
   useEffect(() => {
     if (open) {
-      document.body.style.overflow = "hidden";
+      lockScroll();
       const t = setTimeout(() => setVisible(true), 20);
-      return () => clearTimeout(t);
+      return () => { clearTimeout(t); unlockScroll(); };
     } else {
       setVisible(false);
-      const t = setTimeout(() => { document.body.style.overflow = ""; }, 350);
-      return () => clearTimeout(t);
     }
   }, [open]);
 

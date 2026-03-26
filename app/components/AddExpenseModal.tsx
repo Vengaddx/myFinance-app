@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 export type ExpenseFormData = {
   title: string;
@@ -101,8 +102,9 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
   }, [open, onClose]);
 
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (!open) return;
+    lockScroll();
+    return () => unlockScroll();
   }, [open]);
 
   const setField = <K extends keyof ExpenseFormData>(field: K, value: ExpenseFormData[K]) => {

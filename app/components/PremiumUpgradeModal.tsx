@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import { FREE_LIMITS, PREMIUM_LIMITS } from "@/lib/planLimits";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -66,13 +67,11 @@ export default function PremiumUpgradeModal({ open, onClose, limitContext }: Pro
 
   useEffect(() => {
     if (open) {
-      document.body.style.overflow = "hidden";
+      lockScroll();
       const t = setTimeout(() => setVisible(true), 20);
-      return () => clearTimeout(t);
+      return () => { clearTimeout(t); unlockScroll(); };
     } else {
       setVisible(false);
-      const t = setTimeout(() => { document.body.style.overflow = ""; }, 350);
-      return () => clearTimeout(t);
     }
   }, [open]);
 

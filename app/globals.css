@@ -38,6 +38,9 @@ html {
   /* Prevent font size inflation on orientation change (iOS/Android) */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Contain overscroll at the root so Android PWA doesn't show the
+     pull-to-refresh / navigation gestures while a modal is open */
+  overscroll-behavior: none;
 }
 
 * {

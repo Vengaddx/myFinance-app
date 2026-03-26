@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 export type LiabilityFormData = {
   lender_name: string;
@@ -84,8 +85,9 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
   }, [open, onClose]);
 
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (!open) return;
+    lockScroll();
+    return () => unlockScroll();
   }, [open]);
 
   const set = (field: keyof LiabilityFormData) => (

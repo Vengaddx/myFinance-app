@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 type Props = {
   open: boolean;
@@ -43,8 +44,9 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
   }, [open, onClose]);
 
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (!open) return;
+    lockScroll();
+    return () => unlockScroll();
   }, [open]);
 
   const handleSave = async () => {

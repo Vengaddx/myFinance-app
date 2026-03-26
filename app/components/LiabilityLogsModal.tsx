@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import { supabase } from "@/lib/supabase";
 
 type LogRow = {
@@ -68,8 +69,9 @@ export default function LiabilityLogsModal({ open, onClose, liabilityId, liabili
   }, [open, onClose]);
 
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (!open) return;
+    lockScroll();
+    return () => unlockScroll();
   }, [open]);
 
   const modalBg = isDark ? "rgba(18,18,20,0.96)" : "rgba(255,255,255,0.94)";
