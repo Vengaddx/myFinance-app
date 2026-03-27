@@ -231,7 +231,7 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
               <input
                 ref={firstInputRef}
                 type="text"
-                placeholder="e.g. Rahul, SBI, HDFC Bank"
+                placeholder="e.g. Maha, SBI, HDFC Bank"
                 value={form.lender_name}
                 onChange={set("lender_name")}
                 className="lf-input"

@@ -32,10 +32,28 @@ const ASSET_TYPES = [
   { value: "lended", label: "Lended" },
   { value: "fd", label: "Fixed Deposits" },
   { value: "realestate", label: "Real Estate" },
+  { value: "bank", label: "Bank Account" },
   { value: "cash", label: "Cash" },
   { value: "crypto", label: "Crypto" },
   { value: "other", label: "Other" },
 ];
+
+// Bank and Cash — no invested field, just a balance
+const SIMPLE_TYPES = new Set(["bank", "cash"]);
+
+function getInvestedLabel(assetType: string): string {
+  if (assetType === "fd") return "Principal";
+  if (assetType === "lended") return "Amount Lent";
+  if (assetType === "realestate") return "Purchase Price";
+  return "Invested";
+}
+
+function getCurrentValueLabel(assetType: string): string {
+  if (assetType === "bank") return "Balance";
+  if (assetType === "cash") return "Cash on Hand";
+  if (assetType === "realestate") return "Market Value";
+  return "Current Value";
+}
 
 type Props = {
   open: boolean;
@@ -68,13 +86,15 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<AssetFormData>(EMPTY_FORM);
-  const [sameAsInvested, setSameAsInvested] = useState(false);
   const [errors, setErrors] = useState<{ name?: boolean; currentValue?: boolean }>({});
+
+  const isSimple = SIMPLE_TYPES.has(form.assetType);
+  const investedLabel = getInvestedLabel(form.assetType);
+  const currentValueLabel = getCurrentValueLabel(form.assetType);
 
   useEffect(() => {
     if (!open) return;
     setForm(initialData ?? { ...EMPTY_FORM });
-    setSameAsInvested(false);
     setErrors({});
     const t = setTimeout(() => firstInputRef.current?.focus(), 80);
     return () => clearTimeout(t);
@@ -97,24 +117,9 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const value = e.target.value;
-    setForm((f) => {
-      const next = { ...f, [field]: value };
-      // If syncing and invested changes, keep currentValue in sync
-      if (field === "invested" && sameAsInvested) {
-        next.currentValue = value;
-      }
-      return next;
-    });
+    setForm((f) => ({ ...f, [field]: value }));
     if (field === "name" && value) setErrors((e) => ({ ...e, name: false }));
     if (field === "currentValue" && value) setErrors((e) => ({ ...e, currentValue: false }));
-  };
-
-  const handleCheckbox = (checked: boolean) => {
-    setSameAsInvested(checked);
-    if (checked) {
-      setForm((f) => ({ ...f, currentValue: f.invested }));
-      setErrors((e) => ({ ...e, currentValue: false }));
-    }
   };
 
   const handleSave = async () => {
@@ -234,7 +239,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
 
           {/* Form */}
           <div className="overflow-y-auto flex-1 px-6 py-5 flex flex-col gap-4">
-            {/* Asset Name — mandatory */}
+            {/* Asset Name */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
                 <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.name ? "#ff3b30" : labelColor }}>
@@ -284,49 +289,50 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
               </div>
             </div>
 
-            {/* Invested + Current Value */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Invested — hidden for bank/cash */}
+            {!isSimple && (
               <div className="flex flex-col gap-2">
-                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Invested</label>
-                <input type="number" placeholder="0.00" min="0" value={form.invested} onChange={set("invested")}
-                  className="mf-input" style={inputStyle()} onFocus={onFocus} onBlur={onBlur()} />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.currentValue ? "#ff3b30" : labelColor }}>
-                      Current Value
-                    </label>
-                    <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
-                  </div>
-                  {/* Same as invested checkbox */}
-                  <label className="flex items-center gap-1.5 cursor-pointer select-none" title="Copy invested value">
-                    <div
-                      className="w-[14px] h-[14px] rounded-[4px] flex items-center justify-center flex-shrink-0"
-                      style={{
-                        background: sameAsInvested ? "#007aff" : "transparent",
-                        border: `1.5px solid ${sameAsInvested ? "#007aff" : (isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)")}`,
-                        transition: "background 150ms ease, border-color 150ms ease",
-                      }}
-                    >
-                      {sameAsInvested && (
-                        <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
-                          <polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
-                      <input type="checkbox" checked={sameAsInvested} onChange={(e) => handleCheckbox(e.target.checked)} className="sr-only" />
-                    </div>
-                    <span className="text-[11px] font-medium" style={{ color: labelColor }}>= Invested</span>
-                  </label>
-                </div>
-                <input type="number" placeholder="0.00" min="0" value={form.currentValue}
-                  onChange={(e) => { setSameAsInvested(false); set("currentValue")(e); }}
-                  className="mf-input" style={inputStyle(errors.currentValue)} onFocus={onFocus} onBlur={onBlur(errors.currentValue)}
-                  readOnly={sameAsInvested}
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>
+                  {investedLabel}
+                </label>
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  min="0"
+                  value={form.invested}
+                  onChange={set("invested")}
+                  className="mf-input"
+                  style={inputStyle()}
+                  onFocus={onFocus}
+                  onBlur={onBlur()}
                 />
-                {errors.currentValue && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Current value is required</p>}
               </div>
+            )}
+
+            {/* Current Value / Balance */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-1.5">
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.currentValue ? "#ff3b30" : labelColor }}>
+                  {currentValueLabel}
+                </label>
+                <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
+              </div>
+              <input
+                type="number"
+                placeholder="0.00"
+                min="0"
+                value={form.currentValue}
+                onChange={set("currentValue")}
+                className="mf-input"
+                style={inputStyle(errors.currentValue)}
+                onFocus={onFocus}
+                onBlur={onBlur(errors.currentValue)}
+              />
+              {errors.currentValue && (
+                <p className="text-[12px]" style={{ color: "#ff3b30" }}>
+                  {currentValueLabel} is required
+                </p>
+              )}
             </div>
           </div>
 

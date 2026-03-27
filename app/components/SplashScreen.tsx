@@ -80,6 +80,7 @@ export default function SplashScreen({ onDone }: Props) {
         position: "fixed",
         inset: 0,
         zIndex: 100,
+        overflow: "hidden",
         background: "linear-gradient(155deg, #0d0d10 0%, #101014 55%, #0b0b0e 100%)",
         display: "flex",
         flexDirection: "column",

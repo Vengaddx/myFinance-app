@@ -34,6 +34,9 @@ html.dark {
 }
 
 html {
+  /* Clamp document width to viewport — prevents iOS PWA horizontal scroll */
+  width: 100%;
+  max-width: 100%;
   overflow-x: hidden;
   /* Prevent font size inflation on orientation change (iOS/Android) */
   -webkit-text-size-adjust: 100%;
@@ -54,7 +57,17 @@ button, a, input, select, textarea, [role="button"] {
   touch-action: manipulation;
 }
 
+/* Prevent iOS Safari from zooming in when tapping inputs with small font sizes.
+   Zoom-on-focus shifts the viewport horizontally and can strand it there in PWA mode. */
+@media (hover: none) and (pointer: coarse) {
+  input, select, textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
 body {
+  width: 100%;
+  max-width: 100%;
   overflow-x: hidden;
   /* Contain overscroll on Android; harmless on iOS */
   overscroll-behavior-y: contain;

@@ -59,7 +59,8 @@ const TABS: { label: string; value: AssetCategory | "all" }[] = [
   { label: "Lended", value: "lended" },
   { label: "Fixed Deposits", value: "fd" },
   { label: "Real Estate", value: "realestate" },
-  { label: "Cash & Savings", value: "cash" },
+  { label: "Bank Account", value: "bank" },
+  { label: "Cash", value: "cash" },
   { label: "Crypto", value: "crypto" },
   { label: "Other", value: "other" },
 ];
@@ -73,7 +74,8 @@ const CATEGORY_META: Record<
   lended: { label: "LENDED", bg: "#e8f5ed", color: "#1e7a3e" },
   fd: { label: "FIXED DEPOSITS", bg: "#e6f4ff", color: "#0055b3" },
   realestate: { label: "REAL ESTATE", bg: "#fff0e6", color: "#c0501a" },
-  cash: { label: "CASH & SAVINGS", bg: "#f2f2f7", color: "#636366" },
+  bank: { label: "BANK ACCOUNT", bg: "#e0f0ff", color: "#0055b3" },
+  cash: { label: "CASH", bg: "#f2f2f7", color: "#636366" },
   crypto: { label: "CRYPTO", bg: "#ede8ff", color: "#5b30c0" },
   other: { label: "OTHER", bg: "#f2f2f7", color: "#636366" },
 };
@@ -147,7 +149,10 @@ function normalizeCategory(value?: string | null): AssetCategory {
   if (v === "realestate" || v === "real estate" || v === "property") {
     return "realestate";
   }
-  if (v === "cash" || v === "cash & savings" || v === "savings" || v === "bank") {
+  if (v === "bank" || v === "bank account") {
+    return "bank";
+  }
+  if (v === "cash" || v === "cash & savings" || v === "savings") {
     return "cash";
   }
   if (v === "crypto" || v === "bitcoin") {
@@ -219,6 +224,7 @@ function AssetIcon({ type }: { type?: string }) {
     lended: { symbol: "🤝", bg: "#e8f5ed", color: "#1e7a3e" },
     fd: { symbol: "🏦", bg: "#e6f4ff", color: "#0055b3" },
     realestate: { symbol: "🏠", bg: "#fff0e6", color: "#c0501a" },
+    bank: { symbol: "🏦", bg: "#e0f0ff", color: "#0055b3" },
     cash: { symbol: "💵", bg: "#f2f2f7", color: "#636366" },
     crypto: { symbol: "₿", bg: "#ede8ff", color: "#5b30c0" },
     other: { symbol: "📦", bg: "#f2f2f7", color: "#636366" },
@@ -397,9 +403,10 @@ export type StickyBarData = {
 type AssetsTableProps = {
   onDataChanged?: () => void;
   onSummaryChange?: (data: StickyBarData) => void;
+  refreshKey?: number;
 };
 
-export default function AssetsTable({ onDataChanged, onSummaryChange }: AssetsTableProps) {
+export default function AssetsTable({ onDataChanged, onSummaryChange, refreshKey }: AssetsTableProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { session, profile } = useAuth();
@@ -419,7 +426,7 @@ export default function AssetsTable({ onDataChanged, onSummaryChange }: AssetsTa
   const [expenseQuickFilter, setExpenseQuickFilter] = useState<"all" | "claim" | "splitwise">("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [dbAssets, setDbAssets] = useState<DbAssetRow[]>([]);
-  const [sortKey, setSortKey] = useState<"invested" | "curVal" | "pnl" | null>(null);
+  const [sortKey, setSortKey] = useState<"curVal" | "pnl" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
 const [editingFormData, setEditingFormData] = useState<AssetFormData | null>(null);
@@ -710,9 +717,9 @@ const [upgradeContext, setUpgradeContext] = useState<string | undefined>(undefin
   setEditingFormData({
     name: asset.name,
     currency: String(parsedNotes.currency ?? "INR"),
-    invested: String(parsedNotes.invested ?? parsedNotes.avgPurchasePrice ?? ""),
+    invested: String(parsedNotes.invested ?? ""),
     currentValue: String(asset.curVal ?? ""),
-    assetType: asset.category,
+    assetType: String(dbRow?.type ?? asset.category),
   });
 
   setModalOpen(true);
@@ -781,7 +788,7 @@ onDataChanged?.();
     fetchAssets();
     fetchLiabilities();
     fetchExpenses();
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
     const handler = () => {
@@ -821,11 +828,13 @@ onDataChanged?.();
         parsedNotes = {};
       }
 
-      const invested = Number(parsedNotes.invested ?? parsedNotes.avgPurchasePrice ?? 0);
+      const category = normalizeCategory(a.type);
       const curVal = Number(a.value ?? 0);
+      const isSimple = category === "bank" || category === "cash";
+      // For bank/cash: invested = 0 so P&L is always 0
+      const invested = isSimple ? 0 : Number(parsedNotes.invested ?? 0);
       const pnl = curVal - invested;
       const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
-      const category = normalizeCategory(a.type);
 
       return {
         id: a.id,
@@ -950,7 +959,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
     });
   }, [filtered, filteredExpenses, sectionTab, activeTab, liabilities, onSummaryChange]);
 
-  const handleSort = (key: "invested" | "curVal" | "pnl") => {
+  const handleSort = (key: "curVal" | "pnl") => {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
@@ -967,7 +976,6 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
       const rows = filtered.map((a) => ({
         Name: a.name,
         Category: CATEGORY_META[a.category as AssetCategory]?.label ?? a.category,
-        "Invested (₹)": a.invested,
         "Current Value (₹)": a.curVal,
         "P&L (₹)": a.pnl,
         "P&L (%)": parseFloat(a.pnlPct.toFixed(2)),
@@ -1351,11 +1359,6 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
             >
               {sectionTab === "assets" && (<>
                 <div>
-                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Invested</p>
-                  <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{fmtINR(inv)}</p>
-                </div>
-                {sep}
-                <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Cur. Value</p>
                   <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{fmtINR(cur)}</p>
                 </div>
@@ -1443,12 +1446,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                   className="flex items-start justify-between mt-3 pt-3"
                   style={{ borderTop: "1px solid var(--separator-subtle)" }}
                 >
-                  <StatLabel label="Invested" value={fmtINRFull(asset.invested)} />
-                  <StatLabel
-                    label="Cur. Val"
-                    value={fmtINRFull(asset.curVal)}
-                    align="center"
-                  />
+                  <StatLabel label="Cur. Val" value={fmtINRFull(asset.curVal)} />
                   <StatLabel
                     label="Alloc."
                     value={`${asset.allocation}%`}
@@ -1507,7 +1505,6 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                 </th>
                 {(
                   [
-                    { label: "INVESTED", key: "invested" as const, pad: "px-4" },
                     { label: "CUR. VAL", key: "curVal" as const, pad: "px-4" },
                     { label: "P&L", key: "pnl" as const, pad: "px-4" },
                   ] as const
@@ -1591,13 +1588,6 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
         </button>
       </div>
     </div>
-  </td>
-
-  <td
-    className="px-4 py-4 text-right text-[15px] font-medium"
-    style={{ color: "var(--text-secondary)", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}
-  >
-    {fmtINRFull(asset.invested)}
   </td>
 
   <td

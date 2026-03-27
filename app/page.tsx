@@ -35,6 +35,7 @@ const allocationColorMap: Record<string, string> = {
   lended: "#1e7a3e",
   fd: "#0055b3",
   realestate: "#AEDD00",
+  bank: "#4DA8FF",
   cash: "#636366",
   crypto: "#5b30c0",
   other: "#8E8E93",
@@ -46,7 +47,8 @@ const allocationLabelMap: Record<string, string> = {
   lended: "Lended",
   fd: "Fixed Deposits",
   realestate: "Real Estate",
-  cash: "Cash & Savings",
+  bank: "Bank Account",
+  cash: "Cash",
   crypto: "Crypto",
   other: "Other",
 };
@@ -87,11 +89,12 @@ function normalizeCategory(value?: string | null) {
     v === "property"
   ) return "realestate";
 
+  if (v === "bank" || v === "bank account") return "bank";
+
   if (
     v === "cash" ||
     v === "cash & savings" ||
-    v === "savings" ||
-    v === "bank"
+    v === "savings"
   ) return "cash";
 
   if (v === "crypto" || v === "bitcoin") return "crypto";
@@ -111,6 +114,7 @@ export default function Home() {
   const [stickyData, setStickyData] = useState<StickyBarData | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [tableRefreshKey, setTableRefreshKey] = useState(0);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Auth guard — redirect to login and wipe local state if not signed in
@@ -192,6 +196,7 @@ export default function Home() {
       lended: 0,
       fd: 0,
       realestate: 0,
+      bank: 0,
       cash: 0,
       crypto: 0,
       other: 0,
@@ -211,7 +216,9 @@ export default function Home() {
         parsedNotes = {};
       }
 
-      invested += Number(parsedNotes.invested ?? parsedNotes.avgPurchasePrice ?? 0);
+      // Bank/cash have no invested amount — P&L is always 0 for those
+      const isSimple = category === "bank" || category === "cash";
+      invested += isSimple ? 0 : Number(parsedNotes.invested ?? 0);
     }
 
     const liabilities = dbLiabilities
@@ -275,6 +282,7 @@ export default function Home() {
           onComplete={() => {
             setShowOnboarding(false);
             refreshAll();
+            setTableRefreshKey((k) => k + 1);
           }}
         />
       )}
@@ -317,13 +325,6 @@ export default function Home() {
           {/* Row 2: Metrics */}
           {(!stickyData || stickyData.sectionTab === "assets") && (
             <div className="flex items-center gap-5">
-              <div>
-                <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Invested</p>
-                <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
-                  {fmtINR(stickyData?.invested ?? 0)}
-                </p>
-              </div>
-              <div className="w-px h-6" style={{ background: "var(--separator)" }} />
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Cur. Value</p>
                 <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.015em" }}>
@@ -444,7 +445,7 @@ export default function Home() {
         </div>
 
         <div ref={sentinelRef}>
-          <AssetsTable onDataChanged={refreshAll} onSummaryChange={setStickyData} />
+          <AssetsTable onDataChanged={refreshAll} onSummaryChange={setStickyData} refreshKey={tableRefreshKey} />
         </div>
       </main>
       <Footer />

@@ -4,6 +4,7 @@ export type AssetCategory =
   | "lended"
   | "fd"
   | "realestate"
+  | "bank"
   | "cash"
   | "crypto"
   | "other";
