@@ -8,7 +8,7 @@ const isProd =
 export default function DevBadge() {
   if (isProd) return null;
 
-  const label = process.env.VERCEL_ENV === "preview" ? "PREVIEW" : "DEV";
+  const label = process.env.VERCEL_ENV === "Development" ? "Development" : "DEV";
 
   return (
     <div
