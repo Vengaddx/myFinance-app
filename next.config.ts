@@ -24,7 +24,20 @@ const securityHeaders = [
   },
 ];
 
+// Derive the canonical site URL for every build environment:
+//   - Vercel (preview & prod): VERCEL_URL is auto-injected by Vercel at build time
+//     (it's the deployment hostname without scheme, e.g. myapp-abc123.vercel.app)
+//   - Local dev: fall back to NEXT_PUBLIC_SITE_URL from .env.local, then localhost
+// Exposed as NEXT_PUBLIC_SITE_URL so it's baked into the client bundle and available
+// without window — which matters because Supabase's redirect validation is server-side.
+const siteUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000");
+
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_SITE_URL: siteUrl,
+  },
   async headers() {
     return [
       {

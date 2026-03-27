@@ -46,7 +46,9 @@ export default function LoginPage() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        // NEXT_PUBLIC_SITE_URL is baked in at build time from VERCEL_URL (on Vercel)
+        // or NEXT_PUBLIC_SITE_URL in .env.local (local dev). See next.config.ts.
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
       },
     });
   };
