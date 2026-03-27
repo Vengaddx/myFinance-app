@@ -52,6 +52,17 @@ type DbExpenseRow = {
   created_at?: string;
 };
 
+type BrokerHolding = {
+  tradingsymbol: string;
+  exchange: string;
+  quantity: number;
+  average_price: number;
+  last_price: number;
+  pnl: number;
+  day_change_pct: number;
+  synced_at: string;
+};
+
 const TABS: { label: string; value: AssetCategory | "all" }[] = [
   { label: "All", value: "all" },
   { label: "Stocks & ETFs", value: "stocks" },
@@ -123,6 +134,13 @@ function getMonthOptions(): { key: string; label: string }[] {
     options.push({ key, label });
   }
   return options;
+}
+
+// Kite instruments classified under Gold & Silver instead of Stocks
+const KITE_COMMODITY_SYMBOLS = new Set(["SGBDE31III", "SILVERBEES", "GOLDBEES"]);
+
+function classifyKiteHolding(tradingsymbol: string): "gold" | "stocks" {
+  return KITE_COMMODITY_SYMBOLS.has(tradingsymbol) ? "gold" : "stocks";
 }
 
 function normalizeCategory(value?: string | null): AssetCategory {
@@ -428,6 +446,7 @@ export default function AssetsTable({ onDataChanged, onSummaryChange, refreshKey
   const [dbAssets, setDbAssets] = useState<DbAssetRow[]>([]);
   const [sortKey, setSortKey] = useState<"curVal" | "pnl" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [brokerHoldings, setBrokerHoldings] = useState<BrokerHolding[]>([]);
   const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
 const [editingFormData, setEditingFormData] = useState<AssetFormData | null>(null);
 const [toastMessage, setToastMessage] = useState("");
@@ -481,6 +500,15 @@ const [upgradeContext, setUpgradeContext] = useState<string | undefined>(undefin
       .order("expense_date", { ascending: false });
     if (error) { console.error(error); return; }
     setExpenses((data as DbExpenseRow[]) ?? []);
+  };
+
+  const fetchBrokerHoldings = async () => {
+    const { data, error } = await supabase
+      .from("broker_holdings")
+      .select("tradingsymbol, exchange, quantity, average_price, last_price, pnl, day_change_pct, synced_at")
+      .eq("broker", "kite")
+      .order("synced_at", { ascending: false });
+    if (!error) setBrokerHoldings((data as BrokerHolding[]) ?? []);
   };
 
   const handleSaveExpense = async (data: ExpenseFormData) => {
@@ -788,6 +816,7 @@ onDataChanged?.();
     fetchAssets();
     fetchLiabilities();
     fetchExpenses();
+    fetchBrokerHoldings();
   }, [refreshKey]);
 
   useEffect(() => {
@@ -858,6 +887,90 @@ onDataChanged?.();
     }));
   }, [dbAssets]);
 
+  // ── Kite holdings as UiAsset items (for category-specific views) ─────────────
+  const kiteUiAssets = useMemo<UiAsset[]>(() => {
+    return brokerHoldings.map((h) => {
+      const invested = h.quantity * h.average_price;
+      const curVal   = h.quantity * h.last_price;
+      const pnl      = curVal - invested;
+      const pnlPct   = invested > 0 ? (pnl / invested) * 100 : 0;
+      return {
+        id: `kite_${h.tradingsymbol}`,
+        name: h.tradingsymbol,
+        ticker: h.tradingsymbol,
+        category: classifyKiteHolding(h.tradingsymbol),
+        shares: h.quantity,
+        invested,
+        curVal,
+        pnl,
+        pnlPct,
+        allocation: 0, // recalculated in filtered
+      };
+    });
+  }, [brokerHoldings]);
+
+  // ── Kite grouped summary rows (for ALL view only) ────────────────────────────
+  type KiteGroupRow = {
+    id: string;
+    name: string;
+    subLabel: string;
+    category: string;
+    count: number;
+    invested: number;
+    curVal: number;
+    pnl: number;
+    pnlPct: number;
+    allocation: number;
+  };
+
+  const kiteGroupedRows = useMemo<KiteGroupRow[]>(() => {
+    const stocksH = kiteUiAssets.filter((h) => h.category === "stocks");
+    const commH   = kiteUiAssets.filter((h) => h.category === "gold");
+    const rows: Omit<KiteGroupRow, "allocation">[] = [];
+
+    if (stocksH.length > 0) {
+      const inv = stocksH.reduce((s, h) => s + h.invested, 0);
+      const cur = stocksH.reduce((s, h) => s + h.curVal, 0);
+      const p   = cur - inv;
+      rows.push({
+        id: "kite_group_stocks",
+        name: "Kite Holdings",
+        subLabel: `${stocksH.length} position${stocksH.length !== 1 ? "s" : ""} · Stocks & ETFs`,
+        category: "stocks",
+        count: stocksH.length,
+        invested: inv,
+        curVal: cur,
+        pnl: p,
+        pnlPct: inv > 0 ? (p / inv) * 100 : 0,
+      });
+    }
+
+    if (commH.length > 0) {
+      const inv = commH.reduce((s, h) => s + h.invested, 0);
+      const cur = commH.reduce((s, h) => s + h.curVal, 0);
+      const p   = cur - inv;
+      rows.push({
+        id: "kite_group_commodities",
+        name: "Kite Commodities",
+        subLabel: `${commH.length} position${commH.length !== 1 ? "s" : ""} · Gold & Silver`,
+        category: "gold",
+        count: commH.length,
+        invested: inv,
+        curVal: cur,
+        pnl: p,
+        pnlPct: inv > 0 ? (p / inv) * 100 : 0,
+      });
+    }
+
+    const totalPortfolio =
+      mappedAssets.reduce((s, a) => s + a.curVal, 0) +
+      kiteUiAssets.reduce((s, a) => s + a.curVal, 0);
+    return rows.map((r) => ({
+      ...r,
+      allocation: totalPortfolio > 0 ? Number(((r.curVal / totalPortfolio) * 100).toFixed(1)) : 0,
+    }));
+  }, [kiteUiAssets, mappedAssets]);
+
   const mappedLiabilities = liabilities.map((l) => ({
   id: l.id,
   name: l.liability_name || l.lender_name,
@@ -895,21 +1008,35 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
   }, [expenses, expenseMonthKey, search, expenseCategoryFilter, expenseQuickFilter]);
 
   const filtered = useMemo(() => {
-    const base = mappedAssets.filter((a) => {
+    const q = search.toLowerCase().trim();
+
+    const manualBase = mappedAssets.filter((a) => {
       const matchTab = activeTab === "all" || a.category === activeTab;
-      const q = search.toLowerCase().trim();
-      const matchSearch =
-        a.name.toLowerCase().includes(q) || a.ticker.toLowerCase().includes(q);
+      const matchSearch = a.name.toLowerCase().includes(q) || a.ticker.toLowerCase().includes(q);
       return matchTab && matchSearch;
     });
 
-    if (!sortKey) return base;
+    // In ALL view, kite items are shown as grouped summary rows — not individually
+    const kiteBase = activeTab === "all" ? [] : kiteUiAssets.filter((a) => {
+      const matchSearch = a.name.toLowerCase().includes(q);
+      return a.category === activeTab && matchSearch;
+    });
 
-    return [...base].sort((a, b) => {
+    const combined = [...manualBase, ...kiteBase];
+
+    // Recompute allocation relative to the visible filtered set
+    const totalCurVal = combined.reduce((s, a) => s + a.curVal, 0);
+    const withAlloc = combined.map((a) => ({
+      ...a,
+      allocation: totalCurVal > 0 ? Number(((a.curVal / totalCurVal) * 100).toFixed(1)) : 0,
+    }));
+
+    if (!sortKey) return withAlloc;
+    return [...withAlloc].sort((a, b) => {
       const diff = a[sortKey] - b[sortKey];
       return sortDir === "asc" ? diff : -diff;
     });
-  }, [mappedAssets, activeTab, search, sortKey, sortDir]);
+  }, [mappedAssets, kiteUiAssets, activeTab, search, sortKey, sortDir]);
 
   useEffect(() => {
     if (!onSummaryChange) return;
@@ -931,8 +1058,11 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
       return;
     }
 
-    const invested = filtered.reduce((s, a) => s + a.invested, 0);
-    const curVal   = filtered.reduce((s, a) => s + a.curVal, 0);
+    // For ALL tab, kite items are not in `filtered` — add their totals separately
+    const kiteInv = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.invested, 0) : 0;
+    const kiteCur = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.curVal, 0) : 0;
+    const invested = filtered.reduce((s, a) => s + a.invested, 0) + kiteInv;
+    const curVal   = filtered.reduce((s, a) => s + a.curVal, 0) + kiteCur;
     const pnl      = curVal - invested;
     const pnlPct   = invested > 0 ? (pnl / invested) * 100 : 0;
     const mappedLibs = liabilities.map((l) => ({
@@ -957,7 +1087,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
       totalBorrowed,
       liabilityCount: liabilities.length,
     });
-  }, [filtered, filteredExpenses, sectionTab, activeTab, liabilities, onSummaryChange]);
+  }, [filtered, filteredExpenses, sectionTab, activeTab, liabilities, kiteUiAssets, onSummaryChange]);
 
   const handleSort = (key: "curVal" | "pnl") => {
     if (sortKey === key) {
@@ -1342,8 +1472,10 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
 
         {/* Desktop-only inline summary — always visible above the table */}
         {(() => {
-          const inv  = filtered.reduce((s, a) => s + a.invested, 0);
-          const cur  = filtered.reduce((s, a) => s + a.curVal, 0);
+          const kiteInv = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.invested, 0) : 0;
+          const kiteCur = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.curVal, 0) : 0;
+          const inv  = filtered.reduce((s, a) => s + a.invested, 0) + kiteInv;
+          const cur  = filtered.reduce((s, a) => s + a.curVal, 0) + kiteCur;
           const pnl  = cur - inv;
           const pct  = inv > 0 ? (pnl / inv) * 100 : 0;
           const outstanding   = filteredLiabilities.reduce((s, l) => s + l.outstandingAmount, 0);
@@ -1415,6 +1547,8 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
         {sectionTab === "assets" && (<>
         <div className="md:hidden">
           {filtered.map((asset, idx) => {
+            const isKite = asset.id.startsWith("kite_");
+            const hasKiteRows = activeTab === "all" && kiteGroupedRows.length > 0;
             const isLast = idx === filtered.length - 1;
 
             return (
@@ -1422,18 +1556,26 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                 key={asset.id}
                 className="px-4 sm:px-5 py-4"
                 style={{
-                  borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)",
+                  borderBottom: isLast && !hasKiteRows ? "none" : "1px solid var(--separator-subtle)",
                 }}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="min-w-0">
-                      <p
-                        className="text-[16px] font-bold truncate"
-                        style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
-                      >
-                        {asset.name}
-                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p
+                          className="text-[16px] font-bold truncate"
+                          style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
+                        >
+                          {asset.name}
+                        </p>
+                        {isKite && (
+                          <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
+                            style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
+                            KITE
+                          </span>
+                        )}
+                      </div>
                       <div className="mt-0.5">
                         <CategoryBadge category={asset.category} />
                       </div>
@@ -1454,29 +1596,66 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                   />
                 </div>
 
-                <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
-                  <button
-                    onClick={() => handleEdit(asset)}
-                    className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium"
-                    style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}
-                  >
-                    <EditIcon /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(asset.id)}
-                    className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]"
-                    style={{ color: "var(--text-tertiary)" }}
-                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")}
-                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
-                  >
-                    <TrashIcon />
-                  </button>
+                {!isKite && (
+                  <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
+                    <button
+                      onClick={() => handleEdit(asset)}
+                      className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium"
+                      style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}
+                    >
+                      <EditIcon /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(asset.id)}
+                      className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]"
+                      style={{ color: "var(--text-tertiary)" }}
+                      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")}
+                      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Kite grouped summary rows — ALL view only */}
+          {activeTab === "all" && kiteGroupedRows.map((row, idx) => {
+            const isLast = idx === kiteGroupedRows.length - 1;
+            return (
+              <div
+                key={row.id}
+                className="px-4 sm:px-5 py-4"
+                style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                        {row.name}
+                      </p>
+                      <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
+                        style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
+                        KITE SYNC
+                      </span>
+                    </div>
+                    <div className="mt-0.5">
+                      <CategoryBadge category={row.category} />
+                    </div>
+                    <p className="text-[12px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>{row.subLabel}</p>
+                  </div>
+                  <PnlCell value={row.pnl} pct={row.pnlPct} />
+                </div>
+                <div className="flex items-start justify-between mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
+                  <StatLabel label="Cur. Val" value={fmtINRFull(row.curVal)} />
+                  <StatLabel label="Invested" value={fmtINRFull(row.invested)} align="right" />
                 </div>
               </div>
             );
           })}
 
-          {filtered.length === 0 && (
+          {filtered.length === 0 && kiteGroupedRows.length === 0 && (
             <div
               className="py-14 text-center text-[14px]"
               style={{ color: "var(--text-tertiary)" }}
@@ -1537,99 +1716,134 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
 
             <tbody>
               {filtered.map((asset, idx) => {
+                const isKite = asset.id.startsWith("kite_");
+                const hasKiteRows = activeTab === "all" && kiteGroupedRows.length > 0;
                 const isLast = idx === filtered.length - 1;
 
                 return (
                   <tr
-  key={asset.id}
-  className="cursor-pointer"
-  style={{
-    borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)",
-  }}
-  onMouseEnter={(e) => {
-    (e.currentTarget as HTMLElement).style.background =
-      "var(--row-hover)";
-  }}
-  onMouseLeave={(e) => {
-    (e.currentTarget as HTMLElement).style.background =
-      "transparent";
-  }}
->
-  <td className="pl-6 pr-4 py-4">
-    <div>
-      <p
-        className="text-[15px] font-bold"
-        style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
-      >
-        {asset.name}
-      </p>
+                    key={asset.id}
+                    className="cursor-pointer"
+                    style={{ borderBottom: isLast && !hasKiteRows ? "none" : "1px solid var(--separator-subtle)" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    <td className="pl-6 pr-4 py-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                            {asset.name}
+                          </p>
+                          {isKite && (
+                            <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                              style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
+                              KITE
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 flex items-center gap-2">
+                          <CategoryBadge category={asset.category} />
+                          {!isKite && (
+                            <>
+                              <button
+                                onClick={() => handleEdit(asset)}
+                                className="icon-btn w-5 h-5 flex items-center justify-center rounded-md"
+                                style={{ color: "var(--text-tertiary)" }}
+                                title="Edit"
+                              >
+                                <EditIcon />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(asset.id)}
+                                className="icon-btn w-5 h-5 flex items-center justify-center rounded-md"
+                                style={{ color: "var(--text-tertiary)" }}
+                                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")}
+                                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
+                                title="Delete"
+                              >
+                                <TrashIcon />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </td>
 
-      <div className="mt-1 flex items-center gap-2">
-        <CategoryBadge category={asset.category} />
+                    <td className="px-4 py-4 text-right text-[15px] font-bold" style={{ color: "var(--text-primary)", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
+                      {fmtINRFull(asset.curVal)}
+                    </td>
 
-        <button
-          onClick={() => handleEdit(asset)}
-          className="icon-btn w-5 h-5 flex items-center justify-center rounded-md"
-          style={{ color: "var(--text-tertiary)" }}
-          title="Edit"
-        >
-          <EditIcon />
-        </button>
+                    <td className="px-4 py-4 text-right">
+                      <PnlCell value={asset.pnl} pct={asset.pnlPct} />
+                    </td>
 
-        <button
-          onClick={() => handleDelete(asset.id)}
-          className="icon-btn w-5 h-5 flex items-center justify-center rounded-md"
-          style={{ color: "var(--text-tertiary)" }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
-          title="Delete"
-        >
-          <TrashIcon />
-        </button>
-      </div>
-    </div>
-  </td>
+                    <td className="pr-6 pl-4 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2.5">
+                        <div className="w-14 h-[3px] rounded-full overflow-hidden" style={{ background: "var(--separator)" }}>
+                          <div className="h-full rounded-full" style={{ width: `${Math.min(asset.allocation, 100)}%`, background: "var(--text-primary)" }} />
+                        </div>
+                        <span className="text-[15px] font-bold w-9 text-right" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+                          {asset.allocation}%
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
 
-  <td
-    className="px-4 py-4 text-right text-[15px] font-bold"
-    style={{ color: "var(--text-primary)", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}
-  >
-    {fmtINRFull(asset.curVal)}
-  </td>
+              {/* Kite grouped summary rows — ALL view only */}
+              {activeTab === "all" && kiteGroupedRows.map((row, idx) => {
+                const isLast = idx === kiteGroupedRows.length - 1;
+                return (
+                  <tr
+                    key={row.id}
+                    style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    <td className="pl-6 pr-4 py-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                            {row.name}
+                          </p>
+                          <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                            style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
+                            KITE SYNC
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-center gap-2">
+                          <CategoryBadge category={row.category} />
+                          <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>{row.subLabel}</span>
+                        </div>
+                      </div>
+                    </td>
 
-  <td className="px-4 py-4 text-right">
-    <PnlCell value={asset.pnl} pct={asset.pnlPct} />
-  </td>
+                    <td className="px-4 py-4 text-right text-[15px] font-bold" style={{ color: "var(--text-primary)", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
+                      {fmtINRFull(row.curVal)}
+                    </td>
 
-  <td className="pr-6 pl-4 py-4 text-right">
-    <div className="flex items-center justify-end gap-2.5">
-      <div
-        className="w-14 h-[3px] rounded-full overflow-hidden"
-        style={{ background: "var(--separator)" }}
-      >
-        <div
-          className="h-full rounded-full"
-          style={{
-            width: `${Math.min(asset.allocation, 100)}%`,
-            background: "var(--text-primary)",
-          }}
-        />
-      </div>
-      <span
-        className="text-[15px] font-bold w-9 text-right"
-        style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}
-      >
-        {asset.allocation}%
-      </span>
-    </div>
-  </td>
-</tr>
+                    <td className="px-4 py-4 text-right">
+                      <PnlCell value={row.pnl} pct={row.pnlPct} />
+                    </td>
+
+                    <td className="pr-6 pl-4 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2.5">
+                        <div className="w-14 h-[3px] rounded-full overflow-hidden" style={{ background: "var(--separator)" }}>
+                          <div className="h-full rounded-full" style={{ width: `${Math.min(row.allocation, 100)}%`, background: "var(--text-primary)" }} />
+                        </div>
+                        <span className="text-[15px] font-bold w-9 text-right" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+                          {row.allocation}%
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
                 );
               })}
             </tbody>
           </table>
 
-          {filtered.length === 0 && (
+          {filtered.length === 0 && kiteGroupedRows.length === 0 && (
             <div
               className="py-16 text-center text-[14px]"
               style={{ color: "var(--text-tertiary)" }}
