@@ -35,6 +35,13 @@ export function unlockScroll(): void {
     document.body.style.position = "";
     document.body.style.top = "";
     document.body.style.width = "";
-    window.scrollTo(0, scrollY);
+    // requestAnimationFrame defers scrollTo until after the browser has had one
+    // frame to recalculate layout and update the compositor's (APZ) scroll model.
+    // Without this, Android Chrome does not recognise the document as scrollable
+    // again immediately after position:fixed is removed, so the first pan gesture
+    // after a modal closes silently does nothing.
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   }
 }

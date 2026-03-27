@@ -41,9 +41,12 @@ html {
   /* Prevent font size inflation on orientation change (iOS/Android) */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  /* Contain overscroll at the root so Android PWA doesn't show the
-     pull-to-refresh / navigation gestures while a modal is open */
-  overscroll-behavior: none;
+  /* Only block horizontal overscroll (back/forward nav swipe) at the root.
+     Setting overscroll-behavior: none on html (the ICB) causes Android Chrome's
+     compositor to apply the policy at OS-level touch routing, which can prevent
+     the initial pan gesture from being forwarded to the WebView at all on some
+     Android versions. Vertical overscroll (pull-to-refresh) is handled on body. */
+  overscroll-behavior-x: none;
 }
 
 * {
@@ -69,8 +72,10 @@ body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  /* Contain overscroll on Android; harmless on iOS */
-  overscroll-behavior-y: contain;
+  /* none = disable pull-to-refresh AND edge glow on Android, without touching
+     the html root's touch routing. "contain" was too permissive — it still lets
+     overscroll bubble to the html root, which re-triggers the APZ policy issue. */
+  overscroll-behavior: none;
   background: var(--bg);
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",

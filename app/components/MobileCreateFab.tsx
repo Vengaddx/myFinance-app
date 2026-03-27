@@ -114,6 +114,11 @@ export default function MobileCreateFab({ onAddAsset, onAddLiability, onAddExpen
           bottom: "calc(env(safe-area-inset-bottom) + 84px)",
           zIndex: 45,
           gap: 10,
+          // Wrapper must never intercept touches — only the children (button/items)
+          // should capture events. Without this, the invisible expanded bounding box
+          // of the closed action items (opacity:0 but still in layout) blocks pan
+          // gestures in the bottom-right corner on Android Chrome.
+          pointerEvents: "none",
         }}
       >
         {/* Action items — fan upward */}
@@ -195,6 +200,7 @@ export default function MobileCreateFab({ onAddAsset, onAddLiability, onAddExpen
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
+            pointerEvents: "auto", // re-enable on the button itself (parent wrapper is none)
             boxShadow: open
               ? "0 6px 24px rgba(0,122,255,0.55), 0 2px 8px rgba(0,0,0,0.15)"
               : "0 4px 18px rgba(0,122,255,0.40), 0 2px 6px rgba(0,0,0,0.10)",
