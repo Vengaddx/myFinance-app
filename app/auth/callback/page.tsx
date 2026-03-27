@@ -1,28 +1,56 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
-function CallbackHandler() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+// Module-level flag prevents React StrictMode double-execution.
+// PKCE codes are single-use — the second call consumes an already-cleared verifier.
+let exchanging = false;
 
+export default function AuthCallbackPage() {
   useEffect(() => {
-    const code = searchParams.get("code");
+    if (exchanging) return;
+    exchanging = true;
+
+    // Read directly from window.location — avoids useSearchParams() Suspense issues
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    const status = document.getElementById("cb-status");
+    const show = (msg: string) => { if (status) status.textContent = msg; };
+
     if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (!error) {
-          try { sessionStorage.setItem("mf_fresh_login", "1"); } catch { /* */ }
-        }
-        router.replace(error ? "/login?error=auth_failed" : "/");
-      });
+      show(`code: ${code.slice(0, 8)}… — exchanging`);
+
+      const timeout = setTimeout(() => {
+        show("TIMEOUT — Supabase did not respond after 15s");
+      }, 15000);
+
+      supabase.auth
+        .exchangeCodeForSession(code)
+        .then(({ error }) => {
+          clearTimeout(timeout);
+          if (error) {
+            show(`ERROR: ${error.message}`);
+            setTimeout(() => window.location.replace("/login?error=auth_failed"), 3000);
+          } else {
+            show("Success — redirecting…");
+            try { sessionStorage.setItem("mf_fresh_login", "1"); } catch { /* */ }
+            window.location.replace("/");
+          }
+        })
+        .catch((e: unknown) => {
+          clearTimeout(timeout);
+          show(`CATCH: ${String(e)}`);
+        });
     } else {
-      // No code — maybe a hash-based flow, just go home and let onAuthStateChange handle it
-      try { sessionStorage.setItem("mf_fresh_login", "1"); } catch { /* */ }
-      router.replace("/");
+      // No code in URL — might be hash-based implicit flow
+      show("no code in URL — checking session…");
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        try { if (session) sessionStorage.setItem("mf_fresh_login", "1"); } catch { /* */ }
+        window.location.replace(session ? "/" : "/login");
+      });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -37,18 +65,7 @@ function CallbackHandler() {
       <p className="text-[14px]" style={{ color: "var(--text-secondary)" }}>
         Signing you in…
       </p>
+      <p id="cb-status" style={{ fontSize: 12, color: "#888", marginTop: 8, fontFamily: "monospace" }} />
     </div>
-  );
-}
-
-export default function AuthCallbackPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen" style={{ background: "var(--bg)" }} />
-      }
-    >
-      <CallbackHandler />
-    </Suspense>
   );
 }

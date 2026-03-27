@@ -21,9 +21,9 @@ const EMPTY_FORM: AssetFormData = {
 };
 
 const CURRENCIES = [
-  { value: "INR", label: "₹ INR –" },
-  { value: "SAR", label: "﷼ SAR –" },
-  { value: "USD", label: "$ USD –" },
+  { value: "INR", label: "₹ INR " },
+  { value: "SAR", label: "﷼ SAR " },
+  { value: "USD", label: "$ USD " },
 ];
 
 const ASSET_TYPES = [
