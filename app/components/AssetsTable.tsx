@@ -1482,9 +1482,11 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
         {(() => {
           const kiteInv = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.invested, 0) : 0;
           const kiteCur = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.curVal, 0) : 0;
+          const kitePnl = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.pnl, 0) : 0;
           const inv  = filtered.reduce((s, a) => s + a.invested, 0) + kiteInv;
           const cur  = filtered.reduce((s, a) => s + a.curVal, 0) + kiteCur;
-          const pnl  = cur - inv;
+          // Sum individual pnl values so bank/cash (pnl=0) don't inflate P&L
+          const pnl  = filtered.reduce((s, a) => s + a.pnl, 0) + kitePnl;
           const pct  = inv > 0 ? (pnl / inv) * 100 : 0;
           const outstanding   = filteredLiabilities.reduce((s, l) => s + l.outstandingAmount, 0);
           const totalBorrowed = filteredLiabilities.reduce((s, l) => s + l.originalAmount, 0);
