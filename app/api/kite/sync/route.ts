@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 function parseAccounts(raw: string | undefined): Record<string, string> {
   if (!raw) return {};
@@ -69,12 +69,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.redirect(new URL("/stocks?sync=error", req.url));
   }
 
-  // Use service role client to bypass RLS
-  const adminSupabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
   const now = new Date().toISOString();
   const rows = holdings.map((h) => ({
     user_id:        user.id,
@@ -91,7 +85,7 @@ export async function POST(req: NextRequest) {
   }));
 
   // Delete all holdings for this user + broker + account, then insert fresh batch
-  const { error: deleteError } = await adminSupabase
+  const { error: deleteError } = await supabaseAdmin
     .from("broker_holdings")
     .delete()
     .eq("user_id", user.id)
@@ -104,7 +98,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (rows.length > 0) {
-    const { error: insertError } = await adminSupabase
+    const { error: insertError } = await supabaseAdmin
       .from("broker_holdings")
       .insert(rows);
 
