@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
     .digest("hex");
 
   let accessToken: string;
+  let kiteUserId: string;
 
   try {
     const res = await fetch("https://api.kite.trade/session/token", {
@@ -36,25 +37,25 @@ export async function GET(req: NextRequest) {
     });
 
     const data = await res.json() as Record<string, unknown>;
-    const token = (data?.data as Record<string, string>)?.access_token;
+    const payload = data?.data as Record<string, string> | undefined;
+    const token = payload?.access_token;
+    const userId = payload?.user_id;
 
-    if (!res.ok || !token) {
+    if (!res.ok || !token || !userId) {
       console.error("[kite/callback] token exchange failed:", data);
       return NextResponse.redirect(new URL("/stocks?kite=error", req.url));
     }
 
     accessToken = token;
+    kiteUserId = userId; // e.g. "WMQ571"
   } catch (err) {
     console.error("[kite/callback] fetch error:", err);
     return NextResponse.redirect(new URL("/stocks?kite=error", req.url));
   }
 
-  // Which account label was being connected
-  const label = req.cookies.get("kite_pending_label")?.value ?? "Mine";
-
-  // Read existing accounts and add/update this one
+  // Use Kite user ID as the account label — unique, no user input needed
   const accounts = parseAccounts(req.cookies.get("kite_accounts")?.value);
-  accounts[label] = accessToken;
+  accounts[kiteUserId] = accessToken;
 
   const response = NextResponse.redirect(new URL("/stocks?kite=connected", req.url));
   response.cookies.set("kite_accounts", encodeURIComponent(JSON.stringify(accounts)), {
@@ -64,9 +65,8 @@ export async function GET(req: NextRequest) {
     path: "/",
     maxAge: 60 * 60 * 8,
   });
-  // Clear the pending label cookie
+  // Clear legacy cookies
   response.cookies.set("kite_pending_label", "", { httpOnly: true, path: "/", maxAge: 0 });
-  // Clear legacy single-account cookie if present
   response.cookies.set("kite_access_token", "", { httpOnly: true, path: "/", maxAge: 0 });
   return response;
 }

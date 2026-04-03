@@ -493,43 +493,17 @@ export default async function StocksPage({
         </section>
 
         {/* ── Add another Kite account ── */}
-        <section className="mt-4">
-          <details className="group">
-            <summary
-              className="flex cursor-pointer items-center gap-2 px-1 py-2 text-[13px] font-medium select-none"
-              style={{ color: "var(--text-tertiary)" }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
-              </svg>
-              Connect another Kite account
-            </summary>
-            <form
-              action="/api/kite/login"
-              method="GET"
-              className="mt-2 flex items-center gap-2 px-1"
-            >
-              <input
-                name="label"
-                placeholder="Account name (e.g. Mom)"
-                required
-                maxLength={20}
-                className="flex-1 rounded-[12px] px-3 py-2 text-[13px] outline-none"
-                style={{
-                  background: "var(--surface-secondary)",
-                  border: "1px solid var(--separator)",
-                  color: "var(--text-primary)",
-                }}
-              />
-              <button
-                type="submit"
-                className="rounded-[12px] px-4 py-2 text-[13px] font-semibold"
-                style={{ background: "#AEDD00", color: "#111" }}
-              >
-                Connect
-              </button>
-            </form>
-          </details>
+        <section className="mt-4 px-1">
+          <a
+            href="/api/kite/login"
+            className="inline-flex items-center gap-2 text-[13px] font-medium"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
+            Connect another Kite account
+          </a>
         </section>
 
         {/* ── Holdings table ── */}
