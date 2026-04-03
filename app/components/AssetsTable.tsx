@@ -300,7 +300,15 @@ function TrashIcon() {
   );
 }
 
-function PnlCell({ value, pct }: { value: number; pct: number }) {
+function PnlCell({ value, pct, neutral }: { value: number; pct: number; neutral?: boolean }) {
+  if (neutral) {
+    return (
+      <div className="flex flex-col items-end gap-0.5">
+        <span className="text-[14px] font-semibold" style={{ color: "var(--text-tertiary)" }}>—</span>
+        <span className="text-[12px]" style={{ color: "var(--text-tertiary)", opacity: 0.6 }}>balance</span>
+      </div>
+    );
+  }
   const pos = value >= 0;
   return (
     <div className="flex flex-col items-end gap-0.5">
@@ -1591,7 +1599,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                       </div>
                     </div>
                   </div>
-                  <PnlCell value={asset.pnl} pct={asset.pnlPct} />
+                  <PnlCell value={asset.pnl} pct={asset.pnlPct} neutral={asset.category === "bank" || asset.category === "cash"} />
                 </div>
 
                 <div
@@ -1784,7 +1792,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                     </td>
 
                     <td className="px-4 py-4 text-right">
-                      <PnlCell value={asset.pnl} pct={asset.pnlPct} />
+                      <PnlCell value={asset.pnl} pct={asset.pnlPct} neutral={asset.category === "bank" || asset.category === "cash"} />
                     </td>
 
                     <td className="pr-6 pl-4 py-4 text-right">

@@ -87,6 +87,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
 
   const [form, setForm] = useState<AssetFormData>(EMPTY_FORM);
   const [errors, setErrors] = useState<{ name?: boolean; currentValue?: boolean }>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   const isSimple = SIMPLE_TYPES.has(form.assetType);
   const investedLabel = getInvestedLabel(form.assetType);
@@ -129,8 +130,14 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
     };
     setErrors(newErrors);
     if (newErrors.name || newErrors.currentValue) return;
-    await onSave(form, false);
-    onClose();
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await onSave(form, false);
+      onClose();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Theme tokens
@@ -350,12 +357,13 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
 
             <button
               onClick={handleSave}
+              disabled={isSaving}
               className="h-10 px-6 rounded-[12px] text-[14px] font-semibold text-white"
-              style={{ background: "#007aff", transition: "background 150ms ease, transform 150ms ease" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#0071eb"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#007aff"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
+              style={{ background: isSaving ? "#5aa8ff" : "#007aff", transition: "background 150ms ease, transform 150ms ease", opacity: isSaving ? 0.7 : 1, cursor: isSaving ? "not-allowed" : "pointer" }}
+              onMouseEnter={(e) => { if (!isSaving) { (e.currentTarget as HTMLElement).style.background = "#0071eb"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; } }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isSaving ? "#5aa8ff" : "#007aff"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
             >
-              {mode === "edit" ? "Update Asset" : "Save Asset"}
+              {isSaving ? "Saving…" : (mode === "edit" ? "Update Asset" : "Save Asset")}
             </button>
           </div>
         </div>
