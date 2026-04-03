@@ -168,16 +168,21 @@ export default function SnapshotsPage() {
   const currentSummary = useMemo(() => {
     let totalAssets = 0;
     let invested = 0;
+    let bankCashValue = 0;
 
     for (const asset of currentAssets) {
-      totalAssets += Number(asset.value ?? 0);
+      const val = Number(asset.value ?? 0);
+      totalAssets += val;
       let notes: Record<string, unknown> = {};
       try {
         notes = asset.notes ? JSON.parse(asset.notes) : {};
       } catch {
         /* ignore */
       }
-      invested += Number(notes.invested ?? notes.avgPurchasePrice ?? 0);
+      const t = String(asset.type ?? "").toLowerCase().trim();
+      const isSimple = t === "bank" || t === "bank account" || t === "cash" || t === "cash & savings" || t === "savings";
+      if (isSimple) bankCashValue += val;
+      invested += isSimple ? 0 : Number(notes.invested ?? notes.avgPurchasePrice ?? 0);
     }
 
     const totalLiabilities = currentLiabilities
@@ -189,7 +194,7 @@ export default function SnapshotsPage() {
       totalLiabilities,
       netWorth: totalAssets - totalLiabilities,
       invested,
-      totalPnl: totalAssets - invested,
+      totalPnl: (totalAssets - bankCashValue) - invested,
     };
   }, [currentAssets, currentLiabilities]);
 

@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
   const response = NextResponse.redirect(new URL("/stocks?kite=connected", req.url));
   response.cookies.set("kite_accounts", encodeURIComponent(JSON.stringify(accounts)), {
     httpOnly: true,
-    secure: false,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 8,

@@ -212,6 +212,7 @@ export default function Home() {
   const summary = useMemo(() => {
     let totalAssets = 0;
     let invested = 0;
+    let bankCashValue = 0;
 
     const byCategory: Record<string, number> = {
       stocks: 0,
@@ -241,6 +242,7 @@ export default function Home() {
 
       // Bank/cash have no invested amount — P&L is always 0 for those
       const isSimple = category === "bank" || category === "cash";
+      if (isSimple) bankCashValue += currentValue;
       invested += isSimple ? 0 : Number(parsedNotes.invested ?? 0);
     }
 
@@ -258,7 +260,8 @@ export default function Home() {
       .filter((l) => l.status === "active")
       .reduce((sum, l) => sum + Number(l.outstanding_amount ?? 0), 0);
     const netWorth = totalAssets - liabilities;
-    const totalPnl = totalAssets - invested;
+    // Exclude bank/cash balances from P&L — they have no cost basis
+    const totalPnl = (totalAssets - bankCashValue) - invested;
     const investedPctOfNetWorth =
       netWorth > 0 ? Number(((invested / netWorth) * 100).toFixed(1)) : 0;
     const totalPnlPct =

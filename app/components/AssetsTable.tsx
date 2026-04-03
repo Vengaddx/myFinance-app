@@ -865,9 +865,9 @@ onDataChanged?.();
       const category = normalizeCategory(a.type);
       const curVal = Number(a.value ?? 0);
       const isSimple = category === "bank" || category === "cash";
-      // For bank/cash: invested = 0 so P&L is always 0
+      // For bank/cash: no invested cost basis — P&L is always 0
       const invested = isSimple ? 0 : Number(parsedNotes.invested ?? 0);
-      const pnl = curVal - invested;
+      const pnl = isSimple ? 0 : curVal - invested;
       const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
 
       return {
@@ -1067,9 +1067,11 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
     // For ALL tab, kite items are not in `filtered` — add their totals separately
     const kiteInv = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.invested, 0) : 0;
     const kiteCur = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.curVal, 0) : 0;
+    const kitePnl = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.pnl, 0) : 0;
     const invested = filtered.reduce((s, a) => s + a.invested, 0) + kiteInv;
     const curVal   = filtered.reduce((s, a) => s + a.curVal, 0) + kiteCur;
-    const pnl      = curVal - invested;
+    // Sum individual pnl values (bank/cash assets already carry pnl=0)
+    const pnl      = filtered.reduce((s, a) => s + a.pnl, 0) + kitePnl;
     const pnlPct   = invested > 0 ? (pnl / invested) * 100 : 0;
     const mappedLibs = liabilities.map((l) => ({
       outstanding: Number(l.outstanding_amount ?? 0),
