@@ -73,13 +73,28 @@ export async function POST(req: NextRequest) {
     synced_at:      now,
   }));
 
-  const { error: dbError } = await adminSupabase
+  // Delete all existing holdings for this user+broker, then insert fresh batch.
+  // This avoids duplicates regardless of whether a DB unique constraint exists.
+  const { error: deleteError } = await adminSupabase
     .from("broker_holdings")
-    .upsert(rows, { onConflict: "user_id,broker,tradingsymbol,exchange", ignoreDuplicates: false });
+    .delete()
+    .eq("user_id", user.id)
+    .eq("broker", "kite");
 
-  if (dbError) {
-    console.error("[kite/sync] DB error:", dbError.message);
+  if (deleteError) {
+    console.error("[kite/sync] DB delete error:", deleteError.message);
     return NextResponse.redirect(new URL("/stocks?sync=error", req.url));
+  }
+
+  if (rows.length > 0) {
+    const { error: insertError } = await adminSupabase
+      .from("broker_holdings")
+      .insert(rows);
+
+    if (insertError) {
+      console.error("[kite/sync] DB insert error:", insertError.message);
+      return NextResponse.redirect(new URL("/stocks?sync=error", req.url));
+    }
   }
 
   return NextResponse.redirect(new URL("/stocks?sync=done", req.url));
