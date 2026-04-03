@@ -32,6 +32,7 @@ type Snapshot = {
 
 type DbAssetRow = {
   id: string;
+  type: string | null;
   value: number | string | null;
   notes: string | null;
 };
@@ -144,7 +145,7 @@ export default function SnapshotsPage() {
 
   const fetchCurrentData = useCallback(async () => {
     const [assetsRes, liabsRes] = await Promise.all([
-      supabase.from("assets").select("id, value, notes"),
+      supabase.from("assets").select("id, type, value, notes"),
       supabase.from("liabilities").select("outstanding_amount, status"),
     ]);
     if (!assetsRes.error) setCurrentAssets(assetsRes.data ?? []);
