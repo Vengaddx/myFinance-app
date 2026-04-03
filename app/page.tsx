@@ -31,7 +31,10 @@ type BrokerHolding = {
   pnl: number;
 };
 
-const KITE_COMMODITY_SYMBOLS = new Set(["SGBDE31III", "SILVERBEES", "GOLDBEES"]);
+const KITE_GOLD_EXACT = new Set(["SILVERBEES", "GOLDBEES"]);
+function isKiteGold(tradingsymbol: string) {
+  return tradingsymbol.startsWith("SGB") || KITE_GOLD_EXACT.has(tradingsymbol);
+}
 
 function fmtINR(n: number) {
   if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(2)} Cr`;
@@ -247,7 +250,7 @@ export default function Home() {
       const inv = h.quantity * h.average_price;
       totalAssets += currentValue;
       invested += inv;
-      const category = KITE_COMMODITY_SYMBOLS.has(h.tradingsymbol) ? "gold" : "stocks";
+      const category = isKiteGold(h.tradingsymbol) ? "gold" : "stocks";
       byCategory[category] += currentValue;
     }
 

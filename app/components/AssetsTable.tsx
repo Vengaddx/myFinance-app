@@ -137,10 +137,13 @@ function getMonthOptions(): { key: string; label: string }[] {
 }
 
 // Kite instruments classified under Gold & Silver instead of Stocks
-const KITE_COMMODITY_SYMBOLS = new Set(["SGBDE31III", "SILVERBEES", "GOLDBEES"]);
+const KITE_GOLD_EXACT = new Set(["SILVERBEES", "GOLDBEES"]);
 
 function classifyKiteHolding(tradingsymbol: string): "gold" | "stocks" {
-  return KITE_COMMODITY_SYMBOLS.has(tradingsymbol) ? "gold" : "stocks";
+  // Sovereign Gold Bonds have symbols starting with "SGB" (e.g. SGBDE31III-GB)
+  if (tradingsymbol.startsWith("SGB")) return "gold";
+  if (KITE_GOLD_EXACT.has(tradingsymbol)) return "gold";
+  return "stocks";
 }
 
 function normalizeCategory(value?: string | null): AssetCategory {
