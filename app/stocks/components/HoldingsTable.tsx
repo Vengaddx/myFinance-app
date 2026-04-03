@@ -15,7 +15,16 @@ export interface HoldingData {
   pnl: number;
   pnlPct: number;
   dayChangePct: number;
+  accountLabel?: string;
 }
+
+// Colors assigned per unique account label (stable order)
+const ACCOUNT_BADGE_COLORS = [
+  { bg: "rgba(174,221,0,0.12)", color: "#5a7a00" },
+  { bg: "rgba(0,122,255,0.10)", color: "#007aff" },
+  { bg: "rgba(175,82,222,0.10)", color: "#af52de" },
+  { bg: "rgba(255,149,0,0.10)", color: "#ff9500" },
+];
 
 function inr(n: number) {
   return Math.abs(n).toLocaleString("en-IN", { maximumFractionDigits: 0 });
@@ -76,6 +85,16 @@ function ChevronIcon({ up }: { up: boolean }) {
 export default function HoldingsTable({ holdings }: { holdings: HoldingData[] }) {
   const [sortKey, setSortKey] = useState<SortKey>("pnl");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  // Build a stable color map for each unique account label
+  const accountColorMap = useMemo(() => {
+    const labels = [...new Set(holdings.map((h) => h.accountLabel).filter(Boolean))] as string[];
+    const map: Record<string, { bg: string; color: string }> = {};
+    labels.forEach((label, i) => { map[label] = ACCOUNT_BADGE_COLORS[i % ACCOUNT_BADGE_COLORS.length]; });
+    return map;
+  }, [holdings]);
+
+  const multiAccount = Object.keys(accountColorMap).length > 1;
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -232,10 +251,11 @@ export default function HoldingsTable({ holdings }: { holdings: HoldingData[] })
           const tone = positive ? "#1f9d55" : "#d9473f";
           const dayTone = dayPositive ? "#1f9d55" : "#d9473f";
           const isLast = i === sorted.length - 1;
+          const acctColor = h.accountLabel ? accountColorMap[h.accountLabel] : null;
 
           return (
             <div
-              key={h.tradingsymbol}
+              key={`${h.accountLabel ?? ""}_${h.tradingsymbol}`}
               className="grid gap-x-4 px-6 py-[14px] transition-colors duration-150"
               style={{
                 gridTemplateColumns: "1fr 52px 96px 96px 80px 128px",
@@ -256,20 +276,30 @@ export default function HoldingsTable({ holdings }: { holdings: HoldingData[] })
                 <div
                   className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-[11px] text-[11px] font-bold"
                   style={{
-                    backgroundColor: "var(--surface-secondary)",
-                    color: "var(--text-secondary)",
+                    backgroundColor: acctColor ? acctColor.bg : "var(--surface-secondary)",
+                    color: acctColor ? acctColor.color : "var(--text-secondary)",
                     letterSpacing: "-0.01em",
                   }}
                 >
                   {h.tradingsymbol.slice(0, 2)}
                 </div>
                 <div className="min-w-0">
-                  <p
-                    className="truncate text-[14px] font-semibold tracking-[-0.02em]"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {h.tradingsymbol}
-                  </p>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <p
+                      className="truncate text-[14px] font-semibold tracking-[-0.02em]"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {h.tradingsymbol}
+                    </p>
+                    {multiAccount && acctColor && h.accountLabel && (
+                      <span
+                        className="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                        style={{ background: acctColor.bg, color: acctColor.color }}
+                      >
+                        {h.accountLabel}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
                     {h.exchange}
                   </p>
@@ -349,10 +379,11 @@ export default function HoldingsTable({ holdings }: { holdings: HoldingData[] })
           const dayPositive = h.dayChangePct >= 0;
           const tone = positive ? "#1f9d55" : "#d9473f";
           const dayTone = dayPositive ? "#1f9d55" : "#d9473f";
+          const acctColor = h.accountLabel ? accountColorMap[h.accountLabel] : null;
 
           return (
             <div
-              key={h.tradingsymbol}
+              key={`${h.accountLabel ?? ""}_${h.tradingsymbol}`}
               className="rounded-[22px] p-4 transition-all duration-200 active:scale-[0.99]"
               style={{
                 backgroundColor: "var(--surface)",
@@ -379,7 +410,7 @@ export default function HoldingsTable({ holdings }: { holdings: HoldingData[] })
                     >
                       {h.tradingsymbol}
                     </p>
-                    <div className="mt-0.5 flex items-center gap-1.5">
+                    <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
                       <span
                         className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em]"
                         style={{
@@ -389,6 +420,14 @@ export default function HoldingsTable({ holdings }: { holdings: HoldingData[] })
                       >
                         {h.exchange}
                       </span>
+                      {multiAccount && acctColor && h.accountLabel && (
+                        <span
+                          className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                          style={{ background: acctColor.bg, color: acctColor.color }}
+                        >
+                          {h.accountLabel}
+                        </span>
+                      )}
                       <span
                         className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
                         style={{

@@ -15,6 +15,15 @@ interface Holding {
   day_change_percentage: number;
 }
 
+interface HoldingWithAccount extends Holding {
+  accountLabel: string;
+}
+
+function parseKiteAccounts(raw: string | undefined): Record<string, string> {
+  if (!raw) return {};
+  try { return JSON.parse(decodeURIComponent(raw)); } catch { return {}; }
+}
+
 function makeSupabase(cookieStore: Awaited<ReturnType<typeof cookies>>) {
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,6 +33,7 @@ function makeSupabase(cookieStore: Awaited<ReturnType<typeof cookies>>) {
 }
 
 async function fetchKiteHoldings(accessToken: string): Promise<{ holdings?: Holding[]; error?: string }> {
+  // NOTE: returned holdings do not include accountLabel — caller adds it
   try {
     const res = await fetch("https://api.kite.trade/portfolio/holdings", {
       headers: {
@@ -68,10 +78,17 @@ export default async function StocksPage({
 }) {
   const params = await searchParams;
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get("kite_access_token")?.value;
+
+  // Read multi-account map; fall back to legacy single-account cookie
+  let accounts = parseKiteAccounts(cookieStore.get("kite_accounts")?.value);
+  const legacyToken = cookieStore.get("kite_access_token")?.value;
+  if (Object.keys(accounts).length === 0 && legacyToken) {
+    accounts = { Mine: legacyToken };
+  }
+  const accountLabels = Object.keys(accounts);
 
   // ── Not connected ─────────────────────────────────────────────────────────────
-  if (!accessToken) {
+  if (accountLabels.length === 0) {
     return (
       <div
         className="min-h-screen flex flex-col"
@@ -119,14 +136,32 @@ export default async function StocksPage({
     );
   }
 
-  // ── Fetch holdings + last synced ─────────────────────────────────────────────
-  const [result, lastSyncedAt] = await Promise.all([
-    fetchKiteHoldings(accessToken),
+  // ── Fetch holdings from all connected accounts + last synced ─────────────────
+  const [accountResults, lastSyncedAt] = await Promise.all([
+    Promise.all(
+      Object.entries(accounts).map(async ([label, token]) => {
+        const res = await fetchKiteHoldings(token);
+        return { label, ...res };
+      })
+    ),
     getLastSynced(cookieStore),
   ]);
 
-  // ── Error state ───────────────────────────────────────────────────────────────
-  if (result.error) {
+  const allSucceeded = accountResults.every((r) => !r.error);
+  const allFailed = accountResults.every((r) => !!r.error);
+
+  // Combine holdings from all accounts that succeeded
+  const allHoldings: HoldingWithAccount[] = [];
+  for (const { label, holdings, error } of accountResults) {
+    if (!error && holdings) {
+      for (const h of holdings) allHoldings.push({ ...h, accountLabel: label });
+    }
+  }
+
+  // ── All accounts errored ───────────────────────────────────────────────────────
+  if (allFailed) {
+    const firstError = accountResults[0]?.error ?? "Unknown error";
+    const result = { error: firstError };
     return (
       <div
         className="min-h-screen flex flex-col"
@@ -174,13 +209,12 @@ export default async function StocksPage({
     );
   }
 
-  // ── Portfolio calculations ────────────────────────────────────────────────────
-  const holdings = result.holdings!;
-  const totalValue    = holdings.reduce((s, h) => s + h.last_price * h.quantity, 0);
-  const totalInvested = holdings.reduce((s, h) => s + h.average_price * h.quantity, 0);
-  const totalPnl      = holdings.reduce((s, h) => s + h.pnl, 0);
+  // ── Portfolio calculations (across all accounts) ─────────────────────────────
+  const totalValue    = allHoldings.reduce((s, h) => s + h.last_price * h.quantity, 0);
+  const totalInvested = allHoldings.reduce((s, h) => s + h.average_price * h.quantity, 0);
+  const totalPnl      = allHoldings.reduce((s, h) => s + h.pnl, 0);
   const totalPnlPct   = totalInvested > 0 ? (totalPnl / totalInvested) * 100 : 0;
-  const totalDayChange = holdings.reduce(
+  const totalDayChange = allHoldings.reduce(
     (s, h) => s + (h.last_price * h.quantity * h.day_change_percentage) / 100,
     0
   );
@@ -201,12 +235,15 @@ export default async function StocksPage({
       })
     : null;
 
-  const topHolding = [...holdings].sort(
+  const topHolding = [...allHoldings].sort(
     (a, b) => b.last_price * b.quantity - a.last_price * a.quantity
   )[0];
 
+  // Partial-error banner: some accounts failed, others succeeded
+  const failedAccounts = accountResults.filter((r) => r.error).map((r) => r.label);
+
   // Prepare holdings data for the sortable table
-  const holdingsForTable = holdings.map((h) => {
+  const holdingsForTable = allHoldings.map((h) => {
     const invested = h.average_price * h.quantity;
     return {
       tradingsymbol: h.tradingsymbol,
@@ -218,6 +255,7 @@ export default async function StocksPage({
       pnl: h.pnl,
       pnlPct: invested > 0 ? (h.pnl / invested) * 100 : 0,
       dayChangePct: h.day_change_percentage,
+      accountLabel: h.accountLabel,
     };
   });
 
@@ -233,6 +271,21 @@ export default async function StocksPage({
       >
 
         {/* ── Sync feedback ── */}
+        {/* Partial-error banner: some accounts failed to fetch live data */}
+        {!allSucceeded && failedAccounts.length > 0 && (
+          <div
+            className="mb-4 flex items-center gap-2 rounded-[18px] px-4 py-3"
+            style={{ background: "rgba(217,71,63,0.08)", border: "1px solid rgba(217,71,63,0.14)" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d9473f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span className="text-[13px] font-medium" style={{ color: "#d9473f" }}>
+              {failedAccounts.join(", ")} — token expired. Please reconnect.
+            </span>
+          </div>
+        )}
+
         {params.sync === "done" && (
           <div
             className="mb-4 flex items-center gap-2 rounded-[18px] px-4 py-3"
@@ -305,10 +358,11 @@ export default async function StocksPage({
                   </p>
                   <p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>
                     Live holdings · Zerodha Kite
+                    {accountLabels.length > 1 && ` · ${accountLabels.length} accounts`}
                   </p>
                 </div>
               </div>
-              <PortfolioActions />
+              <PortfolioActions accounts={accountLabels} />
             </div>
 
             {/* Value + snapshot layout */}
@@ -409,7 +463,7 @@ export default async function StocksPage({
                       Holdings
                     </span>
                     <span className="text-[13px] font-semibold" style={{ color: "var(--text-primary)" }}>
-                      {holdings.length}
+                      {allHoldings.length}
                     </span>
                   </div>
                   {topHolding && (
@@ -438,6 +492,46 @@ export default async function StocksPage({
           </div>
         </section>
 
+        {/* ── Add another Kite account ── */}
+        <section className="mt-4">
+          <details className="group">
+            <summary
+              className="flex cursor-pointer items-center gap-2 px-1 py-2 text-[13px] font-medium select-none"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
+              </svg>
+              Connect another Kite account
+            </summary>
+            <form
+              action="/api/kite/login"
+              method="GET"
+              className="mt-2 flex items-center gap-2 px-1"
+            >
+              <input
+                name="label"
+                placeholder="Account name (e.g. Mom)"
+                required
+                maxLength={20}
+                className="flex-1 rounded-[12px] px-3 py-2 text-[13px] outline-none"
+                style={{
+                  background: "var(--surface-secondary)",
+                  border: "1px solid var(--separator)",
+                  color: "var(--text-primary)",
+                }}
+              />
+              <button
+                type="submit"
+                className="rounded-[12px] px-4 py-2 text-[13px] font-semibold"
+                style={{ background: "#AEDD00", color: "#111" }}
+              >
+                Connect
+              </button>
+            </form>
+          </details>
+        </section>
+
         {/* ── Holdings table ── */}
         <section className="mt-6">
           <div className="mb-4 flex items-end justify-between gap-3 px-1">
@@ -449,7 +543,7 @@ export default async function StocksPage({
                 Holdings
               </h2>
               <p className="mt-0.5 text-[13px]" style={{ color: "var(--text-secondary)" }}>
-                {holdings.length} {holdings.length === 1 ? "open position" : "open positions"} · sorted by P&amp;L
+                {allHoldings.length} {allHoldings.length === 1 ? "open position" : "open positions"} · sorted by P&amp;L
               </p>
             </div>
           </div>

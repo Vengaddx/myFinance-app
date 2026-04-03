@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
+function parseAccounts(raw: string | undefined): Record<string, string> {
+  if (!raw) return {};
+  try { return JSON.parse(decodeURIComponent(raw)); } catch { return {}; }
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const requestToken = searchParams.get("request_token");
@@ -44,13 +49,24 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/stocks?kite=error", req.url));
   }
 
+  // Which account label was being connected
+  const label = req.cookies.get("kite_pending_label")?.value ?? "Mine";
+
+  // Read existing accounts and add/update this one
+  const accounts = parseAccounts(req.cookies.get("kite_accounts")?.value);
+  accounts[label] = accessToken;
+
   const response = NextResponse.redirect(new URL("/stocks?kite=connected", req.url));
-  response.cookies.set("kite_access_token", accessToken, {
+  response.cookies.set("kite_accounts", encodeURIComponent(JSON.stringify(accounts)), {
     httpOnly: true,
     secure: false,
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 8,
   });
+  // Clear the pending label cookie
+  response.cookies.set("kite_pending_label", "", { httpOnly: true, path: "/", maxAge: 0 });
+  // Clear legacy single-account cookie if present
+  response.cookies.set("kite_access_token", "", { httpOnly: true, path: "/", maxAge: 0 });
   return response;
 }

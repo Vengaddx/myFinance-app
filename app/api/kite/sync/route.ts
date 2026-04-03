@@ -2,13 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
+function parseAccounts(raw: string | undefined): Record<string, string> {
+  if (!raw) return {};
+  try { return JSON.parse(decodeURIComponent(raw)); } catch { return {}; }
+}
+
 export async function POST(req: NextRequest) {
-  const kiteToken = req.cookies.get("kite_access_token")?.value;
+  // Which account to sync
+  const body = await req.formData();
+  const label = (body.get("label") as string | null) ?? "Mine";
+
+  // Resolve token for this account
+  const accounts = parseAccounts(req.cookies.get("kite_accounts")?.value);
+  // Backward-compat: old single-account cookie
+  if (!accounts["Mine"]) {
+    const old = req.cookies.get("kite_access_token")?.value;
+    if (old) accounts["Mine"] = old;
+  }
+
+  const kiteToken = accounts[label];
   if (!kiteToken) {
     return NextResponse.redirect(new URL("/stocks?sync=error", req.url));
   }
 
-  // Read Supabase session from cookies (set by createBrowserClient after PKCE login)
+  // Get Supabase user (auth stored in cookies by createBrowserClient)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -20,7 +37,6 @@ export async function POST(req: NextRequest) {
   if (!user?.id) {
     return NextResponse.json({
       error: "not_authenticated",
-      cookies: req.cookies.getAll().map(c => c.name),
       hint: "No Supabase session in cookies. Log out and log back in.",
     }, { status: 401 });
   }
@@ -63,6 +79,7 @@ export async function POST(req: NextRequest) {
   const rows = holdings.map((h) => ({
     user_id:        user.id,
     broker:         "kite",
+    account_label:  label,
     tradingsymbol:  h.tradingsymbol as string,
     exchange:       h.exchange as string,
     quantity:       h.quantity as number,
@@ -73,13 +90,13 @@ export async function POST(req: NextRequest) {
     synced_at:      now,
   }));
 
-  // Delete all existing holdings for this user+broker, then insert fresh batch.
-  // This avoids duplicates regardless of whether a DB unique constraint exists.
+  // Delete all holdings for this user + broker + account, then insert fresh batch
   const { error: deleteError } = await adminSupabase
     .from("broker_holdings")
     .delete()
     .eq("user_id", user.id)
-    .eq("broker", "kite");
+    .eq("broker", "kite")
+    .eq("account_label", label);
 
   if (deleteError) {
     console.error("[kite/sync] DB delete error:", deleteError.message);

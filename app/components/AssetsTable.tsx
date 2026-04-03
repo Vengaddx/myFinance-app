@@ -35,6 +35,7 @@ type UiAsset = {
   pnl: number;
   pnlPct: number;
   allocation: number;
+  accountLabel?: string; // only set for Kite holdings
 };
 
 type DbExpenseRow = {
@@ -61,6 +62,7 @@ type BrokerHolding = {
   pnl: number;
   day_change_pct: number;
   synced_at: string;
+  account_label: string;
 };
 
 const TABS: { label: string; value: AssetCategory | "all" }[] = [
@@ -508,7 +510,7 @@ const [upgradeContext, setUpgradeContext] = useState<string | undefined>(undefin
   const fetchBrokerHoldings = async () => {
     const { data, error } = await supabase
       .from("broker_holdings")
-      .select("tradingsymbol, exchange, quantity, average_price, last_price, pnl, day_change_pct, synced_at")
+      .select("tradingsymbol, exchange, quantity, average_price, last_price, pnl, day_change_pct, synced_at, account_label")
       .eq("broker", "kite")
       .order("synced_at", { ascending: false });
     if (!error) setBrokerHoldings((data as BrokerHolding[]) ?? []);
@@ -898,7 +900,7 @@ onDataChanged?.();
       const pnl      = curVal - invested;
       const pnlPct   = invested > 0 ? (pnl / invested) * 100 : 0;
       return {
-        id: `kite_${h.tradingsymbol}`,
+        id: `kite_${h.account_label}_${h.tradingsymbol}`,
         name: h.tradingsymbol,
         ticker: h.tradingsymbol,
         category: classifyKiteHolding(h.tradingsymbol),
@@ -908,6 +910,7 @@ onDataChanged?.();
         pnl,
         pnlPct,
         allocation: 0, // recalculated in filtered
+        accountLabel: h.account_label,
       };
     });
   }, [brokerHoldings]);
@@ -1575,7 +1578,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                         {isKite && (
                           <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
                             style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
-                            KITE
+                            {asset.accountLabel ?? "KITE"}
                           </span>
                         )}
                       </div>
@@ -1740,7 +1743,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                           {isKite && (
                             <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                               style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
-                              KITE
+                              {asset.accountLabel ?? "KITE"}
                             </span>
                           )}
                         </div>
