@@ -23,6 +23,16 @@ type DbAssetRow = {
   created_at?: string;
 };
 
+type BrokerHolding = {
+  tradingsymbol: string;
+  quantity: number;
+  average_price: number;
+  last_price: number;
+  pnl: number;
+};
+
+const KITE_COMMODITY_SYMBOLS = new Set(["SGBDE31III", "SILVERBEES", "GOLDBEES"]);
+
 function fmtINR(n: number) {
   if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(2)} Cr`;
   if (n >= 100_000) return `₹${(n / 100_000).toFixed(1)} L`;
@@ -109,6 +119,7 @@ export default function Home() {
   const { session, loading: authLoading, profile, profileLoading } = useAuth();
   const [dbAssets, setDbAssets] = useState<DbAssetRow[]>([]);
   const [dbLiabilities, setDbLiabilities] = useState<{ outstanding_amount: number; status: string }[]>([]);
+  const [brokerHoldings, setBrokerHoldings] = useState<BrokerHolding[]>([]);
   const [showSplash, setShowSplash] = useState(false);
   const [stickyVisible, setStickyVisible] = useState(false);
   const [stickyData, setStickyData] = useState<StickyBarData | null>(null);
@@ -179,11 +190,20 @@ export default function Home() {
     if (!error) setDbLiabilities(data ?? []);
   };
 
-  const refreshAll = () => { fetchAssets(); fetchLiabilities(); };
+  const fetchBrokerHoldings = async () => {
+    const { data, error } = await supabase
+      .from("broker_holdings")
+      .select("tradingsymbol, quantity, average_price, last_price, pnl");
+
+    if (!error) setBrokerHoldings((data as BrokerHolding[]) ?? []);
+  };
+
+  const refreshAll = () => { fetchAssets(); fetchLiabilities(); fetchBrokerHoldings(); };
 
   useEffect(() => {
     fetchAssets();
     fetchLiabilities();
+    fetchBrokerHoldings();
   }, []);
 
   const summary = useMemo(() => {
@@ -219,6 +239,16 @@ export default function Home() {
       // Bank/cash have no invested amount — P&L is always 0 for those
       const isSimple = category === "bank" || category === "cash";
       invested += isSimple ? 0 : Number(parsedNotes.invested ?? 0);
+    }
+
+    // Include Kite broker holdings
+    for (const h of brokerHoldings) {
+      const currentValue = h.quantity * h.last_price;
+      const inv = h.quantity * h.average_price;
+      totalAssets += currentValue;
+      invested += inv;
+      const category = KITE_COMMODITY_SYMBOLS.has(h.tradingsymbol) ? "gold" : "stocks";
+      byCategory[category] += currentValue;
     }
 
     const liabilities = dbLiabilities
@@ -267,7 +297,7 @@ export default function Home() {
       allocationData,
       topHoldings,
     };
-  }, [dbAssets, dbLiabilities]);
+  }, [dbAssets, dbLiabilities, brokerHoldings]);
 
 
   // Blank screen while auth resolves or redirecting
