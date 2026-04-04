@@ -10,6 +10,7 @@ interface Props {
   open: boolean;
   editData?: ProjectionScenario;
   userId: string;
+  currentNetWorth?: number;
   onClose: () => void;
   onSave: (scenario: ProjectionScenario) => void;
 }
@@ -71,10 +72,12 @@ export default function ScenarioModal({
   open,
   editData,
   userId,
+  currentNetWorth,
   onClose,
   onSave,
 }: Props) {
   const firstRef = useRef<HTMLInputElement>(null);
+  const mouseDownInPanel = useRef(false);
 
   const blank = {
     name: "",
@@ -88,6 +91,7 @@ export default function ScenarioModal({
 
   const [form, setForm] = useState(blank);
   const [customHorizon, setCustomHorizon] = useState(false);
+  const [isAutoNetWorth, setIsAutoNetWorth] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -95,9 +99,13 @@ export default function ScenarioModal({
   useEffect(() => {
     if (editData) {
       const ym = editData.start_date.slice(0, 7);
+      const auto = editData.is_auto_net_worth ?? false;
+      setIsAutoNetWorth(auto);
       setForm({
         name: editData.name,
-        current_net_worth: String(editData.current_net_worth),
+        current_net_worth: auto
+          ? String(currentNetWorth ?? editData.current_net_worth)
+          : String(editData.current_net_worth),
         monthly_income: String(editData.monthly_income),
         monthly_investment: String(editData.monthly_investment),
         annual_return_pct: String(editData.annual_return_pct),
@@ -106,6 +114,7 @@ export default function ScenarioModal({
       });
       setCustomHorizon(!PRESETS.some((p) => p.months === editData.months));
     } else {
+      setIsAutoNetWorth(false);
       setForm(blank);
       setCustomHorizon(false);
     }
@@ -129,7 +138,7 @@ export default function ScenarioModal({
   async function handleSave() {
     setError("");
     if (!form.name.trim()) return setError("Enter a scenario name.");
-    if (!form.current_net_worth || isNaN(Number(form.current_net_worth)))
+    if (!isAutoNetWorth && (!form.current_net_worth || isNaN(Number(form.current_net_worth))))
       return setError("Enter a valid current net worth.");
     if (!form.monthly_investment || isNaN(Number(form.monthly_investment)))
       return setError("Enter a valid monthly investment amount.");
@@ -142,7 +151,10 @@ export default function ScenarioModal({
     const payload = {
       user_id: userId,
       name: form.name.trim(),
-      current_net_worth: Number(form.current_net_worth),
+      current_net_worth: isAutoNetWorth
+        ? (currentNetWorth ?? 0)
+        : Number(form.current_net_worth),
+      is_auto_net_worth: isAutoNetWorth,
       monthly_income: Number(form.monthly_income) || 0,
       monthly_investment: Number(form.monthly_investment),
       annual_return_pct: Number(form.annual_return_pct) || 0,
@@ -182,9 +194,8 @@ export default function ScenarioModal({
 
   return (
     <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      onMouseDown={() => { mouseDownInPanel.current = false; }}
+      onClick={() => { if (!mouseDownInPanel.current) onClose(); }}
       style={{
         position: "fixed",
         inset: 0,
@@ -199,6 +210,8 @@ export default function ScenarioModal({
       }}
     >
       <div
+        onMouseDown={(e) => { mouseDownInPanel.current = true; e.stopPropagation(); }}
+        onClick={(e) => e.stopPropagation()}
         style={{
           background: "var(--surface)",
           borderRadius: 28,
@@ -264,15 +277,112 @@ export default function ScenarioModal({
             />
           </Field>
 
-          <Field label="Current Net Worth (₹)">
-            <input
-              type="number"
-              value={form.current_net_worth}
-              onChange={(e) => set("current_net_worth", e.target.value)}
-              placeholder="e.g. 2000000"
-              style={INPUT}
-            />
-          </Field>
+          {/* Current Net Worth — Auto / Manual */}
+          <div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 7,
+              }}
+            >
+              <div
+                style={{
+                  color: "var(--text-secondary)",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.6px",
+                }}
+              >
+                Current Net Worth (₹)
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !isAutoNetWorth;
+                  setIsAutoNetWorth(next);
+                  if (next) set("current_net_worth", String(currentNetWorth ?? 0));
+                }}
+                style={{
+                  padding: "3px 10px",
+                  borderRadius: 20,
+                  border: "1px solid",
+                  borderColor: isAutoNetWorth
+                    ? "#007aff"
+                    : "var(--separator)",
+                  background: isAutoNetWorth
+                    ? "rgba(0,122,255,0.12)"
+                    : "transparent",
+                  color: isAutoNetWorth
+                    ? "#007aff"
+                    : "var(--text-secondary)",
+                  cursor: "pointer",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  fontFamily: "inherit",
+                  transition: "all 120ms ease",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {isAutoNetWorth ? "✕ Manual" : "Use current net worth"}
+              </button>
+            </div>
+            <div style={{ position: "relative" }}>
+              <input
+                type="number"
+                value={form.current_net_worth}
+                onChange={(e) => {
+                  if (!isAutoNetWorth) set("current_net_worth", e.target.value);
+                }}
+                readOnly={isAutoNetWorth}
+                placeholder="e.g. 2000000"
+                style={{
+                  ...INPUT,
+                  ...(isAutoNetWorth
+                    ? {
+                        background: "rgba(0,122,255,0.06)",
+                        borderColor: "rgba(0,122,255,0.3)",
+                        paddingRight: 56,
+                        cursor: "default",
+                      }
+                    : {}),
+                }}
+              />
+              {isAutoNetWorth && (
+                <span
+                  style={{
+                    position: "absolute",
+                    right: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    fontSize: 10,
+                    color: "#007aff",
+                    fontWeight: 700,
+                    letterSpacing: "0.4px",
+                    background: "rgba(0,122,255,0.12)",
+                    padding: "2px 7px",
+                    borderRadius: 10,
+                    pointerEvents: "none",
+                  }}
+                >
+                  AUTO
+                </span>
+              )}
+            </div>
+            {isAutoNetWorth && (
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "var(--text-secondary)",
+                  marginTop: 6,
+                }}
+              >
+                Linked to your current net worth · updates automatically
+              </div>
+            )}
+          </div>
 
           <div
             style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}

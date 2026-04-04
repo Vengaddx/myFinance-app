@@ -17,6 +17,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const overlayRef = useRef<HTMLDivElement>(null);
+  const mouseDownInPanel = useRef(false);
   const amountRef = useRef<HTMLInputElement>(null);
 
   const today = new Date().toISOString().split("T")[0];
@@ -112,7 +113,8 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
       `}</style>
       <div
         ref={overlayRef}
-        onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
+        onMouseDown={() => { mouseDownInPanel.current = false; }}
+        onClick={() => { if (!mouseDownInPanel.current) onClose(); }}
         aria-modal="true"
         role="dialog"
         className="fixed inset-0 z-50 flex items-center justify-center px-4"
@@ -126,6 +128,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
         }}
       >
         <div
+          onMouseDown={(e) => { mouseDownInPanel.current = true; e.stopPropagation(); }}
           style={{
             background: modalBg,
             backdropFilter: "blur(48px) saturate(200%)",

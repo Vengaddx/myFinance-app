@@ -79,6 +79,7 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const overlayRef = useRef<HTMLDivElement>(null);
+  const mouseDownInPanel = useRef(false);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<ExpenseFormData>({ ...EMPTY_EXPENSE_FORM, expense_date: new Date().toISOString().split("T")[0] });
@@ -207,7 +208,8 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
 
       <div
         ref={overlayRef}
-        onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
+        onMouseDown={() => { mouseDownInPanel.current = false; }}
+        onClick={() => { if (!mouseDownInPanel.current) onClose(); }}
         aria-modal="true"
         role="dialog"
         className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-3 sm:px-4 pb-4 sm:py-6"
@@ -221,6 +223,7 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
         }}
       >
         <div
+          onMouseDown={(e) => { mouseDownInPanel.current = true; e.stopPropagation(); }}
           style={{
             background: modalBg,
             backdropFilter: "blur(48px) saturate(200%)",

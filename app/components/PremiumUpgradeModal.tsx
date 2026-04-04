@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import { FREE_LIMITS, PREMIUM_LIMITS } from "@/lib/planLimits";
@@ -63,6 +63,7 @@ const LIMIT_ROWS: { label: string; free: string; premium: string }[] = [
 export default function PremiumUpgradeModal({ open, onClose, limitContext }: Props) {
   const [visible, setVisible] = useState(false);
   const [copied, setCopied]   = useState(false);
+  const mouseDownInPanel = useRef(false);
   const upiLink = buildUpiLink();
 
   useEffect(() => {
@@ -97,7 +98,8 @@ export default function PremiumUpgradeModal({ open, onClose, limitContext }: Pro
 
   return (
     <div
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onMouseDown={() => { mouseDownInPanel.current = false; }}
+      onClick={() => { if (!mouseDownInPanel.current) onClose(); }}
       style={{
         position: "fixed",
         inset: 0,
@@ -113,6 +115,7 @@ export default function PremiumUpgradeModal({ open, onClose, limitContext }: Pro
     >
       {/* Sheet */}
       <div
+        onMouseDown={(e) => { mouseDownInPanel.current = true; e.stopPropagation(); }}
         style={{
           background: "var(--surface)",
           borderRadius: "28px 28px 0 0",

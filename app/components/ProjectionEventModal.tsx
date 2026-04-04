@@ -81,6 +81,7 @@ export default function ProjectionEventModal({
   onSave,
 }: Props) {
   const nameRef = useRef<HTMLInputElement>(null);
+  const mouseDownInPanel = useRef(false);
 
   const blank = {
     event_name: "",
@@ -200,9 +201,8 @@ function applyQuick(q: (typeof QUICK_PICKS)[0]) {
 
   return (
     <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      onMouseDown={() => { mouseDownInPanel.current = false; }}
+      onClick={() => { if (!mouseDownInPanel.current) onClose(); }}
       style={{
         position: "fixed",
         inset: 0,
@@ -217,6 +217,8 @@ function applyQuick(q: (typeof QUICK_PICKS)[0]) {
       }}
     >
       <div
+        onMouseDown={(e) => { mouseDownInPanel.current = true; e.stopPropagation(); }}
+        onClick={(e) => e.stopPropagation()}
         style={{
           background: "var(--surface)",
           borderRadius: 28,

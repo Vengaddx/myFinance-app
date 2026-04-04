@@ -62,6 +62,7 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const overlayRef = useRef<HTMLDivElement>(null);
+  const mouseDownInPanel = useRef(false);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<LiabilityFormData>(EMPTY_FORM);
@@ -163,7 +164,8 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
 
       <div
         ref={overlayRef}
-        onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
+        onMouseDown={() => { mouseDownInPanel.current = false; }}
+        onClick={() => { if (!mouseDownInPanel.current) onClose(); }}
         aria-modal="true"
         role="dialog"
         className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
@@ -177,6 +179,7 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
         }}
       >
         <div
+          onMouseDown={(e) => { mouseDownInPanel.current = true; e.stopPropagation(); }}
           style={{
             background: modalBg,
             backdropFilter: "blur(48px) saturate(200%)",

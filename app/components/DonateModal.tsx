@@ -55,6 +55,7 @@ export default function DonateModal({ open, onClose }: Props) {
   const [copied, setCopied]       = useState(false);
   const [visible, setVisible]     = useState(false);
   const customRef                 = useRef<HTMLInputElement>(null);
+  const mouseDownInPanel          = useRef(false);
 
   // Amount in use
   const customNum = custom === "" ? NaN : Number(custom);
@@ -115,7 +116,8 @@ export default function DonateModal({ open, onClose }: Props) {
 
   return (
     <div
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onMouseDown={() => { mouseDownInPanel.current = false; }}
+      onClick={() => { if (!mouseDownInPanel.current) onClose(); }}
       style={{
         position: "fixed",
         inset: 0,
@@ -132,6 +134,7 @@ export default function DonateModal({ open, onClose }: Props) {
     >
       {/* Sheet */}
       <div
+        onMouseDown={(e) => { mouseDownInPanel.current = true; e.stopPropagation(); }}
         style={{
           background: "var(--surface)",
           borderRadius: "28px 28px 0 0",

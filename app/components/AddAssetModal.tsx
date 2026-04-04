@@ -83,6 +83,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const overlayRef = useRef<HTMLDivElement>(null);
+  const mouseDownInPanel = useRef(false);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<AssetFormData>(EMPTY_FORM);
@@ -189,7 +190,8 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
 
       <div
         ref={overlayRef}
-        onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
+        onMouseDown={() => { mouseDownInPanel.current = false; }}
+        onClick={() => { if (!mouseDownInPanel.current) onClose(); }}
         aria-modal="true"
         role="dialog"
         className="fixed inset-0 z-50 flex items-center justify-center px-4"
@@ -203,6 +205,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
         }}
       >
         <div
+          onMouseDown={(e) => { mouseDownInPanel.current = true; e.stopPropagation(); }}
           style={{
             background: modalBg,
             backdropFilter: "blur(48px) saturate(200%)",

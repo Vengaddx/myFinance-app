@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
 import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import { supabase } from "@/lib/supabase";
@@ -41,6 +41,7 @@ function fmtDate(d: string) {
 export default function LiabilityLogsModal({ open, onClose, liabilityId, liabilityName, currency }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const mouseDownInPanel = useRef(false);
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -86,7 +87,8 @@ export default function LiabilityLogsModal({ open, onClose, liabilityId, liabili
 
   return (
     <div
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onMouseDown={() => { mouseDownInPanel.current = false; }}
+      onClick={() => { if (!mouseDownInPanel.current) onClose(); }}
       aria-modal="true"
       role="dialog"
       className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
@@ -100,6 +102,7 @@ export default function LiabilityLogsModal({ open, onClose, liabilityId, liabili
       }}
     >
       <div
+        onMouseDown={(e) => { mouseDownInPanel.current = true; e.stopPropagation(); }}
         style={{
           background: modalBg,
           backdropFilter: "blur(48px) saturate(200%)",

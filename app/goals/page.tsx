@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import {
   AreaChart,
   Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  Legend,
 } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
@@ -96,6 +99,7 @@ export interface ProjectionScenario {
   user_id: string;
   name: string;
   current_net_worth: number;
+  is_auto_net_worth?: boolean;
   monthly_income: number;
   monthly_investment: number;
   annual_return_pct: number;
@@ -204,6 +208,9 @@ const MILESTONES = [
   50_000_000, 100_000_000,
 ];
 
+const COMPARE_COLORS = ["#007aff", "#AEDD00", "#ff9f0a", "#bf5af2", "#ff6b6b"];
+const MAX_COMPARE = 5;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Chart sub-components
 // ─────────────────────────────────────────────────────────────────────────────
@@ -262,6 +269,81 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: any[] }
   );
 }
 
+function CompareTooltip({
+  active,
+  payload,
+  compareScenarios,
+  colorMap,
+}: {
+  active?: boolean;
+  payload?: { payload: Record<string, number | string> }[];
+  compareScenarios: ProjectionScenario[];
+  colorMap: Record<string, string>;
+}) {
+  if (!active || !payload?.length) return null;
+  const point = payload[0].payload;
+  return (
+    <div
+      style={{
+        background: "var(--surface)",
+        border: "1px solid var(--separator)",
+        borderRadius: 14,
+        padding: "12px 16px",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+        minWidth: 200,
+      }}
+    >
+      <div
+        style={{
+          color: "var(--text-secondary)",
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.4px",
+          textTransform: "uppercase",
+          marginBottom: 10,
+        }}
+      >
+        {String(point.label ?? `Month ${point.monthIndex}`)}
+      </div>
+      {compareScenarios.map((s) => {
+        const val = typeof point[s.id] === "number" ? (point[s.id] as number) : null;
+        const color = colorMap[s.id] ?? "#007aff";
+        return (
+          <div
+            key={s.id}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 20,
+              marginBottom: 6,
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: color,
+                  display: "inline-block",
+                  flexShrink: 0,
+                }}
+              />
+              <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>
+                {s.name}
+              </span>
+            </span>
+            <span style={{ color, fontWeight: 700, fontSize: 14 }}>
+              {val !== null ? fmtINR(val) : "—"}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
@@ -274,6 +356,12 @@ export default function GoalsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [events, setEvents] = useState<ProjectionEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentNetWorth, setCurrentNetWorth] = useState<number>(0);
+
+  // ── Compare mode ─────────────────────────────────────────────────────────────
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareIds, setCompareIds] = useState<Set<string>>(new Set());
+  const [allEventsMap, setAllEventsMap] = useState<Record<string, ProjectionEvent[]>>({});
 
   const [scenarioModal, setScenarioModal] = useState<{
     open: boolean;
@@ -325,8 +413,58 @@ export default function GoalsPage() {
     if (!error && data) setEvents(data as ProjectionEvent[]);
   }, [user, selectedId]);
 
+  const fetchEventsForScenario = useCallback(
+    async (scenarioId: string): Promise<ProjectionEvent[]> => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("projection_events")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("scenario_id", scenarioId)
+        .order("event_date", { ascending: true });
+      return (data ?? []) as ProjectionEvent[];
+    },
+    [user]
+  );
+
+  // ── Fetch live net worth from assets/liabilities ─────────────────────────────
+  const fetchNetWorth = useCallback(async () => {
+    if (!user) return;
+    const [{ data: assets }, { data: liabilities }, { data: holdings }] =
+      await Promise.all([
+        supabase.from("assets").select("value").eq("user_id", user.id),
+        supabase
+          .from("liabilities")
+          .select("outstanding_amount, status")
+          .eq("user_id", user.id),
+        supabase
+          .from("broker_holdings")
+          .select("quantity, last_price")
+          .eq("user_id", user.id),
+      ]);
+    const totalAssets =
+      (assets ?? []).reduce((s, a) => s + Number(a.value ?? 0), 0) +
+      (holdings ?? []).reduce(
+        (s: number, h: { quantity: number; last_price: number }) =>
+          s + h.quantity * h.last_price,
+        0
+      );
+    const totalLiabilities = (liabilities ?? [])
+      .filter((l: { status: string }) => l.status === "active")
+      .reduce(
+        (s: number, l: { outstanding_amount: number }) =>
+          s + Number(l.outstanding_amount ?? 0),
+        0
+      );
+    setCurrentNetWorth(totalAssets - totalLiabilities);
+  }, [user]);
+
   useEffect(() => {
     if (user) fetchScenarios(true);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (user) fetchNetWorth();
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -334,22 +472,41 @@ export default function GoalsPage() {
     if (selectedId) fetchEvents();
   }, [selectedId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Fetch events for all compared scenarios whenever compareIds changes
+  useEffect(() => {
+    if (!compareMode || !user || compareIds.size === 0) return;
+    const ids = Array.from(compareIds);
+    Promise.all(ids.map((id) => fetchEventsForScenario(id))).then((results) => {
+      const map: Record<string, ProjectionEvent[]> = {};
+      ids.forEach((id, i) => { map[id] = results[i]; });
+      setAllEventsMap(map);
+    });
+  }, [compareMode, compareIds]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Derived data ────────────────────────────────────────────────────────────
   const selectedScenario = useMemo(
     () => scenarios.find((s) => s.id === selectedId) ?? null,
     [scenarios, selectedId]
   );
 
+  // Resolve the effective net worth for auto-linked scenarios
+  const effectiveScenario = useMemo(() => {
+    if (!selectedScenario) return null;
+    if (selectedScenario.is_auto_net_worth)
+      return { ...selectedScenario, current_net_worth: currentNetWorth };
+    return selectedScenario;
+  }, [selectedScenario, currentNetWorth]);
+
   const chartData = useMemo(() => {
-    if (!selectedScenario) return [];
-    return calculateProjection(selectedScenario, events);
-  }, [selectedScenario, events]);
+    if (!effectiveScenario) return [];
+    return calculateProjection(effectiveScenario, events);
+  }, [effectiveScenario, events]);
 
   const metrics = useMemo(() => {
-    if (!selectedScenario || !chartData.length) return null;
+    if (!effectiveScenario || !chartData.length) return null;
     const final = chartData[chartData.length - 1].netWorth;
     const totalContributions =
-      selectedScenario.monthly_investment * selectedScenario.months;
+      effectiveScenario.monthly_investment * effectiveScenario.months;
     const totalExpenses = events
       .filter((e) => e.event_type === "expense")
       .reduce((s, e) => s + e.amount, 0);
@@ -359,7 +516,7 @@ export default function GoalsPage() {
     const netEventImpact = totalIncome - totalExpenses;
     const growthFromReturns =
       final -
-      selectedScenario.current_net_worth -
+      effectiveScenario.current_net_worth -
       totalContributions -
       netEventImpact;
     return {
@@ -369,12 +526,12 @@ export default function GoalsPage() {
       totalIncome,
       growthFromReturns,
     };
-  }, [selectedScenario, events, chartData]);
+  }, [effectiveScenario, events, chartData]);
 
   const nextMilestone = useMemo(() => {
-    if (!selectedScenario || !chartData.length) return null;
+    if (!effectiveScenario || !chartData.length) return null;
     const milestone = MILESTONES.find(
-      (m) => m > selectedScenario.current_net_worth
+      (m) => m > effectiveScenario.current_net_worth
     );
     if (!milestone) return null;
     const point = chartData.find((p) => p.netWorth >= milestone);
@@ -388,6 +545,69 @@ export default function GoalsPage() {
     for (let i = 12; i <= selectedScenario.months; i += 12) ticks.push(i);
     return ticks;
   }, [selectedScenario]);
+
+  // ── Compare-mode derived data ────────────────────────────────────────────────
+  // Stable color map: each scenario gets a color by its position in the list
+  const compareColorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    scenarios.forEach((s, i) => { map[s.id] = COMPARE_COLORS[i % COMPARE_COLORS.length]; });
+    return map;
+  }, [scenarios]);
+
+  const compareScenarios = useMemo(
+    () => scenarios.filter((s) => compareIds.has(s.id)),
+    [scenarios, compareIds]
+  );
+
+  const compareMaxMonths = useMemo(() => {
+    if (!compareMode || compareScenarios.length === 0) return 0;
+    return Math.max(...compareScenarios.map((s) => s.months));
+  }, [compareMode, compareScenarios]);
+
+  const compareXTicks = useMemo(() => {
+    const ticks: number[] = [0];
+    for (let i = 12; i <= compareMaxMonths; i += 12) ticks.push(i);
+    return ticks;
+  }, [compareMaxMonths]);
+
+  const compareChartData = useMemo(() => {
+    if (!compareMode || compareScenarios.length < 2) return [];
+    const projections = compareScenarios.map((s) => {
+      const evs = allEventsMap[s.id] ?? [];
+      const eff = s.is_auto_net_worth ? { ...s, current_net_worth: currentNetWorth } : s;
+      return { id: s.id, points: calculateProjection(eff, evs) };
+    });
+    const data: Record<string, number | string>[] = [];
+    for (let i = 0; i <= compareMaxMonths; i++) {
+      const label =
+        i === 0
+          ? "Start"
+          : Number.isInteger(i / 12)
+          ? `Year ${i / 12}`
+          : `Mo ${i}`;
+      const pt: Record<string, number | string> = { monthIndex: i, label };
+      for (const proj of projections) {
+        const val = proj.points[i]?.netWorth;
+        if (val !== undefined) pt[proj.id] = val;
+      }
+      data.push(pt);
+    }
+    return data;
+  }, [compareMode, compareScenarios, allEventsMap, currentNetWorth, compareMaxMonths]);
+
+  const compareMetrics = useMemo(() => {
+    if (!compareMode || compareScenarios.length < 2) return null;
+    return compareScenarios.map((s) => {
+      const evs = allEventsMap[s.id] ?? [];
+      const eff = s.is_auto_net_worth ? { ...s, current_net_worth: currentNetWorth } : s;
+      const points = calculateProjection(eff, evs);
+      return {
+        scenario: s,
+        color: compareColorMap[s.id] ?? "#007aff",
+        finalNW: points[points.length - 1]?.netWorth ?? 0,
+      };
+    });
+  }, [compareMode, compareScenarios, allEventsMap, currentNetWorth, compareColorMap]);
 
   // ── Mutations ───────────────────────────────────────────────────────────────
   async function deleteScenario(id: string) {
@@ -499,23 +719,59 @@ export default function GoalsPage() {
             scrollbarWidth: "none",
           }}
         >
-          {scenarios.map((s) => {
-            const active = s.id === selectedId;
+          {scenarios.map((s, idx) => {
+            const color = compareColorMap[s.id] ?? COMPARE_COLORS[idx % COMPARE_COLORS.length];
+            const inCompare = compareIds.has(s.id);
+            const active = !compareMode && s.id === selectedId;
             return (
               <div
                 key={s.id}
-                onClick={() => setSelectedId(s.id)}
+                onClick={() => {
+                  if (compareMode) {
+                    setCompareIds((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(s.id)) {
+                        // Keep at least 1 selected
+                        if (next.size > 1) next.delete(s.id);
+                      } else {
+                        if (next.size < MAX_COMPARE) next.add(s.id);
+                        else showToast(`Max ${MAX_COMPARE} scenarios in compare mode.`, "error");
+                      }
+                      return next;
+                    });
+                  } else {
+                    setSelectedId(s.id);
+                  }
+                }}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
                   padding: "7px 14px",
                   borderRadius: 20,
-                  background: active
+                  background: compareMode
+                    ? inCompare
+                      ? `${color}22`
+                      : "var(--surface)"
+                    : active
                     ? "#007aff"
                     : "var(--surface)",
-                  color: active ? "#fff" : "var(--text-primary)",
-                  border: `1px solid ${active ? "#007aff" : "var(--separator)"}`,
+                  color: compareMode
+                    ? inCompare
+                      ? color
+                      : "var(--text-secondary)"
+                    : active
+                    ? "#fff"
+                    : "var(--text-primary)",
+                  border: `1.5px solid ${
+                    compareMode
+                      ? inCompare
+                        ? color
+                        : "var(--separator)"
+                      : active
+                      ? "#007aff"
+                      : "var(--separator)"
+                  }`,
                   cursor: "pointer",
                   fontWeight: 600,
                   fontSize: 13,
@@ -524,74 +780,125 @@ export default function GoalsPage() {
                   userSelect: "none",
                 }}
               >
+                {compareMode && inCompare && (
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: color,
+                      display: "inline-block",
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
                 <span>{s.name}</span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setScenarioModal({ open: true, editData: s });
-                  }}
-                  title="Edit"
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: active ? "rgba(255,255,255,0.7)" : "var(--text-secondary)",
-                    cursor: "pointer",
-                    padding: "0 2px",
-                    fontSize: 12,
-                    lineHeight: 1,
-                  }}
-                >
-                  ✎
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteScenario(s.id);
-                  }}
-                  title="Delete"
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: active ? "rgba(255,255,255,0.6)" : "#ff3b30",
-                    cursor: "pointer",
-                    padding: "0 2px",
-                    fontSize: 16,
-                    lineHeight: 1,
-                  }}
-                >
-                  ×
-                </button>
+                {!compareMode && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setScenarioModal({ open: true, editData: s });
+                      }}
+                      title="Edit"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: active ? "rgba(255,255,255,0.7)" : "var(--text-secondary)",
+                        cursor: "pointer",
+                        padding: "0 2px",
+                        fontSize: 12,
+                        lineHeight: 1,
+                      }}
+                    >
+                      ✎
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteScenario(s.id);
+                      }}
+                      title="Delete"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: active ? "rgba(255,255,255,0.6)" : "#ff3b30",
+                        cursor: "pointer",
+                        padding: "0 2px",
+                        fontSize: 16,
+                        lineHeight: 1,
+                      }}
+                    >
+                      ×
+                    </button>
+                  </>
+                )}
               </div>
             );
           })}
-          <button
-            onClick={() => {
-              const limits = getLimits(profile?.plan_type);
-              if (scenarios.length >= limits.scenarios) {
-                if (!isPremium(profile?.plan_type)) {
-                  setUpgradeModalOpen(true);
-                } else {
-                  showToast(`You've reached the premium limit of ${limits.scenarios} scenarios.`, "error");
+          {!compareMode && (
+            <button
+              onClick={() => {
+                const limits = getLimits(profile?.plan_type);
+                if (scenarios.length >= limits.scenarios) {
+                  if (!isPremium(profile?.plan_type)) {
+                    setUpgradeModalOpen(true);
+                  } else {
+                    showToast(`You've reached the premium limit of ${limits.scenarios} scenarios.`, "error");
+                  }
+                  return;
                 }
-                return;
-              }
-              setScenarioModal({ open: true });
-            }}
-            style={{
-              padding: "7px 16px",
-              borderRadius: 20,
-              background: "transparent",
-              border: "1.5px dashed var(--separator)",
-              color: "#007aff",
-              cursor: "pointer",
-              fontWeight: 600,
-              fontSize: 13,
-              whiteSpace: "nowrap",
-              transition: "opacity 160ms ease",
-            }}
-          >
-            + New Scenario
-          </button>
+                setScenarioModal({ open: true });
+              }}
+              style={{
+                padding: "7px 16px",
+                borderRadius: 20,
+                background: "transparent",
+                border: "1.5px dashed var(--separator)",
+                color: "#007aff",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: 13,
+                whiteSpace: "nowrap",
+                transition: "opacity 160ms ease",
+              }}
+            >
+              + New Scenario
+            </button>
+          )}
+          {scenarios.length >= 2 && (
+            <button
+              onClick={() => {
+                if (compareMode) {
+                  setCompareMode(false);
+                  setCompareIds(new Set());
+                } else {
+                  const preselect = new Set(
+                    scenarios.slice(0, MAX_COMPARE).map((s) => s.id)
+                  );
+                  setCompareMode(true);
+                  setCompareIds(preselect);
+                }
+              }}
+              style={{
+                padding: "7px 14px",
+                borderRadius: 20,
+                background: compareMode ? "rgba(174,221,0,0.12)" : "transparent",
+                border: `1.5px solid ${compareMode ? "#AEDD00" : "var(--separator)"}`,
+                color: compareMode ? "#AEDD00" : "var(--text-secondary)",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: 13,
+                whiteSpace: "nowrap",
+                transition: "all 160ms ease",
+                flexShrink: 0,
+              }}
+            >
+              {compareMode
+                ? `✕ Exit Compare (${compareIds.size})`
+                : "⊕ Compare"}
+            </button>
+          )}
         </div>
 
         {/* ── Empty state ──────────────────────────────────────────────────── */}
@@ -664,8 +971,465 @@ export default function GoalsPage() {
           </div>
         )}
 
+        {/* ── Compare mode ─────────────────────────────────────────────────── */}
+        {compareMode && compareMetrics && compareChartData.length > 0 && (
+          <>
+            {/* Compare summary header */}
+            <div style={{ marginBottom: 14 }}>
+              {(() => {
+                const sorted = [...compareMetrics].sort((a, b) => b.finalNW - a.finalNW);
+                const best = sorted[0];
+                const second = sorted[1];
+                const delta = best.finalNW - second.finalNW;
+                const bestHorizon = best.scenario.months;
+                return (
+                  <div
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(174,221,0,0.08), rgba(0,122,255,0.06))",
+                      border: "1px solid rgba(174,221,0,0.2)",
+                      borderRadius: 16,
+                      padding: "13px 18px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        background: "rgba(174,221,0,0.14)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <IconTrendingUp size={16} stroke="#AEDD00" />
+                    </div>
+                    <span
+                      style={{
+                        color: "var(--text-primary)",
+                        fontWeight: 600,
+                        fontSize: 14,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      <span style={{ color: best.color }}>{best.scenario.name}</span>{" "}
+                      could end{" "}
+                      <span style={{ color: "#AEDD00", fontWeight: 700 }}>
+                        {fmtINR(delta)}
+                      </span>{" "}
+                      higher than{" "}
+                      <span style={{ color: second.color }}>
+                        {second.scenario.name}
+                      </span>{" "}
+                      over{" "}
+                      <span style={{ color: "var(--text-secondary)" }}>
+                        {horizonLabel(bestHorizon)}
+                      </span>
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Per-scenario projected NW cards */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${Math.min(compareMetrics.length, 3)}, 1fr)`,
+                gap: 10,
+                marginBottom: 14,
+              }}
+            >
+              {compareMetrics.map((cm) => (
+                <div
+                  key={cm.scenario.id}
+                  style={{
+                    background: "var(--surface)",
+                    borderRadius: 18,
+                    border: `1.5px solid ${cm.color}33`,
+                    padding: "14px 16px",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 3,
+                      background: cm.color,
+                      borderRadius: "18px 18px 0 0",
+                    }}
+                  />
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: cm.color,
+                        display: "inline-block",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span
+                      style={{
+                        color: "var(--text-secondary)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {cm.scenario.name}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      color: cm.color,
+                      fontSize: 22,
+                      fontWeight: 700,
+                      letterSpacing: "-0.5px",
+                      lineHeight: 1,
+                      marginBottom: 4,
+                    }}
+                  >
+                    {fmtINR(cm.finalNW)}
+                  </div>
+                  <div style={{ color: "var(--text-tertiary)", fontSize: 11 }}>
+                    in {horizonLabel(cm.scenario.months)} ·{" "}
+                    {fmtINR(cm.scenario.monthly_investment)}/mo
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Compare chart */}
+            <div
+              style={{
+                background: "var(--surface)",
+                borderRadius: 24,
+                padding: "22px 20px 16px",
+                border: "1px solid var(--separator)",
+                marginBottom: 16,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  marginBottom: 20,
+                  flexWrap: "wrap",
+                  gap: 8,
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 700,
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    Scenario Comparison
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: "var(--text-secondary)",
+                      marginTop: 2,
+                    }}
+                  >
+                    {compareScenarios.length} scenarios · up to{" "}
+                    {horizonLabel(compareMaxMonths)} horizon
+                  </div>
+                </div>
+                {/* Legend */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 12,
+                    fontSize: 12,
+                    color: "var(--text-secondary)",
+                    alignItems: "center",
+                  }}
+                >
+                  {compareScenarios.map((s) => (
+                    <span
+                      key={s.id}
+                      style={{ display: "flex", alignItems: "center", gap: 5 }}
+                    >
+                      <span
+                        style={{
+                          width: 24,
+                          height: 3,
+                          borderRadius: 2,
+                          background: compareColorMap[s.id],
+                          display: "inline-block",
+                          flexShrink: 0,
+                        }}
+                      />
+                      {s.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ height: 320 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={compareChartData}
+                    margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      {compareScenarios.map((s) => (
+                        <linearGradient
+                          key={s.id}
+                          id={`cmpGrad-${s.id}`}
+                          x1="0" y1="0" x2="0" y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor={compareColorMap[s.id]}
+                            stopOpacity={0.15}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor={compareColorMap[s.id]}
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <CartesianGrid
+                      stroke="var(--separator)"
+                      vertical={false}
+                      strokeDasharray="0"
+                    />
+                    <XAxis
+                      dataKey="monthIndex"
+                      type="number"
+                      domain={[0, compareMaxMonths]}
+                      ticks={compareXTicks}
+                      tickFormatter={(v) =>
+                        v === 0
+                          ? "Start"
+                          : Number.isInteger(v / 12)
+                          ? `Y${v / 12}`
+                          : `M${v}`
+                      }
+                      tick={{ fill: "var(--text-tertiary)", fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tickFormatter={(v) => `₹${fmtShort(v)}`}
+                      tick={{ fill: "var(--text-tertiary)", fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={68}
+                    />
+                    <Tooltip
+                      content={(props) => (
+                        <CompareTooltip
+                          active={props.active}
+                          payload={
+                            props.payload as unknown as {
+                              payload: Record<string, number | string>;
+                            }[]
+                          }
+                          compareScenarios={compareScenarios}
+                          colorMap={compareColorMap}
+                        />
+                      )}
+                      cursor={{
+                        stroke: "var(--separator)",
+                        strokeWidth: 1,
+                      }}
+                    />
+                    {compareScenarios.map((s) => (
+                      <Line
+                        key={s.id}
+                        type="monotone"
+                        dataKey={s.id}
+                        stroke={compareColorMap[s.id]}
+                        strokeWidth={2.5}
+                        dot={false}
+                        activeDot={{
+                          r: 5,
+                          fill: compareColorMap[s.id],
+                          stroke: "var(--surface)",
+                          strokeWidth: 2,
+                        }}
+                        connectNulls={false}
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Compare detail table */}
+            <div
+              style={{
+                background: "var(--surface)",
+                borderRadius: 20,
+                padding: "20px",
+                border: "1px solid var(--separator)",
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: 700,
+                  fontSize: 17,
+                  color: "var(--text-primary)",
+                  marginBottom: 16,
+                }}
+              >
+                Scenario Details
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontSize: 13,
+                  }}
+                >
+                  <thead>
+                    <tr>
+                      {[
+                        "Scenario",
+                        "Starting NW",
+                        "Monthly Investment",
+                        "Return",
+                        "Horizon",
+                        "Projected NW",
+                      ].map((h) => (
+                        <th
+                          key={h}
+                          style={{
+                            color: "var(--text-tertiary)",
+                            fontWeight: 600,
+                            fontSize: 10,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                            textAlign: "left",
+                            paddingBottom: 10,
+                            paddingRight: 16,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {compareMetrics.map((cm) => (
+                      <tr
+                        key={cm.scenario.id}
+                        style={{ borderTop: "1px solid var(--separator)" }}
+                      >
+                        <td style={{ padding: "12px 16px 12px 0" }}>
+                          <span
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: "50%",
+                                background: cm.color,
+                                display: "inline-block",
+                                flexShrink: 0,
+                              }}
+                            />
+                            <span
+                              style={{
+                                fontWeight: 600,
+                                color: "var(--text-primary)",
+                              }}
+                            >
+                              {cm.scenario.name}
+                            </span>
+                          </span>
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px 16px 12px 0",
+                            color: "var(--text-primary)",
+                          }}
+                        >
+                          {cm.scenario.is_auto_net_worth
+                            ? fmtINR(currentNetWorth)
+                            : fmtINR(cm.scenario.current_net_worth)}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px 16px 12px 0",
+                            color: "var(--text-primary)",
+                          }}
+                        >
+                          {fmtINR(cm.scenario.monthly_investment)}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px 16px 12px 0",
+                            color: "var(--text-primary)",
+                          }}
+                        >
+                          {cm.scenario.annual_return_pct}%
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px 16px 12px 0",
+                            color: "var(--text-primary)",
+                          }}
+                        >
+                          {horizonLabel(cm.scenario.months)}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px 0 12px 0",
+                            fontWeight: 700,
+                            color: cm.color,
+                          }}
+                        >
+                          {fmtINR(cm.finalNW)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+
         {/* ── Main content ─────────────────────────────────────────────────── */}
-        {selectedScenario && metrics && (
+        {!compareMode && selectedScenario && metrics && (
           <>
             {/* Milestone insight banner */}
             {nextMilestone && (
@@ -1255,7 +2019,10 @@ export default function GoalsPage() {
                   {[
                     {
                       label: "Current Net Worth",
-                      value: fmtINR(selectedScenario.current_net_worth),
+                      value: selectedScenario.is_auto_net_worth
+                        ? fmtINR(currentNetWorth)
+                        : fmtINR(selectedScenario.current_net_worth),
+                      badge: selectedScenario.is_auto_net_worth ? "Live" : undefined,
                     },
                     {
                       label: "Monthly Income",
@@ -1301,14 +2068,31 @@ export default function GoalsPage() {
                       >
                         {row.label}
                       </span>
-                      <span
-                        style={{
-                          color: "var(--text-primary)",
-                          fontWeight: 600,
-                          fontSize: 14,
-                        }}
-                      >
-                        {row.value}
+                      <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        {"badge" in row && row.badge && (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 700,
+                              color: "#34c759",
+                              background: "rgba(52,199,89,0.12)",
+                              padding: "2px 6px",
+                              borderRadius: 8,
+                              letterSpacing: "0.3px",
+                            }}
+                          >
+                            {row.badge}
+                          </span>
+                        )}
+                        <span
+                          style={{
+                            color: "var(--text-primary)",
+                            fontWeight: 600,
+                            fontSize: 14,
+                          }}
+                        >
+                          {row.value}
+                        </span>
                       </span>
                     </div>
                   ))}
@@ -1333,10 +2117,19 @@ export default function GoalsPage() {
           open={scenarioModal.open}
           editData={scenarioModal.editData}
           userId={user!.id}
+          currentNetWorth={currentNetWorth}
           onClose={() => setScenarioModal({ open: false })}
           onSave={async (scenario) => {
             await fetchScenarios();
             setSelectedId(scenario.id);
+            // In compare mode, add the saved scenario to the comparison set
+            if (compareMode) {
+              setCompareIds((prev) => {
+                const next = new Set(prev);
+                if (next.size < MAX_COMPARE) next.add(scenario.id);
+                return next;
+              });
+            }
             setScenarioModal({ open: false });
             showToast(
               scenarioModal.editData
