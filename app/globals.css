@@ -15,6 +15,7 @@
   --blue: #007aff;
   --green: #34c759;
   --red: #ff3b30;
+  --dot-color: rgba(60, 60, 67, 0.18);
 }
 
 html.dark {
@@ -31,6 +32,7 @@ html.dark {
   --row-hover: rgba(255, 255, 255, 0.04);
   --card-border-dark: rgba(255, 255, 255, 0.08);
   --card-shadow-dark: 0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4);
+  --dot-color: rgba(255, 255, 255, 0.08);
 }
 
 html {
@@ -76,7 +78,9 @@ body {
      the html root's touch routing. "contain" was too permissive — it still lets
      overscroll bubble to the html root, which re-triggers the APZ policy issue. */
   overscroll-behavior: none;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+  background-size: 22px 22px;
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
     system-ui, sans-serif;
