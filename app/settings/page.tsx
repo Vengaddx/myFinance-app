@@ -136,7 +136,7 @@ export default function SettingsPage() {
   }, [session?.user?.id]);
 
   if (authLoading || !session) {
-    return <div className="min-h-screen" style={{ background: "var(--bg)" }} />;
+    return <div className="min-h-screen" />;
   }
 
   const cardStyle: React.CSSProperties = {
@@ -150,7 +150,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)", paddingTop: "calc(50px + env(safe-area-inset-top))" }}>
+    <div className="min-h-screen" style={{ paddingTop: "calc(50px + env(safe-area-inset-top))" }}>
       <Navbar />
 
       <main

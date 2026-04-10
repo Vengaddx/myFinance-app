@@ -24,7 +24,6 @@ export default function Loading() {
     <div
       className="min-h-screen px-4 py-6"
       style={{
-        background: "var(--bg)",
         paddingTop: "calc(68px + env(safe-area-inset-top))",
         paddingBottom: "calc(80px + env(safe-area-inset-bottom))",
       }}

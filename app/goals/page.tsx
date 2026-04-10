@@ -12,7 +12,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  Legend,
 } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
@@ -642,7 +641,6 @@ export default function GoalsPage() {
     return (
       <div
         style={{
-          background: "var(--bg)",
           minHeight: "100vh",
           paddingTop: "calc(50px + env(safe-area-inset-top))",
         }}
@@ -671,7 +669,6 @@ export default function GoalsPage() {
   return (
     <div
       style={{
-        background: "var(--bg)",
         minHeight: "100vh",
         paddingTop: "calc(50px + env(safe-area-inset-top))",
         paddingBottom: 88,

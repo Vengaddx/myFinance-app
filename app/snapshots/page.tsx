@@ -348,7 +348,7 @@ export default function SnapshotsPage() {
     : [];
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)", paddingTop: "calc(50px + env(safe-area-inset-top))" }}>
+    <div className="min-h-screen" style={{ paddingTop: "calc(50px + env(safe-area-inset-top))" }}>
       <Toast message={toastMessage} type={toastType} visible={toastVisible} />
       <Navbar />
 

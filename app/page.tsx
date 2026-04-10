@@ -308,11 +308,11 @@ export default function Home() {
 
   // Blank screen while auth resolves or redirecting
   if (authLoading || !session) {
-    return <div className="min-h-screen" style={{ background: "var(--bg)" }} />;
+    return <div className="min-h-screen" />;
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)", paddingTop: "calc(50px + env(safe-area-inset-top))" }}>
+    <div className="min-h-screen" style={{ paddingTop: "calc(50px + env(safe-area-inset-top))" }}>
       {showOnboarding && (
         <OnboardingFlow
           onComplete={() => {

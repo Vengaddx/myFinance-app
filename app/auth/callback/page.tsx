@@ -56,7 +56,6 @@ export default function AuthCallbackPage() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center gap-3"
-      style={{ background: "var(--bg)" }}
     >
       <div
         className="w-6 h-6 rounded-full border-2 animate-spin"

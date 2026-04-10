@@ -55,13 +55,12 @@ export default function LoginPage() {
 
   // Show blank while checking session to avoid login page flash
   if (loading) {
-    return <div className="min-h-screen" style={{ background: "var(--bg)" }} />;
+    return <div className="min-h-screen" />;
   }
 
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center p-6"
-      style={{ background: "var(--bg)" }}
     >
       <div
         className="w-full max-w-sm rounded-[28px] p-8 flex flex-col items-center gap-6"
