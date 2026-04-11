@@ -471,7 +471,7 @@ export default function Home() {
             />
           </div>
 
-          <div className="md:col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1 h-full">
+          <div className="hidden md:block md:col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1 h-full">
             <AllocationCard
               allocationData={summary.allocationData}
               totalAssets={summary.totalAssets}
