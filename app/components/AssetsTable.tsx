@@ -1389,7 +1389,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`shrink-0 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[12.5px] sm:text-[13px] font-medium${tab.value === "stocks" ? " hidden md:inline-flex" : ""}`}
+                className="shrink-0 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[12.5px] sm:text-[13px] font-medium"
                 style={{
                   background: isActive
                     ? isDark ? "rgba(255,255,255,0.12)" : "#1d1d1f"

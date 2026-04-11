@@ -582,7 +582,7 @@ export default function Navbar() {
                 key={item.id}
                 ref={(el) => { bottomBtnRefs.current[idx] = el; }}
                 onClick={() => router.push(item.id === "portfolio" ? "/" : `/${item.id}`)}
-                className="relative z-10 flex flex-col items-center gap-[3px] px-[22px] py-[4px] active:scale-95"
+                className={`relative z-10 flex flex-col items-center gap-[3px] px-[22px] py-[4px] active:scale-95${item.id === "stocks" ? " hidden" : ""}`}
                 style={{
                   borderRadius: 28,
                   transition: "transform 140ms cubic-bezier(0.25,0.46,0.45,0.94)",
