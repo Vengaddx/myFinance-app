@@ -1083,12 +1083,14 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
     // Sum individual pnl values (bank/cash assets already carry pnl=0)
     const pnl      = filtered.reduce((s, a) => s + a.pnl, 0) + kitePnl;
     const pnlPct   = invested > 0 ? (pnl / invested) * 100 : 0;
-    const mappedLibs = liabilities.map((l) => ({
-      outstanding: Number(l.outstanding_amount ?? 0),
-      original:    Number(l.original_amount ?? 0),
-    }));
-    const outstanding  = mappedLibs.reduce((s, l) => s + l.outstanding, 0);
-    const totalBorrowed = mappedLibs.reduce((s, l) => s + l.original, 0);
+    const activeLibs = liabilities
+      .filter((l) => (l.status || "active") === "active")
+      .map((l) => ({
+        outstanding: Number(l.outstanding_amount ?? 0),
+        original:    Number(l.original_amount ?? 0),
+      }));
+    const outstanding   = activeLibs.reduce((s, l) => s + l.outstanding, 0);
+    const totalBorrowed = activeLibs.reduce((s, l) => s + l.original, 0);
     const categoryLabel =
       activeTab === "all"
         ? "All Assets"
@@ -1103,7 +1105,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
       assetCount: filtered.length,
       outstanding,
       totalBorrowed,
-      liabilityCount: liabilities.length,
+      liabilityCount: activeLibs.length,
     });
   }, [filtered, filteredExpenses, sectionTab, activeTab, liabilities, kiteUiAssets, onSummaryChange]);
 
@@ -1498,8 +1500,9 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
           // Sum individual pnl values so bank/cash (pnl=0) don't inflate P&L
           const pnl  = filtered.reduce((s, a) => s + a.pnl, 0) + kitePnl;
           const pct  = inv > 0 ? (pnl / inv) * 100 : 0;
-          const outstanding   = filteredLiabilities.reduce((s, l) => s + l.outstandingAmount, 0);
-          const totalBorrowed = filteredLiabilities.reduce((s, l) => s + l.originalAmount, 0);
+          const activeFilteredLibs = filteredLiabilities.filter((l) => l.status === "active");
+          const outstanding   = activeFilteredLibs.reduce((s, l) => s + l.outstandingAmount, 0);
+          const totalBorrowed = activeFilteredLibs.reduce((s, l) => s + l.originalAmount, 0);
           const expTotal = filteredExpenses.reduce((s, e) => s + e.amount, 0);
           const expClaim = filteredExpenses.filter((e) => e.claim_eligible).reduce((s, e) => s + e.amount, 0);
           const expSW    = filteredExpenses.filter((e) => e.splitwise_applicable && !e.splitwise_added).reduce((s, e) => s + e.amount, 0);
@@ -1536,7 +1539,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                 {sep}
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Count</p>
-                  <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{filteredLiabilities.length}</p>
+                  <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{activeFilteredLibs.length}</p>
                 </div>
               </>)}
               {sectionTab === "expenses" && (<>
