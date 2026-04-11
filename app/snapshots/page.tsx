@@ -42,6 +42,13 @@ type DbLiabilityRow = {
   status: string;
 };
 
+type BrokerHolding = {
+  quantity: number;
+  average_price: number;
+  last_price: number;
+  tradingsymbol: string;
+};
+
 function fmtINR(n: number) {
   const abs = Math.abs(n);
   const sign = n < 0 ? "-" : "";
@@ -118,6 +125,7 @@ export default function SnapshotsPage() {
 
   const [currentAssets, setCurrentAssets] = useState<DbAssetRow[]>([]);
   const [currentLiabilities, setCurrentLiabilities] = useState<DbLiabilityRow[]>([]);
+  const [currentBrokerHoldings, setCurrentBrokerHoldings] = useState<BrokerHolding[]>([]);
 
   const showToast = useCallback(
     (message: string, type: "success" | "error" | "info" = "info") => {
@@ -144,12 +152,14 @@ export default function SnapshotsPage() {
   }, [showToast]);
 
   const fetchCurrentData = useCallback(async () => {
-    const [assetsRes, liabsRes] = await Promise.all([
+    const [assetsRes, liabsRes, brokerRes] = await Promise.all([
       supabase.from("assets").select("id, type, value, notes"),
       supabase.from("liabilities").select("outstanding_amount, status"),
+      supabase.from("broker_holdings").select("tradingsymbol, quantity, average_price, last_price"),
     ]);
     if (!assetsRes.error) setCurrentAssets(assetsRes.data ?? []);
     if (!liabsRes.error) setCurrentLiabilities(liabsRes.data ?? []);
+    if (!brokerRes.error) setCurrentBrokerHoldings((brokerRes.data as BrokerHolding[]) ?? []);
   }, []);
 
   useEffect(() => {
@@ -183,7 +193,15 @@ export default function SnapshotsPage() {
       const t = String(asset.type ?? "").toLowerCase().trim();
       const isSimple = t === "bank" || t === "bank account" || t === "cash" || t === "cash & savings" || t === "savings";
       if (isSimple) bankCashValue += val;
-      invested += isSimple ? 0 : Number(notes.invested ?? notes.avgPurchasePrice ?? 0);
+      invested += isSimple ? 0 : Number(notes.invested ?? 0);
+    }
+
+    // Include broker holdings — same as main dashboard
+    for (const h of currentBrokerHoldings) {
+      const currentValue = h.quantity * h.last_price;
+      const inv = h.quantity * h.average_price;
+      totalAssets += currentValue;
+      invested += inv;
     }
 
     const totalLiabilities = currentLiabilities
@@ -197,7 +215,7 @@ export default function SnapshotsPage() {
       invested,
       totalPnl: (totalAssets - bankCashValue) - invested,
     };
-  }, [currentAssets, currentLiabilities]);
+  }, [currentAssets, currentLiabilities, currentBrokerHoldings]);
 
   const handleTakeSnapshot = async () => {
     setTakingSnapshot(true);
