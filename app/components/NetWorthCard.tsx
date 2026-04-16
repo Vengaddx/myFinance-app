@@ -8,6 +8,8 @@ type Props = {
   investedPctOfNetWorth: number;
   totalPnl: number;
   totalPnlPct: number;
+  totalAssets: number;
+  liabilities: number;
   netWorthChange?: number;
   onClick?: () => void;
 };
@@ -16,12 +18,54 @@ function fmtINR(n: number) {
   return `₹\u202f${n.toLocaleString("en-IN")}`;
 }
 
+function fmtShort(n: number) {
+  if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(2)} Cr`;
+  if (n >= 100_000) return `₹${(n / 100_000).toFixed(1)} L`;
+  return `₹${n.toLocaleString("en-IN")}`;
+}
+
+function MetricBlock({
+  label,
+  value,
+  sub,
+  valueColor,
+  align = "left",
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  valueColor?: string;
+  align?: "left" | "right";
+}) {
+  return (
+    <div className={align === "right" ? "text-right" : ""}>
+      <p
+        className="text-[10px] font-semibold uppercase mb-1"
+        style={{ color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em" }}
+      >
+        {label}
+      </p>
+      <p
+        className="text-[15px] font-bold leading-none mb-0.5"
+        style={{ color: valueColor ?? "#ffffff", letterSpacing: "-0.02em" }}
+      >
+        {value}
+      </p>
+      <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.28)" }}>
+        {sub}
+      </p>
+    </div>
+  );
+}
+
 export default function NetWorthCard({
   netWorth,
   invested,
   investedPctOfNetWorth,
   totalPnl,
   totalPnlPct,
+  totalAssets,
+  liabilities,
   netWorthChange = 0,
   onClick,
 }: Props) {
@@ -37,7 +81,7 @@ export default function NetWorthCard({
 
   return (
     <div
-      className="card-lift flex flex-col justify-between h-full rounded-[20px] p-5 relative overflow-hidden"
+      className="card-lift flex flex-col h-full rounded-[20px] p-5 gap-4 relative overflow-hidden"
       style={{
         background: bg,
         border,
@@ -47,40 +91,35 @@ export default function NetWorthCard({
       }}
       onClick={onClick}
     >
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <p
-            className="text-[11.5px] font-semibold uppercase"
-            style={{ color: "rgba(255,255,255,0.45)", letterSpacing: "0.13em" }}
-          >
-            Net Worth
-          </p>
-          {onClick && (
-            <span
-              className="text-[11px] font-medium flex items-center gap-1"
-              style={{ color: "rgba(255,255,255,0.3)" }}
-            >
-              Timeline ›
-            </span>
-          )}
-        </div>
-
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <p
-          className="text-[28px] font-bold leading-none text-white"
-          style={{ letterSpacing: "-0.025em" }}
+          className="text-[11px] font-semibold uppercase"
+          style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.13em" }}
+        >
+          Net Worth
+        </p>
+        {onClick && (
+          <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.28)" }}>
+            Timeline ›
+          </span>
+        )}
+      </div>
+
+      {/* Main number + change */}
+      <div>
+        <p
+          className="text-[38px] font-bold leading-none text-white"
+          style={{ letterSpacing: "-0.03em" }}
         >
           {fmtINR(netWorth)}
-          <span
-            className="text-[17px] font-normal"
-            style={{ color: "rgba(255,255,255,0.35)" }}
-          >
+          <span className="text-[20px] font-normal" style={{ color: "rgba(255,255,255,0.25)" }}>
             .00
           </span>
         </p>
-
         <div className="flex items-center gap-2 mt-2">
           <span
-            className="inline-flex items-center gap-1 text-[13px] font-bold px-2.5 py-1 rounded-full"
+            className="inline-flex items-center gap-1 text-[12px] font-bold px-2.5 py-0.5 rounded-full"
             style={{
               color: up ? "#34c759" : "#ff3b30",
               background: up ? "rgba(52,199,89,0.15)" : "rgba(255,59,48,0.15)",
@@ -88,56 +127,46 @@ export default function NetWorthCard({
           >
             {up ? "▲" : "▼"} {Math.abs(netWorthChange)}%
           </span>
-          <span
-            className="text-[12.5px]"
-            style={{ color: "rgba(255,255,255,0.35)" }}
-          >
+          <span className="text-[12px]" style={{ color: "rgba(255,255,255,0.28)" }}>
             from last snapshot
           </span>
         </div>
       </div>
 
-      <div
-        className="mt-3 pt-2.5"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p
-              className="text-[11px] font-medium uppercase mb-1"
-              style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}
-            >
-              Invested
-            </p>
-            <p
-              className="text-[17px] font-bold text-white"
-              style={{ letterSpacing: "-0.015em" }}
-            >
-              {fmtINR(invested)}
-            </p>
-            <p className="text-[12px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
-              {investedPctOfNetWorth}% of Net Worth
-            </p>
-          </div>
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
 
-          <div className="text-right">
-            <p
-              className="text-[11px] font-medium uppercase mb-1"
-              style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}
-            >
-              Total P&L
-            </p>
-            <p
-              className="text-[17px] font-bold"
-              style={{ letterSpacing: "-0.015em", color: totalPnl >= 0 ? "#34c759" : "#ff3b30" }}
-            >
-              {totalPnl >= 0 ? "+" : ""}{fmtINR(totalPnl)}
-            </p>
-            <p className="text-[12px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
-              {totalPnl >= 0 ? "+" : ""}{totalPnlPct}% ROI
-            </p>
-          </div>
-        </div>
+      {/* Invested / P&L */}
+      <div className="grid grid-cols-2">
+        <MetricBlock
+          label="Invested"
+          value={fmtINR(invested)}
+          sub={`${investedPctOfNetWorth}% of Net Worth`}
+        />
+        <MetricBlock
+          label="Total P&L"
+          value={`${totalPnl >= 0 ? "+" : ""}${fmtINR(totalPnl)}`}
+          sub={`${totalPnl >= 0 ? "+" : ""}${totalPnlPct}% ROI`}
+          valueColor={totalPnl >= 0 ? "#34c759" : "#ff3b30"}
+          align="right"
+        />
+      </div>
+
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
+
+      {/* Total Assets / Liabilities */}
+      <div className="grid grid-cols-2">
+        <MetricBlock
+          label="Total Assets"
+          value={fmtShort(totalAssets)}
+          sub="Gross portfolio value"
+        />
+        <MetricBlock
+          label="Liabilities"
+          value={fmtShort(liabilities)}
+          sub="Total owed"
+          valueColor="#ff3b30"
+          align="right"
+        />
       </div>
     </div>
   );
