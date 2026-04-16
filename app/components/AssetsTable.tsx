@@ -235,32 +235,96 @@ function LenderTypeBadge({ type }: { type: string }) {
   );
 }
 
-function AssetIcon({ type }: { type?: string }) {
+const ASSET_ICON_SVG: Record<AssetCategory, React.ReactNode> = {
+  stocks: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+      <polyline points="16 7 22 7 22 13" />
+    </svg>
+  ),
+  gold: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v1.5M12 15.5V17M10 9.5c0-1.1.9-2 2-2s2 .9 2 2c0 1.1-.9 1.5-2 1.5S10 13 10 14.1c0 1.1.9 2 2 2s2-.9 2-2" />
+    </svg>
+  ),
+  lended: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <line x1="23" y1="11" x2="17" y2="11" />
+      <polyline points="20 8 23 11 20 14" />
+    </svg>
+  ),
+  fd: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <polyline points="9 12 11 14 15 10" />
+    </svg>
+  ),
+  realestate: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  ),
+  bank: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="22" x2="21" y2="22" />
+      <line x1="6" y1="18" x2="6" y2="11" />
+      <line x1="10" y1="18" x2="10" y2="11" />
+      <line x1="14" y1="18" x2="14" y2="11" />
+      <line x1="18" y1="18" x2="18" y2="11" />
+      <polygon points="12 2 20 7 4 7" />
+    </svg>
+  ),
+  cash: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2" />
+      <path d="M6 12h.01M18 12h.01" />
+    </svg>
+  ),
+  crypto: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 8h6M9 12h6M9 16h4" />
+      <path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+      <path d="M11 4v3M13 4v3M11 17v3M13 17v3" />
+    </svg>
+  ),
+  other: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  ),
+};
+
+const ASSET_ICON_STYLE: Record<AssetCategory, { bgLight: string; bgDark: string; color: string }> = {
+  stocks:    { bgLight: "rgba(0,122,255,0.10)",   bgDark: "rgba(0,122,255,0.20)",   color: "#007aff" },
+  gold:      { bgLight: "rgba(200,148,0,0.12)",   bgDark: "rgba(255,184,0,0.18)",   color: "#b8890a" },
+  lended:    { bgLight: "rgba(52,199,89,0.12)",   bgDark: "rgba(52,199,89,0.20)",   color: "#28a745" },
+  fd:        { bgLight: "rgba(0,85,179,0.10)",    bgDark: "rgba(0,85,179,0.22)",    color: "#0055b3" },
+  realestate:{ bgLight: "rgba(90,122,0,0.10)",    bgDark: "rgba(174,221,0,0.18)",   color: "#5a7a00" },
+  bank:      { bgLight: "rgba(0,122,255,0.08)",   bgDark: "rgba(77,168,255,0.18)",  color: "#4da8ff" },
+  cash:      { bgLight: "rgba(99,99,102,0.10)",   bgDark: "rgba(99,99,102,0.20)",   color: "#8e8e93" },
+  crypto:    { bgLight: "rgba(91,48,192,0.10)",   bgDark: "rgba(91,48,192,0.22)",   color: "#7c4ddb" },
+  other:     { bgLight: "rgba(142,142,147,0.10)", bgDark: "rgba(142,142,147,0.18)", color: "#8e8e93" },
+};
+
+function AssetIcon({ type, isDark }: { type?: string; isDark?: boolean }) {
   const category = normalizeCategory(type);
-
-  const iconMap: Record<
-    AssetCategory,
-    { symbol: string; bg: string; color: string }
-  > = {
-    stocks: { symbol: "📈", bg: "#e8eeff", color: "#2c5ae9" },
-    gold: { symbol: "🥇", bg: "#fff8e0", color: "#a67c00" },
-    lended: { symbol: "🤝", bg: "#e8f5ed", color: "#1e7a3e" },
-    fd: { symbol: "🏦", bg: "#e6f4ff", color: "#0055b3" },
-    realestate: { symbol: "🏠", bg: "#fff0e6", color: "#c0501a" },
-    bank: { symbol: "🏦", bg: "#e0f0ff", color: "#0055b3" },
-    cash: { symbol: "💵", bg: "#f2f2f7", color: "#636366" },
-    crypto: { symbol: "₿", bg: "#ede8ff", color: "#5b30c0" },
-    other: { symbol: "📦", bg: "#f2f2f7", color: "#636366" },
-  };
-
-  const icon = iconMap[category];
+  const style = ASSET_ICON_STYLE[category];
+  const bg = isDark ? style.bgDark : style.bgLight;
 
   return (
     <div
-      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-[16px] sm:text-[17px] shrink-0 font-bold select-none"
-      style={{ background: icon.bg, color: icon.color }}
+      className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0"
+      style={{ background: bg, color: style.color }}
     >
-      {icon.symbol}
+      {ASSET_ICON_SVG[category]}
     </div>
   );
 }
@@ -1593,7 +1657,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <AssetIcon type={asset.category} />
+                    <AssetIcon type={asset.category} isDark={isDark} />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p
@@ -1664,7 +1728,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <AssetIcon type={row.category} />
+                    <AssetIcon type={row.category} isDark={isDark} />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
@@ -1765,7 +1829,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                   >
                     <td className="pl-6 pr-4 py-3.5">
                       <div className="flex items-center gap-3">
-                        <AssetIcon type={asset.category} />
+                        <AssetIcon type={asset.category} isDark={isDark} />
                         <div>
                         <div className="flex items-center gap-2">
                           <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
@@ -1841,7 +1905,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                   >
                     <td className="pl-6 pr-4 py-3.5">
                       <div className="flex items-center gap-3">
-                        <AssetIcon type={row.category} />
+                        <AssetIcon type={row.category} isDark={isDark} />
                         <div>
                           <div className="flex items-center gap-2">
                             <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
