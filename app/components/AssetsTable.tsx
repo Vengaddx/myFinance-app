@@ -1330,24 +1330,30 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
           className="flex flex-col md:flex-row md:items-center md:justify-between px-4 sm:px-5 md:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 gap-3 md:gap-2"
           style={{ borderBottom: "1px solid var(--separator-subtle)" }}
         >
-          <div className="flex items-center gap-5">
+          <div
+            className="flex items-center gap-0.5 p-[3px] rounded-[12px]"
+            style={{
+              background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)",
+              border: isDark ? "1px solid rgba(255,255,255,0.07)" : "1px solid rgba(0,0,0,0.04)",
+            }}
+          >
             {(["assets", "liabilities", "expenses"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setSectionTab(t)}
-                className="relative pb-1 text-[14px] sm:text-[15px] font-medium transition-colors capitalize"
+                className="px-3 sm:px-4 py-1.5 rounded-[9px] text-[12.5px] sm:text-[13px] font-semibold capitalize"
                 style={{
+                  background: sectionTab === t
+                    ? (isDark ? "rgba(255,255,255,0.14)" : "#ffffff")
+                    : "transparent",
                   color: sectionTab === t ? "var(--text-primary)" : "var(--text-tertiary)",
-                  fontWeight: sectionTab === t ? 600 : 400,
+                  boxShadow: sectionTab === t
+                    ? (isDark ? "0 1px 4px rgba(0,0,0,0.4)" : "0 1px 3px rgba(0,0,0,0.12)")
+                    : "none",
+                  transition: "background 180ms ease, color 180ms ease, box-shadow 180ms ease",
                 }}
               >
                 {t.charAt(0).toUpperCase() + t.slice(1)}
-                {sectionTab === t && (
-                  <span
-                    className="absolute bottom-0 left-0 right-0 h-[1.5px] rounded-full"
-                    style={{ background: "var(--text-primary)" }}
-                  />
-                )}
               </button>
             ))}
           </div>
@@ -1587,6 +1593,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
+                    <AssetIcon type={asset.category} />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p
@@ -1656,20 +1663,23 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                 style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
-                        {row.name}
-                      </p>
-                      <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
-                        style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
-                        KITE SYNC
-                      </span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <AssetIcon type={row.category} />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                          {row.name}
+                        </p>
+                        <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
+                          style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
+                          KITE SYNC
+                        </span>
+                      </div>
+                      <div className="mt-0.5">
+                        <CategoryBadge category={row.category} />
+                      </div>
+                      <p className="text-[12px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>{row.subLabel}</p>
                     </div>
-                    <div className="mt-0.5">
-                      <CategoryBadge category={row.category} />
-                    </div>
-                    <p className="text-[12px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>{row.subLabel}</p>
                   </div>
                   <PnlCell value={row.pnl} pct={row.pnlPct} />
                 </div>
@@ -1682,11 +1692,10 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
           })}
 
           {filtered.length === 0 && kiteGroupedRows.length === 0 && (
-            <div
-              className="py-14 text-center text-[14px]"
-              style={{ color: "var(--text-tertiary)" }}
-            >
-              No assets found
+            <div className="py-16 flex flex-col items-center gap-2">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>📊</div>
+              <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No assets yet</p>
+              <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Tap "Add Asset" to get started</p>
             </div>
           )}
         </div>
@@ -1754,8 +1763,10 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                   >
-                    <td className="pl-6 pr-4 py-4">
-                      <div>
+                    <td className="pl-6 pr-4 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <AssetIcon type={asset.category} />
+                        <div>
                         <div className="flex items-center gap-2">
                           <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
                             {asset.name}
@@ -1792,10 +1803,11 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                             </>
                           )}
                         </div>
+                        </div>
                       </div>
                     </td>
 
-                    <td className="px-4 py-4 text-right text-[15px] font-bold" style={{ color: "var(--text-primary)", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
+                    <td className="px-4 py-3.5 text-right text-[15px] font-bold" style={{ color: "var(--text-primary)", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
                       {fmtINRFull(asset.curVal)}
                     </td>
 
@@ -1827,20 +1839,23 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                   >
-                    <td className="pl-6 pr-4 py-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
-                            {row.name}
-                          </p>
-                          <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                            style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
-                            KITE SYNC
-                          </span>
-                        </div>
-                        <div className="mt-1 flex items-center gap-2">
-                          <CategoryBadge category={row.category} />
-                          <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>{row.subLabel}</span>
+                    <td className="pl-6 pr-4 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <AssetIcon type={row.category} />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                              {row.name}
+                            </p>
+                            <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                              style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
+                              KITE SYNC
+                            </span>
+                          </div>
+                          <div className="mt-1 flex items-center gap-2">
+                            <CategoryBadge category={row.category} />
+                            <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>{row.subLabel}</span>
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -1870,11 +1885,10 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
           </table>
 
           {filtered.length === 0 && kiteGroupedRows.length === 0 && (
-            <div
-              className="py-16 text-center text-[14px]"
-              style={{ color: "var(--text-tertiary)" }}
-            >
-              No assets found
+            <div className="py-16 flex flex-col items-center gap-2">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>📊</div>
+              <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No assets yet</p>
+              <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Add your first asset to get started</p>
             </div>
           )}
         </div>
@@ -1985,7 +1999,11 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               );
             })}
             {filteredLiabilities.length === 0 && (
-              <div className="py-14 text-center text-[14px]" style={{ color: "var(--text-tertiary)" }}>No liabilities found</div>
+              <div className="py-16 flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>🏦</div>
+                <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No liabilities</p>
+                <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Add a loan or debt to track it here</p>
+              </div>
             )}
           </div>
 
@@ -2109,7 +2127,11 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               </tbody>
             </table>
             {filteredLiabilities.length === 0 && (
-              <div className="py-16 text-center text-[14px]" style={{ color: "var(--text-tertiary)" }}>No liabilities found</div>
+              <div className="py-16 flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>🏦</div>
+                <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No liabilities</p>
+                <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Add a loan or debt to track it here</p>
+              </div>
             )}
           </div>
         </>)}
@@ -2131,7 +2153,9 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                 >
                   {/* Row 1: title + amount */}
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[16px] shrink-0 mt-0.5" style={{ background: meta.bg }}>{meta.emoji}</div>
+                      <div className="min-w-0">
                       <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
                         {e.title}
                       </p>
@@ -2141,6 +2165,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                           {e.category.toUpperCase()}
                         </span>
                         <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>{fmtDate(e.expense_date)}</span>
+                      </div>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
@@ -2196,8 +2221,10 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               );
             })}
             {filteredExpenses.length === 0 && (
-              <div className="py-14 text-center text-[14px]" style={{ color: "var(--text-tertiary)" }}>
-                No expenses found
+              <div className="py-16 flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>🧾</div>
+                <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No expenses this month</p>
+                <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Tap "Add Expense" to log one</p>
               </div>
             )}
           </div>
@@ -2231,12 +2258,17 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                       onMouseEnter={(ev) => { (ev.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }}
                       onMouseLeave={(ev) => { (ev.currentTarget as HTMLElement).style.background = "transparent"; }}
                     >
-                      <td className="pl-6 pr-4 py-4">
-                        <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{e.title}</p>
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium mt-0.5" style={{ color: meta.color }}>
-                          <span className="w-[5px] h-[5px] rounded-full shrink-0" style={{ background: meta.color }} />
-                          {e.category.toUpperCase()}
-                        </span>
+                      <td className="pl-6 pr-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[16px] shrink-0" style={{ background: meta.bg }}>{meta.emoji}</div>
+                          <div>
+                            <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{e.title}</p>
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium mt-0.5" style={{ color: meta.color }}>
+                              <span className="w-[5px] h-[5px] rounded-full shrink-0" style={{ background: meta.color }} />
+                              {e.category.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
                         {fmtDate(e.expense_date)}
@@ -2288,7 +2320,11 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               </tbody>
             </table>
             {filteredExpenses.length === 0 && (
-              <div className="py-16 text-center text-[14px]" style={{ color: "var(--text-tertiary)" }}>No expenses found</div>
+              <div className="py-16 flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>🧾</div>
+                <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No expenses this month</p>
+                <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Tap "Add Expense" to log one</p>
+              </div>
             )}
           </div>
         </>)}

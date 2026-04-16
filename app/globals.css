@@ -15,7 +15,7 @@
   --blue: #007aff;
   --green: #34c759;
   --red: #ff3b30;
-  --dot-color: rgba(60, 60, 67, 0.12);
+  --dot-color: rgba(60, 60, 67, 0.07);
 }
 
 html.dark {
@@ -32,7 +32,7 @@ html.dark {
   --row-hover: rgba(255, 255, 255, 0.04);
   --card-border-dark: rgba(255, 255, 255, 0.08);
   --card-shadow-dark: 0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4);
-  --dot-color: rgba(255, 255, 255, 0.08);
+  --dot-color: rgba(255, 255, 255, 0.05);
 }
 
 html {
@@ -75,7 +75,7 @@ body {
   overscroll-behavior: none;
   background-color: var(--bg);
   background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-size: 24px 24px;
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
     system-ui, sans-serif;
@@ -99,33 +99,60 @@ body {
 
 /* ── Card hover lift ── */
 .card-lift {
-  transition: transform 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              box-shadow  220ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 240ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow  240ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity     150ms ease;
 }
-.card-lift:hover { transform: translateY(-2px); }
+.card-lift:hover { transform: translateY(-3px); }
 
 .card-shadow-dark {
   box-shadow: 0 8px 40px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.14);
 }
 .card-shadow-dark:hover {
-  box-shadow: 0 16px 52px rgba(0,0,0,0.30), 0 2px 8px rgba(0,0,0,0.18);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.32), 0 2px 8px rgba(0,0,0,0.18);
 }
 
 .card-shadow-light {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 2px 12px rgba(0,0,0,0.04);
 }
 .card-shadow-light:hover {
-  box-shadow: 0 6px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.05);
 }
 
 /* ── Search input glass focus ── */
 .search-glass {
   transition: background 180ms ease-out, box-shadow 180ms ease-out;
+  outline: none;
 }
 .search-glass:focus {
   outline: none;
   background: rgba(60,60,67,0.04) !important;
-  box-shadow: 0 0 0 3px rgba(0,122,255,0.13);
+  box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+}
+
+/* ── Premium input focus ring ── */
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0,122,255,0.18);
+}
+
+/* ── Segmented control base ── */
+.segmented {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: 12px;
+  gap: 2px;
+}
+.segmented-item {
+  padding: 5px 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+  cursor: pointer;
+  border: none;
+  background: transparent;
 }
 
 /* ── Primary button lift ── */
