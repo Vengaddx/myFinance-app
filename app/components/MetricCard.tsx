@@ -50,17 +50,17 @@ export default function MetricCard({
 
   return (
     <div
-      className={`card-lift rounded-[14px] px-4 py-3 flex flex-col justify-center ${className}`}
+      className={`card-lift rounded-[14px] px-4 py-2.5 flex flex-col justify-center ${className}`}
       style={{ background, border, boxShadow }}
     >
       <p
-        className="text-[11px] font-semibold uppercase mb-1"
+        className="text-[11px] font-semibold uppercase mb-0.5"
         style={{ color: isDanger ? "rgba(255,59,48,0.6)" : "var(--text-tertiary)", letterSpacing: "0.1em" }}
       >
         {label}
       </p>
       <p
-        className="text-[21px] font-bold leading-none"
+        className="text-[19px] font-bold leading-none"
         style={{ color: isDanger ? "#ff3b30" : "var(--text-primary)", letterSpacing: "-0.02em" }}
       >
         {value}
