@@ -37,7 +37,7 @@ export default function NetWorthCard({
 
   return (
     <div
-      className="card-lift flex flex-col justify-between h-full rounded-[20px] p-6 relative overflow-hidden"
+      className="card-lift flex flex-col justify-between h-full rounded-[20px] p-5 relative overflow-hidden"
       style={{
         background: bg,
         border,
@@ -48,7 +48,7 @@ export default function NetWorthCard({
       onClick={onClick}
     >
       <div>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-1.5">
           <p
             className="text-[11.5px] font-semibold uppercase"
             style={{ color: "rgba(255,255,255,0.45)", letterSpacing: "0.13em" }}
@@ -66,19 +66,19 @@ export default function NetWorthCard({
         </div>
 
         <p
-          className="text-[32px] font-bold leading-none text-white"
+          className="text-[28px] font-bold leading-none text-white"
           style={{ letterSpacing: "-0.025em" }}
         >
           {fmtINR(netWorth)}
           <span
-            className="text-[19px] font-normal"
+            className="text-[17px] font-normal"
             style={{ color: "rgba(255,255,255,0.35)" }}
           >
             .00
           </span>
         </p>
 
-        <div className="flex items-center gap-2 mt-3">
+        <div className="flex items-center gap-2 mt-2">
           <span
             className="inline-flex items-center gap-1 text-[13px] font-bold px-2.5 py-1 rounded-full"
             style={{
@@ -98,7 +98,7 @@ export default function NetWorthCard({
       </div>
 
       <div
-        className="mt-4 pt-3"
+        className="mt-3 pt-2.5"
         style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}
       >
         <div className="flex items-center justify-between">
@@ -128,7 +128,7 @@ export default function NetWorthCard({
               Total P&L
             </p>
             <p
-              className="text-[19px] font-bold"
+              className="text-[17px] font-bold"
               style={{ letterSpacing: "-0.015em", color: totalPnl >= 0 ? "#34c759" : "#ff3b30" }}
             >
               {totalPnl >= 0 ? "+" : ""}{fmtINR(totalPnl)}
