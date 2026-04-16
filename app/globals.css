@@ -36,18 +36,13 @@ html.dark {
 }
 
 html {
-  /* Clamp document width to viewport — prevents iOS PWA horizontal scroll */
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
   /* Prevent font size inflation on orientation change (iOS/Android) */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   /* Only block horizontal overscroll (back/forward nav swipe) at the root.
-     Setting overscroll-behavior: none on html (the ICB) causes Android Chrome's
-     compositor to apply the policy at OS-level touch routing, which can prevent
-     the initial pan gesture from being forwarded to the WebView at all on some
-     Android versions. Vertical overscroll (pull-to-refresh) is handled on body. */
+     NOTE: Do NOT set overflow-x: hidden here. Setting any overflow value on <html>
+     breaks viewport scroll propagation — browsers stop treating <html> as transparent
+     to body overflow, making the page unscrollable. Body handles overflow-x instead. */
   overscroll-behavior-x: none;
 }
 

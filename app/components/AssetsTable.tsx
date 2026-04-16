@@ -444,9 +444,12 @@ export default function AssetsTable({ onDataChanged, onSummaryChange, refreshKey
   const userId = session?.user?.id ?? "";
   const [activeTab, setActiveTab] = useState<AssetCategory | "all">("all");
   const [search, setSearch] = useState("");
-  const [sectionTab, setSectionTab] = useState<"assets" | "liabilities" | "expenses">(
-    () => typeof window !== "undefined" && window.innerWidth < 768 ? "expenses" : "assets"
-  );
+  const [sectionTab, setSectionTab] = useState<"assets" | "liabilities" | "expenses">("assets");
+
+  // Default to expenses on mobile — done in useEffect to avoid SSR/hydration mismatch
+  useEffect(() => {
+    if (window.innerWidth < 768) setSectionTab("expenses");
+  }, []);
   const [expenses, setExpenses] = useState<DbExpenseRow[]>([]);
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
