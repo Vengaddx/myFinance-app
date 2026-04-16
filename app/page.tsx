@@ -7,7 +7,6 @@ import { useAuth } from "@/lib/AuthContext";
 import Navbar from "./components/Navbar";
 import OnboardingFlow from "./components/OnboardingFlow";
 import NetWorthCard from "./components/NetWorthCard";
-import MetricCard from "./components/MetricCard";
 import AllocationCard, { type TopHolding } from "./components/AllocationCard";
 import AssetsTable, { type StickyBarData } from "./components/AssetsTable";
 import Footer from "./components/Footer";
@@ -433,45 +432,19 @@ export default function Home() {
       </div>
 
       <main className="max-w-[1320px] mx-auto px-4 sm:px-5 lg:px-6 py-4 sm:py-5 lg:py-6 lg:pb-6 flex flex-col gap-3 sm:gap-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 7rem)" }}>
-        <div
-          className="
-            grid gap-3 sm:gap-3.5
-            grid-cols-1
-            md:grid-cols-[1fr_200px]
-            lg:grid-cols-[450px_200px_1fr]
-            items-stretch
-          "
-        >
-          <div className="md:col-start-1 md:row-start-1 md:row-span-2 lg:row-span-1 h-full">
-            <NetWorthCard
-              netWorth={summary.netWorth}
-              invested={summary.invested}
-              investedPctOfNetWorth={summary.investedPctOfNetWorth}
-              totalPnl={summary.totalPnl}
-              totalPnlPct={summary.totalPnlPct}
-              netWorthChange={0}
-              onClick={() => router.push("/snapshots")}
-            />
-          </div>
-
-          <div className="flex flex-row md:flex-col gap-2 md:col-start-2 md:row-start-1 h-full">
-            <MetricCard
-              label="Total Assets"
-              value={fmtINR(summary.totalAssets)}
-              sub="Gross portfolio value"
-              subColor="muted"
-              className="flex-1"
-            />
-            <MetricCard
-              label="Liabilities"
-              value={fmtINR(summary.liabilities)}
-              sub="Total owed"
-              variant="danger"
-              className="flex-1"
-            />
-          </div>
-
-          <div className="hidden md:block md:col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1 h-full">
+        <div className="grid gap-3 sm:gap-3.5 grid-cols-1 md:grid-cols-2 items-stretch">
+          <NetWorthCard
+            netWorth={summary.netWorth}
+            invested={summary.invested}
+            investedPctOfNetWorth={summary.investedPctOfNetWorth}
+            totalPnl={summary.totalPnl}
+            totalPnlPct={summary.totalPnlPct}
+            totalAssets={summary.totalAssets}
+            liabilities={summary.liabilities}
+            netWorthChange={0}
+            onClick={() => router.push("/snapshots")}
+          />
+          <div className="hidden md:block h-full">
             <AllocationCard
               allocationData={summary.allocationData}
               totalAssets={summary.totalAssets}
