@@ -164,7 +164,7 @@ export default function AllocationCard({ allocationData, totalAssets, topHolding
   const [view, setView] = useState<View>("allocation");
 
   const firstColumn = allocationData.slice(0, 3);
-  const secondColumn = allocationData.slice(3);
+  const secondColumn = allocationData.slice(3, 6);
 
   const pillBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
   const activePillBg = isDark ? "rgba(255,255,255,0.16)" : "#ffffff";
