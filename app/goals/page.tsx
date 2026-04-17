@@ -216,7 +216,8 @@ const MAX_COMPARE = 5;
 
 function ChartTooltip({ active, payload }: { active?: boolean; payload?: any[] }) {
   if (!active || !payload?.[0]) return null;
-  const point: ChartPoint = payload[0].payload;
+  const point = payload[0].payload as ChartPoint & { actualNetWorth?: number };
+  const hasActual = point.actualNetWorth !== undefined && point.actualNetWorth !== null;
   return (
     <div
       style={{
@@ -225,27 +226,29 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: any[] }
         borderRadius: 14,
         padding: "12px 16px",
         boxShadow: "0 8px 32px rgba(0,0,0,0.24)",
-        minWidth: 160,
+        minWidth: 170,
       }}
     >
-      <div
-        style={{
-          color: "var(--text-secondary)",
-          fontSize: 12,
-          marginBottom: 2,
-        }}
-      >
+      <div style={{ color: "var(--text-secondary)", fontSize: 12, marginBottom: 8 }}>
         {point.label}
       </div>
-      <div
-        style={{
-          color: "var(--text-primary)",
-          fontWeight: 700,
-          fontSize: 20,
-          marginBottom: point.events.length ? 8 : 0,
-        }}
-      >
-        {fmtINR(point.netWorth)}
+      <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: point.events.length ? 10 : 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--text-secondary)" }}>
+            <span style={{ width: 10, height: 3, borderRadius: 2, background: "#007aff", display: "inline-block", flexShrink: 0 }} />
+            Planned
+          </span>
+          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>{fmtINR(point.netWorth)}</span>
+        </div>
+        {hasActual && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--text-secondary)" }}>
+              <span style={{ width: 10, height: 3, borderRadius: 2, background: "#34c759", display: "inline-block", flexShrink: 0 }} />
+              Actual
+            </span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "#34c759" }}>{fmtINR(point.actualNetWorth!)}</span>
+          </div>
+        )}
       </div>
       {point.events.map((ev) => (
         <div
@@ -616,6 +619,10 @@ export default function GoalsPage() {
   } | null>(null);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
+  // ── vs-Actual overlay ────────────────────────────────────────────────────────
+  const [showActual, setShowActual] = useState(false);
+  const [snapshots, setSnapshots] = useState<{ snapshot_date: string; net_worth: number }[]>([]);
+
   // ── FIRE calculator ──────────────────────────────────────────────────────────
   const [goalTab, setGoalTab] = useState<"scenarios" | "fire">("scenarios");
   const [avgMonthlyExpenses, setAvgMonthlyExpenses] = useState(0);
@@ -712,6 +719,18 @@ export default function GoalsPage() {
 
   useEffect(() => {
     if (!user) return;
+    supabase
+      .from("networth_snapshots")
+      .select("snapshot_date, net_worth")
+      .eq("user_id", user.id)
+      .order("snapshot_date", { ascending: true })
+      .then(({ data }) => {
+        setSnapshots((data ?? []) as { snapshot_date: string; net_worth: number }[]);
+      });
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!user) return;
     const now = new Date();
     const months: string[] = [];
     for (let i = 5; i >= 0; i--) {
@@ -770,6 +789,24 @@ export default function GoalsPage() {
     if (!effectiveScenario) return [];
     return calculateProjection(effectiveScenario, events);
   }, [effectiveScenario, events]);
+
+  const chartDataWithActual = useMemo(() => {
+    if (!effectiveScenario || !chartData.length) return chartData;
+    const start = new Date(effectiveScenario.start_date);
+    // Build month-keyed map from snapshots, keeping the last snapshot per month
+    const snapMap: Record<string, number> = {};
+    for (const s of snapshots) {
+      const d = new Date(s.snapshot_date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      snapMap[key] = s.net_worth;
+    }
+    return chartData.map((pt) => {
+      const d = new Date(start.getFullYear(), start.getMonth() + pt.monthIndex, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const actual = snapMap[key];
+      return actual !== undefined ? { ...pt, actualNetWorth: actual } : pt;
+    });
+  }, [chartData, snapshots, effectiveScenario]);
 
   const metrics = useMemo(() => {
     if (!effectiveScenario || !chartData.length) return null;
@@ -1905,52 +1942,57 @@ export default function GoalsPage() {
                     {horizonLabel(selectedScenario.months)} horizon
                   </div>
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 14,
-                    fontSize: 12,
-                    color: "var(--text-secondary)",
-                    alignItems: "center",
-                  }}
-                >
-                  <span
-                    style={{ display: "flex", alignItems: "center", gap: 5 }}
+                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                  {/* Planned / Actual legend */}
+                  <div style={{ display: "flex", gap: 12, fontSize: 12, color: "var(--text-secondary)", alignItems: "center" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <span style={{ width: 14, height: 3, borderRadius: 2, background: "#007aff", display: "inline-block", flexShrink: 0 }} />
+                      Planned
+                    </span>
+                    {showActual && (
+                      <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <span style={{ width: 14, height: 3, borderRadius: 2, background: "#34c759", display: "inline-block", flexShrink: 0 }} />
+                        Actual
+                      </span>
+                    )}
+                    {!showActual && (
+                      <>
+                        <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff3b30", display: "inline-block", flexShrink: 0 }} />
+                          Expense
+                        </span>
+                        <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34c759", display: "inline-block", flexShrink: 0 }} />
+                          Income
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {/* vs Actual toggle */}
+                  <button
+                    onClick={() => setShowActual((v) => !v)}
+                    style={{
+                      padding: "4px 10px",
+                      borderRadius: 8,
+                      border: `1px solid ${showActual ? "#34c759" : "var(--separator)"}`,
+                      background: showActual ? "rgba(52,199,89,0.12)" : "none",
+                      color: showActual ? "#34c759" : "var(--text-secondary)",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      transition: "all 180ms ease",
+                    }}
                   >
-                    <span
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: "#ff3b30",
-                        display: "inline-block",
-                        flexShrink: 0,
-                      }}
-                    />
-                    Expense
-                  </span>
-                  <span
-                    style={{ display: "flex", alignItems: "center", gap: 5 }}
-                  >
-                    <span
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: "#34c759",
-                        display: "inline-block",
-                        flexShrink: 0,
-                      }}
-                    />
-                    Income
-                  </span>
+                    vs Actual
+                  </button>
                 </div>
               </div>
 
               <div style={{ height: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
-                    data={chartData}
+                    data={chartDataWithActual}
                     margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
                   >
                     <defs>
@@ -2014,39 +2056,33 @@ export default function GoalsPage() {
                       fill="url(#projGradient)"
                       dot={(props: any) => {
                         const { cx, cy, key, payload } = props;
-                        if (!payload?.hasExpense && !payload?.hasIncome) {
-                          return (
-                            <circle
-                              key={key}
-                              cx={cx}
-                              cy={cy}
-                              r={0}
-                              fill="none"
-                            />
-                          );
+                        if (showActual || (!payload?.hasExpense && !payload?.hasIncome)) {
+                          return <circle key={key} cx={cx} cy={cy} r={0} fill="none" />;
                         }
-                        const color = payload.hasExpense
-                          ? "#ff3b30"
-                          : "#34c759";
+                        const color = payload.hasExpense ? "#ff3b30" : "#34c759";
                         return (
-                          <circle
-                            key={key}
-                            cx={cx}
-                            cy={cy}
-                            r={6}
-                            fill={color}
-                            stroke="var(--surface)"
-                            strokeWidth={2.5}
-                          />
+                          <circle key={key} cx={cx} cy={cy} r={6} fill={color}
+                            stroke="var(--surface)" strokeWidth={2.5} />
                         );
                       }}
-                      activeDot={{
-                        r: 5,
-                        fill: "#007aff",
-                        stroke: "var(--surface)",
-                        strokeWidth: 2,
-                      }}
+                      activeDot={{ r: 5, fill: "#007aff", stroke: "var(--surface)", strokeWidth: 2 }}
                     />
+                    {showActual && (
+                      <Line
+                        type="monotone"
+                        dataKey="actualNetWorth"
+                        stroke="#34c759"
+                        strokeWidth={2.5}
+                        dot={(props: any) => {
+                          const { cx, cy, key, value } = props;
+                          if (value === undefined || value === null) return <circle key={key} r={0} cx={cx} cy={cy} fill="none" />;
+                          return <circle key={key} cx={cx} cy={cy} r={5} fill="#34c759" stroke="var(--surface)" strokeWidth={2} />;
+                        }}
+                        activeDot={{ r: 5, fill: "#34c759", stroke: "var(--surface)", strokeWidth: 2 }}
+                        connectNulls={false}
+                        isAnimationActive={false}
+                      />
+                    )}
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
