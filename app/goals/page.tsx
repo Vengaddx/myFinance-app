@@ -457,80 +457,79 @@ function FIREView({
     ? `${monthsToFIRE} months`
     : `${(monthsToFIRE / 12).toFixed(1)} years`;
 
+  const card: React.CSSProperties = {
+    background: "var(--surface)",
+    borderRadius: 22,
+    border: "1px solid var(--separator)",
+    boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
+  };
+
   return (
-    <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
 
-      {/* ── Hero outcome card ── */}
-      <div style={{
-        background: "var(--surface)", borderRadius: 22,
-        border: "1px solid var(--separator)",
-        boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
-        overflow: "hidden",
-      }}>
-        {/* Top: time to FIRE + corpus */}
-        <div style={{ padding: "24px 24px 20px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <div>
-            <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.7px", color: "var(--text-tertiary)" }}>Time to FIRE</p>
-            <p style={{ margin: 0, fontSize: 34, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1, color: monthsToFIRE === 0 ? "#34c759" : monthsToFIRE == null ? "#ff9500" : "var(--text-primary)" }}>
-              {timeLabel}
-            </p>
-            {fireYear && (
-              <p style={{ margin: "5px 0 0", fontSize: 13, color: "var(--text-secondary)", fontWeight: 500 }}>Est. {fireYear}</p>
-            )}
-          </div>
-          <div style={{ borderLeft: "1px solid var(--separator)", paddingLeft: 16 }}>
-            <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.7px", color: "var(--text-tertiary)" }}>Corpus Needed</p>
-            <p style={{ margin: 0, fontSize: 26, fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1, color: "var(--text-primary)" }}>
-              {fireCorpus > 0 ? fmtINR(fireCorpus) : "—"}
-            </p>
-            <p style={{ margin: "5px 0 0", fontSize: 13, color: "var(--text-secondary)" }}>
-              {fmtINR(passiveMonthly)}/mo passive
-            </p>
-          </div>
-        </div>
+      {/* ── Left: Outcome card ── */}
+      <div style={{ ...card, padding: "24px" }}>
+        <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.7px", color: "var(--text-tertiary)" }}>
+          Time to FIRE
+        </p>
+        <p style={{
+          margin: 0, fontSize: 48, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1,
+          color: monthsToFIRE === 0 ? "#34c759" : monthsToFIRE == null ? "#ff9500" : "var(--text-primary)",
+        }}>
+          {timeLabel}
+        </p>
+        {fireYear && (
+          <p style={{ margin: "6px 0 0", fontSize: 14, color: "var(--text-secondary)", fontWeight: 500 }}>
+            Estimated retirement — <strong style={{ color: "var(--text-primary)" }}>{fireYear}</strong>
+          </p>
+        )}
 
-        {/* Progress bar section */}
-        <div style={{ padding: "0 24px 24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <span style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 500 }}>
-              {fmtINR(currentNetWorth)} saved
-            </span>
-            <span style={{ fontSize: 13, fontWeight: 800, color: progressColor }}>
-              {progress.toFixed(1)}% to FIRE
-            </span>
+        <div style={{ height: 1, background: "var(--separator)", margin: "20px 0" }} />
+
+        {/* Progress */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 500 }}>Progress to FIRE</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: progressColor }}>{progress.toFixed(1)}%</span>
           </div>
-          <div style={{ height: 10, borderRadius: 5, background: "rgba(120,120,128,0.12)", overflow: "hidden" }}>
+          <div style={{ height: 8, borderRadius: 4, background: "rgba(120,120,128,0.12)", overflow: "hidden" }}>
             <div style={{
-              height: "100%", borderRadius: 5,
-              width: `${progress}%`,
-              background: progress >= 100
-                ? "#34c759"
-                : `linear-gradient(90deg, #ff9500 0%, #007aff ${Math.min(progress * 1.5, 100)}%, #34c759 100%)`,
+              height: "100%", borderRadius: 4, width: `${progress}%`,
+              background: progress >= 100 ? "#34c759" : `linear-gradient(90deg, #ff9500 0%, #007aff 60%, #34c759 100%)`,
               transition: "width 300ms ease",
             }} />
           </div>
-          {fireCorpus > 0 && currentNetWorth < fireCorpus && (
-            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--text-tertiary)" }}>
-              {fmtINR(fireCorpus - currentNetWorth)} remaining · invest {fmtINR(monthlyInv)}/mo at {roiPct}% ROI
-            </p>
-          )}
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+            <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Now: {fmtINR(currentNetWorth)}</span>
+            <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Goal: {fmtINR(fireCorpus)}</span>
+          </div>
+        </div>
+
+        {/* 4 stat pills */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {[
+            { label: "Corpus Needed", value: fmtINR(fireCorpus), color: "var(--text-primary)" },
+            { label: "Monthly Passive", value: `${fmtINR(passiveMonthly)}/mo`, color: "#34c759" },
+            { label: "Gap Remaining", value: fireCorpus > currentNetWorth ? fmtINR(fireCorpus - currentNetWorth) : "Achieved!", color: "#ff9500" },
+            { label: "Annual Expenses", value: fmtINR(monthlyExp * 12), color: "#ff3b30" },
+          ].map((s) => (
+            <div key={s.label} style={{ background: "rgba(120,120,128,0.06)", borderRadius: 14, padding: "12px 14px" }}>
+              <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>{s.label}</p>
+              <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: s.color, letterSpacing: "-0.01em" }}>{s.value}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* ── Parameters card ── */}
-      <div style={{
-        background: "var(--surface)", borderRadius: 22,
-        border: "1px solid var(--separator)",
-        boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
-        padding: "22px 24px",
-      }}>
+      {/* ── Right: Parameters card ── */}
+      <div style={{ ...card, padding: "24px" }}>
         <p style={{ margin: "0 0 20px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.7px", color: "var(--text-tertiary)" }}>
           Adjust Parameters
         </p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <SliderRow
             label="Monthly Expenses"
-            hint={expensesLoaded && avgMonthlyExpenses > 0 ? `(6-mo avg ${fmtShort(avgMonthlyExpenses)})` : undefined}
+            hint={expensesLoaded && avgMonthlyExpenses > 0 ? `avg ${fmtShort(avgMonthlyExpenses)}` : undefined}
             value={monthlyExp}
             min={10000}
             max={500000}
@@ -561,7 +560,7 @@ function FIREView({
           />
           <SliderRow
             label="Safe Withdrawal Rate"
-            hint="(4% rule = 25× expenses)"
+            hint="4% rule = 25× expenses"
             value={swrPct}
             min={2}
             max={6}
@@ -571,13 +570,14 @@ function FIREView({
             accentColor="#bf5af2"
           />
         </div>
-      </div>
 
-      {/* ── Key assumptions pill ── */}
-      <p style={{ margin: 0, fontSize: 12, color: "var(--text-tertiary)", textAlign: "center", lineHeight: 1.5 }}>
-        Based on {fmtINR(monthlyExp * 12)}/yr expenses · {swrPct}% SWR · {roiPct}% annual return
-        <br />Current net worth {fmtINR(currentNetWorth)} growing with {fmtINR(monthlyInv)}/mo investment
-      </p>
+        <div style={{ height: 1, background: "var(--separator)", margin: "20px 0" }} />
+
+        <p style={{ margin: 0, fontSize: 12, color: "var(--text-tertiary)", lineHeight: 1.6 }}>
+          Corpus = Annual expenses ÷ SWR · Classic 4% rule means you need 25× your annual spending.
+          Returns compound monthly. Net worth grows with your monthly investment.
+        </p>
+      </div>
     </div>
   );
 }
