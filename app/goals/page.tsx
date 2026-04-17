@@ -344,6 +344,159 @@ function CompareTooltip({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// FIRE Calculator view
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface FIREConfig {
+  cagrPct: number;
+  swrPct: number;
+  monthlyInvestment: number;
+}
+
+function calcMonthsToFIRE(nw: number, pmt: number, annualRatePct: number, target: number): number | null {
+  if (target <= nw) return 0;
+  const r = Math.pow(1 + annualRatePct / 100, 1 / 12) - 1;
+  let n = nw;
+  let months = 0;
+  while (n < target && months < 720) {
+    n = (n + pmt) * (1 + r);
+    months++;
+  }
+  return months < 720 ? months : null;
+}
+
+function FIREView({
+  currentNetWorth,
+  avgMonthlyExpenses,
+  expensesLoaded,
+  config,
+  onConfigChange,
+}: {
+  currentNetWorth: number;
+  avgMonthlyExpenses: number;
+  expensesLoaded: boolean;
+  config: FIREConfig;
+  onConfigChange: (c: FIREConfig) => void;
+}) {
+  const [expenseOverride, setExpenseOverride] = useState("");
+
+  const monthlyExp = expenseOverride ? parseFloat(expenseOverride) : avgMonthlyExpenses;
+  const annualExp = monthlyExp * 12;
+  const fireCorpus = config.swrPct > 0 ? annualExp / (config.swrPct / 100) : 0;
+  const progress = fireCorpus > 0 ? Math.min((currentNetWorth / fireCorpus) * 100, 100) : 0;
+  const monthsToFIRE = fireCorpus > 0 ? calcMonthsToFIRE(currentNetWorth, config.monthlyInvestment, config.cagrPct, fireCorpus) : null;
+
+  const cardStyle: React.CSSProperties = {
+    background: "var(--surface)",
+    borderRadius: 20,
+    border: "1px solid var(--separator)",
+    padding: "20px",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 2px 12px rgba(0,0,0,0.04)",
+    marginBottom: 16,
+  };
+
+  return (
+    <div style={{ maxWidth: 640 }}>
+      {/* FIRE number card */}
+      <div style={{ ...cardStyle, background: "linear-gradient(135deg, rgba(0,122,255,0.08) 0%, rgba(52,199,89,0.06) 100%)", border: "1px solid rgba(0,122,255,0.18)" }}>
+        <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>FIRE Corpus Needed</p>
+        <p style={{ margin: "0 0 4px", fontSize: 40, fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+          {fireCorpus > 0 ? fmtINR(fireCorpus) : "—"}
+        </p>
+        <p style={{ margin: 0, fontSize: 13, color: "var(--text-secondary)" }}>
+          {config.swrPct}% safe withdrawal · {fmtINR(annualExp)}/yr expenses
+        </p>
+      </div>
+
+      {/* Progress */}
+      <div style={cardStyle}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12 }}>
+          <div>
+            <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>Progress</p>
+            <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: progress >= 100 ? "#34c759" : "#007aff", letterSpacing: "-0.02em" }}>
+              {fireCorpus > 0 ? `${progress.toFixed(1)}%` : "—"}
+            </p>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <p style={{ margin: "0 0 2px", fontSize: 11, color: "var(--text-tertiary)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.4px" }}>Net Worth</p>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>{fmtINR(currentNetWorth)}</p>
+          </div>
+        </div>
+        <div style={{ height: 8, borderRadius: 4, background: "rgba(120,120,128,0.12)", overflow: "hidden" }}>
+          <div style={{
+            height: "100%", borderRadius: 4,
+            width: `${progress}%`,
+            background: progress >= 100 ? "#34c759" : "linear-gradient(90deg, #007aff 0%, #34c759 100%)",
+            transition: "width 800ms cubic-bezier(0.34,1.15,0.64,1)",
+          }} />
+        </div>
+        {fireCorpus > 0 && currentNetWorth < fireCorpus && (
+          <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--text-secondary)" }}>
+            {fmtINR(fireCorpus - currentNetWorth)} remaining to FIRE
+          </p>
+        )}
+      </div>
+
+      {/* Time to FIRE */}
+      <div style={{ ...cardStyle, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div>
+          <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>Time to FIRE</p>
+          {monthsToFIRE === null ? (
+            <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#ff9500" }}>50+ yrs</p>
+          ) : monthsToFIRE === 0 ? (
+            <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#34c759" }}>Already there!</p>
+          ) : (
+            <>
+              <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                {monthsToFIRE >= 12 ? `${(monthsToFIRE / 12).toFixed(1)} yrs` : `${monthsToFIRE} mo`}
+              </p>
+              <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-secondary)" }}>
+                {new Date(new Date().getFullYear(), new Date().getMonth() + monthsToFIRE, 1)
+                  .toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
+              </p>
+            </>
+          )}
+        </div>
+        <div>
+          <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>Monthly Income from corpus</p>
+          <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+            {fireCorpus > 0 ? fmtINR(fireCorpus * (config.swrPct / 100) / 12) : "—"}
+          </p>
+          <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-secondary)" }}>at {config.swrPct}% SWR</p>
+        </div>
+      </div>
+
+      {/* Config */}
+      <div style={cardStyle}>
+        <p style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Assumptions</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {[
+            { label: "Monthly expenses (₹)", value: expenseOverride || (expensesLoaded ? String(Math.round(avgMonthlyExpenses)) : ""), placeholder: expensesLoaded ? `${Math.round(avgMonthlyExpenses)} (6-mo avg)` : "Loading…", onChange: setExpenseOverride, isString: true },
+            { label: "Monthly investment (₹)", value: String(config.monthlyInvestment), placeholder: "50000", onChange: (v: string) => onConfigChange({ ...config, monthlyInvestment: parseFloat(v) || 0 }) },
+            { label: "Expected CAGR (%)", value: String(config.cagrPct), placeholder: "12", onChange: (v: string) => onConfigChange({ ...config, cagrPct: parseFloat(v) || 0 }) },
+            { label: "Safe Withdrawal Rate (%)", value: String(config.swrPct), placeholder: "4", onChange: (v: string) => onConfigChange({ ...config, swrPct: parseFloat(v) || 0 }) },
+          ].map((f) => (
+            <div key={f.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <label style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 500 }}>{f.label}</label>
+              <input
+                type="number"
+                value={f.value}
+                onChange={(e) => f.onChange(e.target.value)}
+                placeholder={f.placeholder}
+                style={{ width: 110, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--separator)", background: "var(--surface)", color: "var(--text-primary)", fontSize: 14, textAlign: "right", fontFamily: "inherit" }}
+              />
+            </div>
+          ))}
+        </div>
+        <p style={{ margin: "14px 0 0", fontSize: 12, color: "var(--text-tertiary)" }}>
+          FIRE corpus = Annual expenses ÷ SWR%. Classic 4% rule = 25× annual expenses.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -376,6 +529,12 @@ export default function GoalsPage() {
     type: "success" | "error";
   } | null>(null);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+
+  // ── FIRE calculator ──────────────────────────────────────────────────────────
+  const [goalTab, setGoalTab] = useState<"scenarios" | "fire">("scenarios");
+  const [avgMonthlyExpenses, setAvgMonthlyExpenses] = useState(0);
+  const [fireConfig, setFireConfig] = useState({ cagrPct: 12, swrPct: 4, monthlyInvestment: 50000 });
+  const [expensesLoaded, setExpensesLoaded] = useState(false);
 
   // ── Auth guard ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -464,6 +623,32 @@ export default function GoalsPage() {
 
   useEffect(() => {
     if (user) fetchNetWorth();
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!user) return;
+    const now = new Date();
+    const months: string[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+    supabase
+      .from("expenses")
+      .select("amount, month_key, notes")
+      .eq("user_id", user.id)
+      .gte("month_key", months[0])
+      .then(({ data }) => {
+        const byMonth: Record<string, number> = {};
+        for (const e of (data ?? []) as { amount: number; month_key: string; notes: string | null }[]) {
+          let amt = Number(e.amount ?? 0);
+          try { const n = e.notes ? JSON.parse(e.notes) : {}; if (n.sar && n.rate) amt = Number(n.sar) * Number(n.rate); } catch { /* */ }
+          byMonth[e.month_key] = (byMonth[e.month_key] ?? 0) + amt;
+        }
+        const vals = months.map((mk) => byMonth[mk] ?? 0).filter((v) => v > 0);
+        setAvgMonthlyExpenses(vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0);
+        setExpensesLoaded(true);
+      });
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -681,29 +866,45 @@ export default function GoalsPage() {
       >
         {/* ── Page header ──────────────────────────────────────────────────── */}
         <div style={{ marginBottom: 20 }}>
-          <h1
-            style={{
-              fontSize: 28,
-              fontWeight: 800,
-              color: "var(--text-primary)",
-              margin: 0,
-              letterSpacing: "-0.5px",
-            }}
-          >
-            Wealth Projection
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--text-primary)", margin: 0, letterSpacing: "-0.5px" }}>
+            {goalTab === "fire" ? "FIRE Calculator" : "Wealth Projection"}
           </h1>
-          <p
-            style={{
-              color: "var(--text-secondary)",
-              fontSize: 15,
-              marginTop: 4,
-              margin: "4px 0 0",
-            }}
-          >
-            See where you could be in 3, 5, or 10 years.
+          <p style={{ color: "var(--text-secondary)", fontSize: 15, margin: "4px 0 16px" }}>
+            {goalTab === "fire" ? "Financial Independence · Retire Early" : "See where you could be in 3, 5, or 10 years."}
           </p>
+          <div style={{ display: "inline-flex", gap: 4, padding: 4, borderRadius: 12, background: "rgba(120,120,128,0.10)", border: "1px solid var(--separator)" }}>
+            {(["scenarios", "fire"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setGoalTab(tab)}
+                style={{
+                  padding: "7px 18px", borderRadius: 9, border: "none",
+                  background: goalTab === tab ? "var(--surface)" : "transparent",
+                  color: goalTab === tab ? "var(--text-primary)" : "var(--text-tertiary)",
+                  fontWeight: goalTab === tab ? 700 : 500,
+                  fontSize: 14, cursor: "pointer", fontFamily: "inherit",
+                  boxShadow: goalTab === tab ? "0 1px 4px rgba(0,0,0,0.10)" : "none",
+                  transition: "all 200ms ease",
+                }}
+              >
+                {tab === "scenarios" ? "Projections" : "FIRE"}
+              </button>
+            ))}
+          </div>
         </div>
 
+        {goalTab === "fire" && (
+          <FIREView
+            currentNetWorth={currentNetWorth}
+            avgMonthlyExpenses={avgMonthlyExpenses}
+            expensesLoaded={expensesLoaded}
+            config={fireConfig}
+            onConfigChange={setFireConfig}
+          />
+        )}
+
+        {goalTab === "scenarios" && (
+        <>
         {/* ── Scenario tabs ────────────────────────────────────────────────── */}
         <div
           style={{
@@ -2098,6 +2299,7 @@ export default function GoalsPage() {
             </div>
           </>
         )}
+        </> )}
       </main>
 
       <Footer />

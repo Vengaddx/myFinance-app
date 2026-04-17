@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { label: "Portfolio", id: "portfolio" },
   { label: "Stocks",    id: "stocks" },
   { label: "Goals",     id: "goals" },
+  { label: "Cash Flow", id: "cashflow" },
 ];
 
 function PortfolioIcon() {
@@ -40,6 +41,15 @@ function GoalsIcon() {
       <circle cx="12" cy="12" r="10" />
       <circle cx="12" cy="12" r="6" />
       <circle cx="12" cy="12" r="2" />
+    </svg>
+  );
+}
+
+function CashFlowIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="1" x2="12" y2="23" />
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
     </svg>
   );
 }
@@ -190,6 +200,7 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
   portfolio: <PortfolioIcon />,
   stocks:    <StocksIcon />,
   goals:     <GoalsIcon />,
+  cashflow:  <CashFlowIcon />,
 };
 
 export default function Navbar() {
@@ -202,8 +213,9 @@ export default function Navbar() {
   const [showDonate, setShowDonate] = useState(false);
 
   const activeTab =
-    pathname === "/stocks" ? "stocks" :
-    pathname === "/goals"  ? "goals"  :
+    pathname === "/stocks"    ? "stocks"    :
+    pathname === "/goals"     ? "goals"     :
+    pathname === "/cashflow"  ? "cashflow"  :
     "portfolio";
   const [showUserMenu, setShowUserMenu] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -438,7 +450,7 @@ export default function Navbar() {
                 key={item.id}
                 ref={(el) => { desktopBtnRefs.current[idx] = el; }}
                 onClick={() => router.push(item.id === "portfolio" ? "/" : `/${item.id}`)}
-                className="relative z-10 px-4 py-1.5 rounded-[10px] text-[14px]"
+                className="relative z-10 px-3 py-1.5 rounded-[10px] text-[14px]"
                 style={{
                   fontWeight: isActive ? 700 : 500,
                   letterSpacing: isActive ? "-0.01em" : "0",
@@ -582,7 +594,7 @@ export default function Navbar() {
                 key={item.id}
                 ref={(el) => { bottomBtnRefs.current[idx] = el; }}
                 onClick={() => router.push(item.id === "portfolio" ? "/" : `/${item.id}`)}
-                className={`relative z-10 flex flex-col items-center gap-[3px] px-[22px] py-[4px] active:scale-95${item.id === "stocks" ? " hidden" : ""}`}
+                className={`relative z-10 flex flex-col items-center gap-[3px] px-[18px] py-[4px] active:scale-95${item.id === "stocks" ? " hidden" : ""}`}
                 style={{
                   borderRadius: 28,
                   transition: "transform 140ms cubic-bezier(0.25,0.46,0.45,0.94)",

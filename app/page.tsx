@@ -12,6 +12,7 @@ import AssetsTable, { type StickyBarData } from "./components/AssetsTable";
 import Footer from "./components/Footer";
 import SplashScreen from "./components/SplashScreen";
 import { supabase } from "@/lib/supabase";
+import RebalancingCard from "./components/RebalancingCard";
 
 type DbAssetRow = {
   id: string;
@@ -301,6 +302,7 @@ export default function Home() {
       totalPnlPct,
       allocationData,
       topHoldings,
+      byCategory,
     };
   }, [dbAssets, dbLiabilities, brokerHoldings]);
 
@@ -452,6 +454,8 @@ export default function Home() {
             />
           </div>
         </div>
+
+        <RebalancingCard byCategory={summary.byCategory} totalAssets={summary.totalAssets} />
 
         <div ref={sentinelRef}>
           <AssetsTable onDataChanged={refreshAll} onSummaryChange={setStickyData} refreshKey={tableRefreshKey} />
