@@ -69,7 +69,6 @@ const TABS: { label: string; value: AssetCategory | "all" }[] = [
   { label: "All", value: "all" },
   { label: "Stocks & ETFs", value: "stocks" },
   { label: "Gold & Silver", value: "gold" },
-  { label: "Lended", value: "lended" },
   { label: "Fixed Deposits", value: "fd" },
   { label: "Real Estate", value: "realestate" },
   { label: "Bank Account", value: "bank" },
@@ -479,7 +478,7 @@ function StatLabel({
 }
 
 export type StickyBarData = {
-  sectionTab: "assets" | "liabilities" | "expenses";
+  sectionTab: "assets" | "liabilities" | "expenses" | "friends";
   categoryLabel: string;
   invested: number;
   curVal: number;
@@ -508,7 +507,7 @@ export default function AssetsTable({ onDataChanged, onSummaryChange, refreshKey
   const userId = session?.user?.id ?? "";
   const [activeTab, setActiveTab] = useState<AssetCategory | "all">("all");
   const [search, setSearch] = useState("");
-  const [sectionTab, setSectionTab] = useState<"assets" | "liabilities" | "expenses">("assets");
+  const [sectionTab, setSectionTab] = useState<"assets" | "liabilities" | "expenses" | "friends">("assets");
 
   // Default to expenses on mobile — done in useEffect to avoid SSR/hydration mismatch
   useEffect(() => {
@@ -1068,13 +1067,48 @@ onDataChanged?.();
   notes: l.notes || "",
 }));
 
+// Liabilities tab: bank loans only (friend loans live in Friends tab)
 const filteredLiabilities = mappedLiabilities.filter((l) => {
+  if (l.liabilityType === "friend") return false;
   const q = search.toLowerCase().trim();
   return (
     l.name.toLowerCase().includes(q) ||
     l.lenderName.toLowerCase().includes(q)
   );
 });
+
+// Friends tab: lended assets (positive) + friend liabilities (negative)
+const friendsLended = mappedAssets.filter((a) => a.category === "lended").map((a) => ({
+  id: a.id,
+  name: a.name,
+  amount: a.curVal,
+  kind: "lended" as const,
+  currency: "INR" as const,
+}));
+
+const friendsBorrowed = mappedLiabilities.filter((l) => l.liabilityType === "friend").map((l) => ({
+  id: l.id,
+  name: l.lenderName,
+  label: l.name !== l.lenderName ? l.name : undefined,
+  amount: l.outstandingAmount,
+  originalAmount: l.originalAmount,
+  kind: "borrowed" as const,
+  currency: l.currency,
+  borrowedDate: l.borrowedDate,
+  dueDate: l.dueDate,
+  status: l.status,
+}));
+
+type FriendLended  = typeof friendsLended[number];
+type FriendBorrowed = typeof friendsBorrowed[number];
+type FriendItem = FriendLended | FriendBorrowed;
+
+const filteredFriends: FriendItem[] = (() => {
+  const q = search.toLowerCase().trim();
+  const lended  = friendsLended.filter((f)  => f.name.toLowerCase().includes(q));
+  const borrowed = friendsBorrowed.filter((f) => f.name.toLowerCase().includes(q));
+  return [...lended, ...borrowed];
+})();
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter((e) => {
@@ -1094,6 +1128,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
     const q = search.toLowerCase().trim();
 
     const manualBase = mappedAssets.filter((a) => {
+      if (a.category === "lended") return false; // lended lives in Friends tab
       const matchTab = activeTab === "all" || a.category === activeTab;
       const matchSearch = a.name.toLowerCase().includes(q) || a.ticker.toLowerCase().includes(q);
       return matchTab && matchSearch;
@@ -1141,6 +1176,18 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
       return;
     }
 
+    if (sectionTab === "friends") {
+      const lentTotal = filteredFriends.filter((f) => f.kind === "lended").reduce((s, f) => s + f.amount, 0);
+      const borrowedTotal = filteredFriends.filter((f) => f.kind === "borrowed").reduce((s, f) => s + f.amount, 0);
+      onSummaryChange({
+        sectionTab: "friends",
+        categoryLabel: "Friends",
+        invested: 0, curVal: lentTotal, pnl: 0, pnlPct: 0, assetCount: filteredFriends.filter((f) => f.kind === "lended").length,
+        outstanding: borrowedTotal, totalBorrowed: borrowedTotal, liabilityCount: filteredFriends.filter((f) => f.kind === "borrowed").length,
+      });
+      return;
+    }
+
     // For ALL tab, kite items are not in `filtered` — add their totals separately
     const kiteInv = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.invested, 0) : 0;
     const kiteCur = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.curVal, 0) : 0;
@@ -1174,7 +1221,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
       totalBorrowed,
       liabilityCount: activeLibs.length,
     });
-  }, [filtered, filteredExpenses, sectionTab, activeTab, liabilities, kiteUiAssets, onSummaryChange]);
+  }, [filtered, filteredExpenses, filteredFriends, sectionTab, activeTab, liabilities, kiteUiAssets, onSummaryChange]);
 
   const handleSort = (key: "curVal" | "pnl") => {
     if (sortKey === key) {
@@ -1269,6 +1316,8 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
       setEditingLiabilityId(null);
       setEditingLiabilityData(null);
       setLiabilityModalOpen(true);
+    } else if (sectionTab === "friends") {
+      // handled by the two inline buttons in the friends tab header
     } else {
       if (dbAssets.length >= limits.assets) {
         showUpgrade(`You've reached the ${premium ? "premium" : "free"} limit of ${limits.assets} assets.`);
@@ -1278,7 +1327,53 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
     }
   };
 
+  const handleAddLend = () => {
+    const lims = getLimits(profile?.plan_type);
+    const prem = isPremium(profile?.plan_type);
+    if (dbAssets.length >= lims.assets) {
+      if (!prem) { setUpgradeContext(`You've reached the ${prem ? "premium" : "free"} limit of ${lims.assets} assets.`); setUpgradeModalOpen(true); }
+      else showToast(`Asset limit reached`, "error");
+      return;
+    }
+    setEditingAssetId(null);
+    setEditingFormData(null);
+    setModalOpen(true);
+  };
+
+  const handleAddBorrow = () => {
+    const lims = getLimits(profile?.plan_type);
+    const prem = isPremium(profile?.plan_type);
+    if (liabilities.length >= lims.liabilities) {
+      if (!prem) { setUpgradeContext(`You've reached the ${prem ? "premium" : "free"} limit of ${lims.liabilities} liabilities.`); setUpgradeModalOpen(true); }
+      else showToast(`Liability limit reached`, "error");
+      return;
+    }
+    setEditingLiabilityId(null);
+    setEditingLiabilityData(null);
+    setLiabilityModalOpen(true);
+  };
+
   const addButton = (
+    sectionTab === "friends" ? (
+      <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={handleAddLend}
+          className="btn-lift flex items-center gap-1.5 h-[34px] px-3 rounded-[10px] text-[13px] font-semibold text-white shrink-0"
+          style={{ background: "#34c759" }}
+        >
+          <PlusIcon />
+          <span className="hidden sm:inline">Lend</span>
+        </button>
+        <button
+          onClick={handleAddBorrow}
+          className="btn-lift flex items-center gap-1.5 h-[34px] px-3 rounded-[10px] text-[13px] font-semibold text-white shrink-0"
+          style={{ background: "#ff3b30" }}
+        >
+          <PlusIcon />
+          <span className="hidden sm:inline">Borrow</span>
+        </button>
+      </div>
+    ) : (
     <button
       onClick={handleAddClick}
       className="btn-lift flex items-center gap-1.5 h-[34px] px-3 sm:px-4 rounded-[10px] text-[13px] sm:text-[14px] font-semibold text-white shrink-0"
@@ -1290,6 +1385,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
       </span>
       <span className="sm:hidden">Add</span>
     </button>
+    )
   );
   const handleDelete = async (id: string) => {
   const confirmDelete = confirm("Are you sure you want to delete this asset?");
@@ -1401,7 +1497,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               border: isDark ? "1px solid rgba(255,255,255,0.07)" : "1px solid rgba(0,0,0,0.04)",
             }}
           >
-            {(["assets", "liabilities", "expenses"] as const).map((t) => (
+            {(["assets", "liabilities", "friends", "expenses"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setSectionTab(t)}
@@ -1437,7 +1533,7 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
               </span>
               <input
                 type="text"
-                placeholder={sectionTab === "expenses" ? "Search expenses..." : sectionTab === "liabilities" ? "Search liabilities..." : "Search assets..."}
+                placeholder={sectionTab === "expenses" ? "Search expenses..." : sectionTab === "liabilities" ? "Search liabilities..." : sectionTab === "friends" ? "Search friends..." : "Search assets..."}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="search-glass flex-1 bg-transparent text-[14px] placeholder:text-[#aeaeb2] min-w-0"
@@ -1615,6 +1711,27 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                   <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{activeFilteredLibs.length}</p>
                 </div>
               </>)}
+              {sectionTab === "friends" && (() => {
+                const lentTotal     = filteredFriends.filter((f) => f.kind === "lended").reduce((s, f) => s + f.amount, 0);
+                const borrowedTotal = filteredFriends.filter((f) => f.kind === "borrowed").reduce((s, f) => s + f.amount, 0);
+                const net = lentTotal - borrowedTotal;
+                return (<>
+                  <div>
+                    <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>You Lent</p>
+                    <p className="text-[19px] font-bold" style={{ color: "#34c759", letterSpacing: "-0.025em" }}>+{fmtINR(lentTotal)}</p>
+                  </div>
+                  {sep}
+                  <div>
+                    <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>You Borrowed</p>
+                    <p className="text-[19px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.025em" }}>-{fmtINR(borrowedTotal)}</p>
+                  </div>
+                  {sep}
+                  <div>
+                    <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Net</p>
+                    <p className="text-[19px] font-bold" style={{ color: net >= 0 ? "#34c759" : "#ff3b30", letterSpacing: "-0.025em" }}>{net >= 0 ? "+" : ""}{fmtINR(net)}</p>
+                  </div>
+                </>);
+              })()}
               {sectionTab === "expenses" && (<>
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Total Spent</p>
@@ -2195,6 +2312,197 @@ const filteredLiabilities = mappedLiabilities.filter((l) => {
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>🏦</div>
                 <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No liabilities</p>
                 <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Add a loan or debt to track it here</p>
+              </div>
+            )}
+          </div>
+        </>)}
+
+        {/* ── FRIENDS ── */}
+        {sectionTab === "friends" && (<>
+          {/* Mobile */}
+          <div className="md:hidden">
+            {filteredFriends.map((item, idx) => {
+              const isLast = idx === filteredFriends.length - 1;
+              const isLended = item.kind === "lended";
+              if (isLended) {
+                const f = item as typeof friendsLended[number];
+                return (
+                  <div key={f.id} className="px-4 sm:px-5 py-4" style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{f.name}</p>
+                        <span className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full mt-1" style={{ background: "rgba(52,199,89,0.12)", color: "#1e7a3e" }}>YOU LENT</span>
+                      </div>
+                      <p className="text-[17px] font-bold shrink-0" style={{ color: "#34c759", letterSpacing: "-0.02em" }}>+{fmtAmt(f.amount, f.currency)}</p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
+                      <button
+                        onClick={() => { const a = mappedAssets.find((a) => a.id === f.id); if (a) handleEdit(a); }}
+                        className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium"
+                        style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}
+                      >
+                        <EditIcon /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(f.id)}
+                        className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]"
+                        style={{ color: "var(--text-tertiary)" }}
+                        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")}
+                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  </div>
+                );
+              } else {
+                const f = item as typeof friendsBorrowed[number];
+                const openEdit = () => {
+                  const raw = liabilities.find((x) => x.id === f.id);
+                  if (!raw) return;
+                  setEditingLiabilityId(f.id);
+                  setEditingLiabilityData({ lender_name: raw.lender_name, lender_type: raw.lender_type, liability_name: raw.liability_name || "", original_amount: String(raw.original_amount ?? ""), outstanding_amount: String(raw.outstanding_amount ?? ""), currency: raw.currency || "INR", borrowed_date: raw.borrowed_date || "", due_date: raw.due_date || "", notes: raw.notes || "" });
+                  setLiabilityModalOpen(true);
+                };
+                return (
+                  <div key={f.id} className="px-4 sm:px-5 py-4" style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{f.name}</p>
+                        {f.label && <p className="text-[13px] mt-0.5 truncate" style={{ color: "var(--text-secondary)" }}>{f.label}</p>}
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          <span className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,59,48,0.1)", color: "#c0281f" }}>YOU BORROWED</span>
+                          <StatusBadge status={f.status} />
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-[17px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.02em" }}>-{fmtAmt(f.amount, f.currency)}</p>
+                        <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--text-tertiary)" }}>of {fmtAmt(f.originalAmount, f.currency)}</p>
+                      </div>
+                    </div>
+                    {(f.borrowedDate || f.dueDate) && (
+                      <div className="flex items-center gap-4 mt-2">
+                        {f.borrowedDate && <div><p className="text-[10px] uppercase font-semibold" style={{ color: "var(--text-tertiary)", letterSpacing: "0.07em" }}>Borrowed</p><p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>{fmtDate(f.borrowedDate)}</p></div>}
+                        {f.dueDate && <div><p className="text-[10px] uppercase font-semibold" style={{ color: "var(--text-tertiary)", letterSpacing: "0.07em" }}>Due</p><p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>{fmtDate(f.dueDate)}</p></div>}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
+                      <button onClick={openEdit} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}>
+                        <EditIcon /> Edit
+                      </button>
+                      {f.status === "active" && (
+                        <button onClick={() => { setRepayingLiability({ id: f.id, name: f.label ?? f.name, outstanding: f.amount, currency: f.currency }); setRepayModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>
+                          Repay
+                        </button>
+                      )}
+                      <button onClick={() => { setViewingLogsLiabilityId(f.id); setViewingLogsLiabilityName(f.label ?? f.name); setLogsModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}>
+                        Logs
+                      </button>
+                      <button onClick={() => handleDeleteLiability(f.id)} className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}>
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+            })}
+            {filteredFriends.length === 0 && (
+              <div className="py-16 flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>🤝</div>
+                <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No friend transactions</p>
+                <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Track money you lent or borrowed from friends</p>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop */}
+          <div className="hidden md:block" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100dvh - 280px)" }}>
+            <table className="w-full">
+              <thead style={{ position: "sticky", top: 0, zIndex: 10, boxShadow: isDark ? "0 1px 0 rgba(255,255,255,0.07), 0 4px 20px rgba(0,0,0,0.4)" : "0 1px 0 rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.06)" }}>
+                <tr>
+                  <th className="py-3.5 pl-6 pr-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>FRIEND</th>
+                  <th className="py-3.5 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>AMOUNT</th>
+                  <th className="py-3.5 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>TYPE</th>
+                  <th className="py-3.5 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>DATE</th>
+                  <th className="py-3.5 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>DUE</th>
+                  <th className="py-3.5 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>STATUS</th>
+                  <th className="py-3.5 pr-6 pl-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredFriends.map((item, idx) => {
+                  const isLast = idx === filteredFriends.length - 1;
+                  const isLended = item.kind === "lended";
+                  if (isLended) {
+                    const f = item as typeof friendsLended[number];
+                    return (
+                      <tr key={f.id} style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                        <td className="pl-6 pr-4 py-4">
+                          <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{f.name}</p>
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          <span className="text-[15px] font-bold" style={{ color: "#34c759", letterSpacing: "-0.01em" }}>+{fmtAmt(f.amount, f.currency)}</span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(52,199,89,0.12)", color: "#1e7a3e" }}>YOU LENT</span>
+                        </td>
+                        <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)" }}>—</td>
+                        <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)" }}>—</td>
+                        <td className="px-4 py-4"><span className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(52,199,89,0.1)", color: "#34c759" }}>Active</span></td>
+                        <td className="pr-6 pl-4 py-4">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button onClick={() => { const a = mappedAssets.find((a) => a.id === f.id); if (a) handleEdit(a); }} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} title="Edit"><EditIcon /></button>
+                            <button onClick={() => handleDelete(f.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")} title="Delete"><TrashIcon /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  } else {
+                    const f = item as typeof friendsBorrowed[number];
+                    const openEdit = () => {
+                      const raw = liabilities.find((x) => x.id === f.id);
+                      if (!raw) return;
+                      setEditingLiabilityId(f.id);
+                      setEditingLiabilityData({ lender_name: raw.lender_name, lender_type: raw.lender_type, liability_name: raw.liability_name || "", original_amount: String(raw.original_amount ?? ""), outstanding_amount: String(raw.outstanding_amount ?? ""), currency: raw.currency || "INR", borrowed_date: raw.borrowed_date || "", due_date: raw.due_date || "", notes: raw.notes || "" });
+                      setLiabilityModalOpen(true);
+                    };
+                    return (
+                      <tr key={f.id} style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                        <td className="pl-6 pr-4 py-4">
+                          <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{f.name}</p>
+                          {f.label && <p className="text-[13px] mt-0.5" style={{ color: "var(--text-secondary)" }}>{f.label}</p>}
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          <span className="text-[15px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.01em" }}>-{fmtAmt(f.amount, f.currency)}</span>
+                          <p className="text-[12px] mt-0.5 font-medium text-right" style={{ color: "var(--text-tertiary)" }}>of {fmtAmt(f.originalAmount, f.currency)}</p>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,59,48,0.1)", color: "#c0281f" }}>YOU BORROWED</span>
+                        </td>
+                        <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(f.borrowedDate)}</td>
+                        <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(f.dueDate)}</td>
+                        <td className="px-4 py-4"><StatusBadge status={f.status} /></td>
+                        <td className="pr-6 pl-4 py-4">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button onClick={openEdit} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} title="Edit"><EditIcon /></button>
+                            {f.status === "active" && (
+                              <button onClick={() => { setRepayingLiability({ id: f.id, name: f.label ?? f.name, outstanding: f.amount, currency: f.currency }); setRepayModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }} title="Repay">Repay</button>
+                            )}
+                            <button onClick={() => { setViewingLogsLiabilityId(f.id); setViewingLogsLiabilityName(f.label ?? f.name); setLogsModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }} title="Logs">Logs</button>
+                            <button onClick={() => handleDeleteLiability(f.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")} title="Delete"><TrashIcon /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
+                })}
+              </tbody>
+            </table>
+            {filteredFriends.length === 0 && (
+              <div className="py-16 flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>🤝</div>
+                <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No friend transactions</p>
+                <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Track money you lent or borrowed from friends</p>
               </div>
             )}
           </div>
