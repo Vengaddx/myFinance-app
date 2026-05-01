@@ -322,7 +322,7 @@ export default function Home() {
           }}
         />
       )}
-      {showSplash && <SplashScreen onDone={handleSplashDone} />}
+      {showSplash && <SplashScreen onDone={handleSplashDone} username={profile?.full_name} />}
       <Navbar />
 
       {/* Context-aware sticky summary bar */}

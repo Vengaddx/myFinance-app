@@ -2,36 +2,36 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const LINES = [
-  { text: "Hey!",                          speed: 60 },
-  { text: "Thanks for testing myFinance.",         speed: 36 },
-  { text: "Your feedback means a lot to Deesh! ",         speed: 42 },
-] as const;
+const LINE_PAUSE    = 480;
+const END_PAUSE     = 1600;
+const FADE_DURATION = 550;
 
-const LINE_PAUSE    = 480;  // ms pause between lines
-const END_PAUSE     = 1600; // ms after last line before fade-out
-const FADE_DURATION = 550;  // ms for the overall fade-out
+type Line = { text: string; speed: number };
 
-type Props = { onDone: () => void };
+type Props = { onDone: () => void; username?: string | null };
 
-export default function SplashScreen({ onDone }: Props) {
+export default function SplashScreen({ onDone, username }: Props) {
+  const firstName = username ? username.split(" ")[0] : null;
+
+  const lines: Line[] = [
+    { text: firstName ? `hey, ${firstName}.` : "hey.", speed: 60 },
+    { text: "welcome back to myFinance.",               speed: 36 },
+  ];
+
   const [fadeIn,      setFadeIn]      = useState(false);
   const [fadeOut,     setFadeOut]     = useState(false);
-  const [lineTexts,   setLineTexts]   = useState<string[]>(LINES.map(() => ""));
-  const [lineVisible, setLineVisible] = useState<boolean[]>(LINES.map(() => false));
+  const [lineTexts,   setLineTexts]   = useState<string[]>(lines.map(() => ""));
+  const [lineVisible, setLineVisible] = useState<boolean[]>(lines.map(() => false));
   const [currentLine, setCurrentLine] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // Soft fade-in on mount
   useEffect(() => {
     timer.current = setTimeout(() => setFadeIn(true), 60);
     return () => clearTimeout(timer.current);
   }, []);
 
-  // Typing engine — one line at a time
   useEffect(() => {
-    if (currentLine >= LINES.length) {
-      // All lines typed — wait then fade out
+    if (currentLine >= lines.length) {
       timer.current = setTimeout(() => {
         setFadeOut(true);
         setTimeout(onDone, FADE_DURATION);
@@ -39,10 +39,9 @@ export default function SplashScreen({ onDone }: Props) {
       return () => clearTimeout(timer.current);
     }
 
-    const { text, speed } = LINES[currentLine];
+    const { text, speed } = lines[currentLine];
     let charIdx = 0;
 
-    // Reveal the line div so its fade-in transition fires
     setLineVisible(prev => prev.map((v, i) => (i === currentLine ? true : v)));
 
     const type = () => {
@@ -62,9 +61,9 @@ export default function SplashScreen({ onDone }: Props) {
       }
     };
 
-    // Small lead delay before the first line so the fade-in settles
     timer.current = setTimeout(type, currentLine === 0 ? 520 : 0);
     return () => clearTimeout(timer.current);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentLine, onDone]);
 
   const skip = () => {
@@ -111,7 +110,7 @@ export default function SplashScreen({ onDone }: Props) {
 
       {/* Lines */}
       <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-        {LINES.map((_line, i) => {
+        {lines.map((_line, i) => {
           const isTyping = currentLine === i;
           const styles = lineStyle(i);
           return (
@@ -175,8 +174,7 @@ function lineStyle(i: number): React.CSSProperties {
     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
     WebkitFontSmoothing: "antialiased",
   };
-  if (i === 0) return { ...base, fontSize: 58, fontWeight: 800, color: "#AEDD00",               letterSpacing: "-0.04em",  lineHeight: 1.05 };
-  if (i === 1) return { ...base, fontSize: 17, fontWeight: 400, color: "rgba(255,255,255,0.65)", letterSpacing: "-0.015em", lineHeight: 1.6  };
+  if (i === 0) return { ...base, fontSize: 52, fontWeight: 800, color: "#AEDD00",               letterSpacing: "-0.04em",  lineHeight: 1.05 };
   return           { ...base, fontSize: 26, fontWeight: 700, color: "#ffffff",               letterSpacing: "-0.03em",  lineHeight: 1.2  };
 }
 
