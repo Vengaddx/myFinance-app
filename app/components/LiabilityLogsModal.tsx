@@ -17,11 +17,22 @@ type LogRow = {
 };
 
 const ACTION_META: Record<string, { label: string; color: string }> = {
-  created: { label: "Created", color: "#007aff" },
-  repayment: { label: "Repayment", color: "#34c759" },
-  borrowed_more: { label: "Borrowed More", color: "#ff9500" },
-  adjustment: { label: "Adjustment", color: "#af52de" },
-  closed: { label: "Closed", color: "#636366" },
+  created:      { label: "Created",       color: "#007aff" },
+  repayment:    { label: "Repayment",     color: "#34c759" },
+  received:     { label: "Received",      color: "#34c759" },
+  borrowed_more:{ label: "Borrowed More", color: "#ff9500" },
+  lent_more:    { label: "Lent More",     color: "#ff9500" },
+  adjustment:   { label: "Adjustment",    color: "#af52de" },
+  closed:       { label: "Closed",        color: "#636366" },
+};
+
+export type LendLogEntry = {
+  date: string;
+  amount: number;
+  previousOutstanding: number;
+  newOutstanding: number;
+  remarks?: string;
+  action_type?: string;
 };
 
 type Props = {
@@ -30,6 +41,7 @@ type Props = {
   liabilityId: string | null;
   liabilityName: string;
   currency: string;
+  localLogs?: LendLogEntry[];
 };
 
 function fmtDate(d: string) {
@@ -38,7 +50,7 @@ function fmtDate(d: string) {
   return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-export default function LiabilityLogsModal({ open, onClose, liabilityId, liabilityName, currency }: Props) {
+export default function LiabilityLogsModal({ open, onClose, liabilityId, liabilityName, currency, localLogs }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const mouseDownInPanel = useRef(false);
@@ -48,7 +60,23 @@ export default function LiabilityLogsModal({ open, onClose, liabilityId, liabili
   const currencySymbol = currency === "USD" ? "$" : currency === "SAR" ? "﷼" : "₹";
 
   useEffect(() => {
-    if (!open || !liabilityId) { setLogs([]); return; }
+    if (!open) { setLogs([]); return; }
+    // If local logs provided (lend logs from notes JSON), use those directly
+    if (localLogs) {
+      const mapped: LogRow[] = [...localLogs].reverse().map((l, i) => ({
+        id: String(i),
+        action_type: l.action_type ?? "received",
+        amount: l.amount,
+        previous_outstanding: l.previousOutstanding,
+        new_outstanding: l.newOutstanding,
+        action_date: l.date,
+        remarks: l.remarks ?? null,
+        created_at: l.date,
+      }));
+      setLogs(mapped);
+      return;
+    }
+    if (!liabilityId) { setLogs([]); return; }
     setLoading(true);
     supabase
       .from("liability_logs")
@@ -60,7 +88,7 @@ export default function LiabilityLogsModal({ open, onClose, liabilityId, liabili
         setLoading(false);
         if (!error) setLogs((data as LogRow[]) ?? []);
       });
-  }, [open, liabilityId]);
+  }, [open, liabilityId, localLogs]);
 
   useEffect(() => {
     if (!open) return;
@@ -126,7 +154,7 @@ export default function LiabilityLogsModal({ open, onClose, liabilityId, liabili
         <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0" style={{ borderBottom: `1px solid ${dividerColor}` }}>
           <div>
             <h2 className="text-[19px] font-semibold" style={{ color: titleColor, letterSpacing: "-0.02em" }}>
-              Liability Logs
+              {localLogs ? "Lend Logs" : "Liability Logs"}
             </h2>
             <p className="text-[13px] mt-0.5" style={{ color: labelColor }}>{liabilityName}</p>
           </div>
