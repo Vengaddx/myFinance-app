@@ -1072,48 +1072,48 @@ onDataChanged?.();
   notes: l.notes || "",
 }));
 
-// Liabilities tab: bank loans only (friend loans live in Friends tab)
-const filteredLiabilities = mappedLiabilities.filter((l) => {
-  if (l.liabilityType === "friend") return false;
-  const q = search.toLowerCase().trim();
-  return (
-    l.name.toLowerCase().includes(q) ||
-    l.lenderName.toLowerCase().includes(q)
-  );
-});
+  // Liabilities tab: bank loans only (friend loans live in Friends tab)
+  const filteredLiabilities = useMemo(() => mappedLiabilities.filter((l) => {
+    if (l.liabilityType === "friend") return false;
+    const q = search.toLowerCase().trim();
+    return (
+      l.name.toLowerCase().includes(q) ||
+      l.lenderName.toLowerCase().includes(q)
+    );
+  }), [mappedLiabilities, search]);
 
-// Friends tab: lended assets (positive) + friend liabilities (negative)
-const friendsLended = mappedAssets.filter((a) => a.category === "lended").map((a) => ({
-  id: a.id,
-  name: a.name,
-  amount: a.curVal,
-  kind: "lended" as const,
-  currency: "INR" as const,
-}));
+  // Friends tab: lended assets (positive) + friend liabilities (negative)
+  const friendsLended = useMemo(() => mappedAssets.filter((a) => a.category === "lended").map((a) => ({
+    id: a.id,
+    name: a.name,
+    amount: a.curVal,
+    kind: "lended" as const,
+    currency: "INR" as const,
+  })), [mappedAssets]);
 
-const friendsBorrowed = mappedLiabilities.filter((l) => l.liabilityType === "friend").map((l) => ({
-  id: l.id,
-  name: l.lenderName,
-  label: l.name !== l.lenderName ? l.name : undefined,
-  amount: l.outstandingAmount,
-  originalAmount: l.originalAmount,
-  kind: "borrowed" as const,
-  currency: l.currency,
-  borrowedDate: l.borrowedDate,
-  dueDate: l.dueDate,
-  status: l.status,
-}));
+  const friendsBorrowed = useMemo(() => mappedLiabilities.filter((l) => l.liabilityType === "friend").map((l) => ({
+    id: l.id,
+    name: l.lenderName,
+    label: l.name !== l.lenderName ? l.name : undefined,
+    amount: l.outstandingAmount,
+    originalAmount: l.originalAmount,
+    kind: "borrowed" as const,
+    currency: l.currency,
+    borrowedDate: l.borrowedDate,
+    dueDate: l.dueDate,
+    status: l.status,
+  })), [mappedLiabilities]);
 
-type FriendLended  = typeof friendsLended[number];
-type FriendBorrowed = typeof friendsBorrowed[number];
-type FriendItem = FriendLended | FriendBorrowed;
+  type FriendLended  = typeof friendsLended[number];
+  type FriendBorrowed = typeof friendsBorrowed[number];
+  type FriendItem = FriendLended | FriendBorrowed;
 
-const filteredFriends: FriendItem[] = (() => {
-  const q = search.toLowerCase().trim();
-  const lended  = friendsLended.filter((f)  => f.name.toLowerCase().includes(q));
-  const borrowed = friendsBorrowed.filter((f) => f.name.toLowerCase().includes(q));
-  return [...lended, ...borrowed];
-})();
+  const filteredFriends = useMemo((): FriendItem[] => {
+    const q = search.toLowerCase().trim();
+    const lended  = friendsLended.filter((f)  => f.name.toLowerCase().includes(q));
+    const borrowed = friendsBorrowed.filter((f) => f.name.toLowerCase().includes(q));
+    return [...lended, ...borrowed];
+  }, [friendsLended, friendsBorrowed, search]);
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter((e) => {
@@ -1214,7 +1214,7 @@ const filteredFriends: FriendItem[] = (() => {
       totalBorrowed,
       liabilityCount: activeLibs.length,
     });
-  }, [filtered, filteredExpenses, filteredFriends, sectionTab, activeTab, liabilities, kiteUiAssets, onSummaryChange]);
+  }, [filtered, filteredExpenses, sectionTab, activeTab, liabilities, kiteUiAssets, onSummaryChange]);
 
   const handleSort = (key: "curVal" | "pnl") => {
     if (sortKey === key) {
