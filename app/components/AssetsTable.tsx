@@ -5,6 +5,7 @@ import * as XLSX from "xlsx";
 import { AssetCategory } from "../data/assets";
 import AddAssetModal, { AssetFormData } from "./AddAssetModal";
 import AddLiabilityModal, { LiabilityFormData } from "./AddLiabilityModal";
+import AddLendModal, { LendFormData } from "./AddLendModal";
 import AddExpenseModal, { ExpenseFormData, EMPTY_EXPENSE_FORM, EXPENSE_CATEGORIES } from "./AddExpenseModal";
 import RepayLiabilityModal from "./RepayLiabilityModal";
 import LiabilityLogsModal, { LendLogEntry } from "./LiabilityLogsModal";
@@ -547,6 +548,9 @@ const [viewingLendLogs, setViewingLendLogs] = useState<LendLogEntry[] | null>(nu
 const [receivingLend, setReceivingLend] = useState<{ id: string; name: string; outstanding: number; currency: string } | null>(null);
 const [receivedModalOpen, setReceivedModalOpen] = useState(false);
 const [loansFilter, setLoansFilter] = useState<"all" | "banks" | "friends">("all");
+const [lendModalOpen, setLendModalOpen] = useState(false);
+const [editingLendId, setEditingLendId] = useState<string | null>(null);
+const [editingLendData, setEditingLendData] = useState<LendFormData | null>(null);
 const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 const [upgradeContext, setUpgradeContext] = useState<string | undefined>(undefined);
 
@@ -680,7 +684,7 @@ const [upgradeContext, setUpgradeContext] = useState<string | undefined>(undefin
   const handleAddLiability = async (data: LiabilityFormData) => {
     const today = new Date().toISOString().split("T")[0];
     const originalAmount = Number(data.original_amount) || 0;
-    const outstandingAmount = Number(data.outstanding_amount) || 0;
+    const outstandingAmount = Number(data.outstanding_amount) || originalAmount;
 
     const { data: inserted, error } = await supabase
       .from("liabilities")
@@ -815,6 +819,79 @@ const [upgradeContext, setUpgradeContext] = useState<string | undefined>(undefin
     onDataChanged?.();
     setRepayModalOpen(false);
     setRepayingLiability(null);
+  };
+
+  const handleSaveLend = async (data: LendFormData) => {
+    const today = new Date().toISOString().split("T")[0];
+    const amount = Number(data.amount) || 0;
+
+    if (editingLendId) {
+      const dbRow = dbAssets.find((a) => a.id === editingLendId);
+      let parsedNotes: Record<string, unknown> = {};
+      try { parsedNotes = dbRow?.notes ? JSON.parse(dbRow.notes) : {}; } catch {}
+      const updatedNotes = JSON.stringify({
+        ...parsedNotes,
+        invested: amount,
+        lendDate: data.date || undefined,
+        dueDate: data.due_date || undefined,
+        lendNotes: data.notes || undefined,
+      });
+      const { error } = await supabase
+        .from("assets")
+        .update({ name: data.name, value: amount, notes: updatedNotes })
+        .eq("id", editingLendId)
+        .eq("user_id", userId);
+      if (error) { showToast(error.message, "error"); return; }
+      await fetchAssets();
+      showToast("Lend updated", "success");
+      onDataChanged?.();
+      setEditingLendId(null);
+      setEditingLendData(null);
+      setLendModalOpen(false);
+      return;
+    }
+
+    const initialLog = {
+      date: data.date || today,
+      amount,
+      previousOutstanding: 0,
+      newOutstanding: amount,
+      action_type: "created" as const,
+    };
+    const notes = JSON.stringify({
+      invested: amount,
+      lendDate: data.date || undefined,
+      dueDate: data.due_date || undefined,
+      lendNotes: data.notes || undefined,
+      lendLogs: [initialLog],
+    });
+    const { error } = await supabase.from("assets").insert([{
+      name: data.name,
+      type: "lended",
+      value: amount,
+      notes,
+      user_id: userId,
+    }]);
+    if (error) { showToast(error.message, "error"); return; }
+    await fetchAssets();
+    showToast("Lend added", "success");
+    onDataChanged?.();
+    setLendModalOpen(false);
+  };
+
+  const openEditLend = (asset: UiAsset) => {
+    const dbRow = dbAssets.find((a) => a.id === asset.id);
+    let parsedNotes: Record<string, unknown> = {};
+    try { parsedNotes = dbRow?.notes ? JSON.parse(dbRow.notes) : {}; } catch {}
+    setEditingLendId(asset.id);
+    setEditingLendData({
+      name: asset.name,
+      amount: String(asset.curVal ?? ""),
+      date: String(parsedNotes.lendDate ?? ""),
+      due_date: String(parsedNotes.dueDate ?? ""),
+      notes: String(parsedNotes.lendNotes ?? ""),
+    });
+    setLendModalOpen(true);
   };
 
   const handleEdit = (asset: UiAsset) => {
@@ -1326,9 +1403,9 @@ onDataChanged?.();
       else showToast(`Asset limit reached`, "error");
       return;
     }
-    setEditingAssetId(null);
-    setEditingFormData(null);
-    setModalOpen(true);
+    setEditingLendId(null);
+    setEditingLendData(null);
+    setLendModalOpen(true);
   };
 
   const handleAddBorrow = () => {
@@ -1457,6 +1534,18 @@ onDataChanged?.();
   onSave={handleSaveLiability}
   initialData={editingLiabilityData}
   mode={editingLiabilityId ? "edit" : "add"}
+/>
+
+      <AddLendModal
+  open={lendModalOpen}
+  onClose={() => {
+    setLendModalOpen(false);
+    setEditingLendId(null);
+    setEditingLendData(null);
+  }}
+  onSave={handleSaveLend}
+  initialData={editingLendData}
+  mode={editingLendId ? "edit" : "add"}
 />
 
       <AddExpenseModal
@@ -1745,7 +1834,7 @@ onDataChanged?.();
                   </p>
                 </div>
               </>)}
-              {sectionTab === "liabilities" && (<>
+              {sectionTab === "liabilities" && loansFilter !== "friends" && (<>
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Outstanding</p>
                   <p className="text-[19px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.025em" }}>{fmtINR(outstanding)}</p>
@@ -2199,7 +2288,7 @@ onDataChanged?.();
                           <p className="text-[17px] font-bold shrink-0" style={{ color: "#34c759", letterSpacing: "-0.02em" }}>+{fmtAmt(f.amount, f.currency)}</p>
                         </div>
                         <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
-                          <button onClick={() => { const a = mappedAssets.find((a) => a.id === f.id); if (a) handleEdit(a); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}><EditIcon /> Edit</button>
+                          <button onClick={() => { const a = mappedAssets.find((a) => a.id === f.id); if (a) openEditLend(a); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}><EditIcon /> Edit</button>
                           {f.amount > 0 && <button onClick={() => { setReceivingLend({ id: f.id, name: f.name, outstanding: f.amount, currency: f.currency }); setReceivedModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>Received</button>}
                           <button onClick={() => { setViewingLendLogs(getLendLogs(f.id)); setViewingLogsLiabilityName(f.name); setLogsModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}>Logs</button>
                           <button onClick={() => handleDelete(f.id)} className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
@@ -2320,7 +2409,7 @@ onDataChanged?.();
                             <td className="px-4 py-4 text-[14px]" style={{ color: "var(--text-secondary)" }}>—</td>
                             <td className="px-4 py-4"><span className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(52,199,89,0.1)", color: "#34c759" }}>Active</span></td>
                             <td className="pr-6 pl-4 py-4"><div className="flex items-center justify-end gap-1.5">
-                              <button onClick={() => { const a = mappedAssets.find((a) => a.id === f.id); if (a) handleEdit(a); }} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} title="Edit"><EditIcon /></button>
+                              <button onClick={() => { const a = mappedAssets.find((a) => a.id === f.id); if (a) openEditLend(a); }} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} title="Edit"><EditIcon /></button>
                               {f.amount > 0 && <button onClick={() => { setReceivingLend({ id: f.id, name: f.name, outstanding: f.amount, currency: f.currency }); setReceivedModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }} title="Mark Received">Received</button>}
                               <button onClick={() => { setViewingLendLogs(getLendLogs(f.id)); setViewingLogsLiabilityName(f.name); setLogsModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }} title="Logs">Logs</button>
                               <button onClick={() => handleDelete(f.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")} title="Delete"><TrashIcon /></button>
