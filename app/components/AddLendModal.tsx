@@ -4,41 +4,27 @@ import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
 import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
-export type LiabilityFormData = {
-  lender_name: string;
-  lender_type: string;
-  liability_name: string;
-  original_amount: string;
-  outstanding_amount: string;
-  currency: string;
-  borrowed_date: string;
+export type LendFormData = {
+  name: string;
+  amount: string;
+  date: string;
   due_date: string;
   notes: string;
 };
 
-const EMPTY_FORM: LiabilityFormData = {
-  lender_name: "",
-  lender_type: "friend",
-  liability_name: "",
-  original_amount: "",
-  outstanding_amount: "",
-  currency: "INR",
-  borrowed_date: "",
+const EMPTY_FORM: LendFormData = {
+  name: "",
+  amount: "",
+  date: "",
   due_date: "",
   notes: "",
 };
 
-const CURRENCIES = [
-  { value: "INR", label: "₹ INR" },
-  { value: "SAR", label: "﷼ SAR" },
-  { value: "USD", label: "$ USD" },
-];
-
 type Props = {
   open: boolean;
   onClose: () => void;
-  onSave: (data: LiabilityFormData) => void | Promise<void>;
-  initialData?: LiabilityFormData | null;
+  onSave: (data: LendFormData) => void | Promise<void>;
+  initialData?: LendFormData | null;
   mode?: "add" | "edit";
 };
 
@@ -50,37 +36,22 @@ function XIcon() {
   );
 }
 
-function ChevronIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: "none" }}>
-      <path d="M6 9l6 6 6-6" />
-    </svg>
-  );
-}
-
-export default function AddLiabilityModal({ open, onClose, onSave, initialData = null, mode = "add" }: Props) {
+export default function AddLendModal({ open, onClose, onSave, initialData = null, mode = "add" }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const overlayRef = useRef<HTMLDivElement>(null);
   const mouseDownInPanel = useRef(false);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState<LiabilityFormData>(EMPTY_FORM);
-  const [errors, setErrors] = useState<{ lender_name?: boolean; original_amount?: boolean }>({});
+  const [form, setForm] = useState<LendFormData>(EMPTY_FORM);
+  const [errors, setErrors] = useState<{ name?: boolean; amount?: boolean }>({});
   const [saving, setSaving] = useState(false);
-  const [showOutstanding, setShowOutstanding] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setForm(initialData ?? { ...EMPTY_FORM });
     setErrors({});
     setSaving(false);
-    // Show outstanding field in edit mode if values differ
-    if (initialData && initialData.outstanding_amount && initialData.original_amount) {
-      setShowOutstanding(initialData.outstanding_amount !== initialData.original_amount);
-    } else {
-      setShowOutstanding(false);
-    }
     const t = setTimeout(() => firstInputRef.current?.focus(), 80);
     return () => clearTimeout(t);
   }, [open, initialData]);
@@ -98,31 +69,25 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
     return () => unlockScroll();
   }, [open]);
 
-  const set = (field: keyof LiabilityFormData) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  const set = (field: keyof LendFormData) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const value = e.target.value;
     setForm((f) => ({ ...f, [field]: value }));
-    if (field === "lender_name" && value) setErrors((err) => ({ ...err, lender_name: false }));
-    if (field === "original_amount" && value) setErrors((err) => ({ ...err, original_amount: false }));
+    if (field === "name" && value) setErrors((err) => ({ ...err, name: false }));
+    if (field === "amount" && value) setErrors((err) => ({ ...err, amount: false }));
   };
 
   const handleSave = async () => {
     const newErrors = {
-      lender_name: !form.lender_name.trim(),
-      original_amount: !form.original_amount.trim(),
+      name: !form.name.trim(),
+      amount: !form.amount.trim() || isNaN(Number(form.amount)),
     };
     setErrors(newErrors);
-    if (newErrors.lender_name || newErrors.original_amount) return;
+    if (newErrors.name || newErrors.amount) return;
     setSaving(true);
     try {
-      // If outstanding not specified, default to original amount
-      const dataToSave: LiabilityFormData = {
-        ...form,
-        outstanding_amount: form.outstanding_amount.trim() || form.original_amount,
-        liability_name: "", // no longer collected from UI
-      };
-      await onSave(dataToSave);
+      await onSave(form);
     } finally {
       setSaving(false);
     }
@@ -140,7 +105,6 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
   const inputColor = isDark ? "#ffffff" : "#1d1d1f";
   const cancelBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
   const cancelColor = isDark ? "rgba(235,235,245,0.6)" : "#86868b";
-  const isFriend = form.lender_type === "friend";
 
   const inputStyle = (hasError?: boolean): React.CSSProperties => ({
     width: "100%",
@@ -156,13 +120,13 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
     boxSizing: "border-box",
   });
 
-  const onFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const onFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     e.currentTarget.style.borderColor = "rgba(0,122,255,0.6)";
     e.currentTarget.style.boxShadow = `0 0 0 3px ${isDark ? "rgba(0,122,255,0.2)" : "rgba(0,122,255,0.12)"}`;
     e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.9)";
   };
 
-  const onBlur = (hasError?: boolean) => (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const onBlur = (hasError?: boolean) => (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     e.currentTarget.style.borderColor = hasError ? "#ff3b30" : inputBorder;
     e.currentTarget.style.boxShadow = "none";
     e.currentTarget.style.background = hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg;
@@ -171,8 +135,7 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
   return (
     <>
       <style>{`
-        .lf-input::placeholder { color: ${isDark ? "rgba(235,235,245,0.28)" : "#aeaeb2"}; }
-        .lf-input option { background: ${isDark ? "#1c1c1e" : "#ffffff"}; color: ${inputColor}; }
+        .lend-input::placeholder { color: ${isDark ? "rgba(235,235,245,0.28)" : "#aeaeb2"}; }
       `}</style>
 
       <div
@@ -203,7 +166,7 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
               ? "0 40px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05)"
               : "0 32px 64px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.06)",
             width: "100%",
-            maxWidth: 440,
+            maxWidth: 420,
             maxHeight: "calc(100dvh - 48px)",
             display: "flex",
             flexDirection: "column",
@@ -216,10 +179,10 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
           <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0" style={{ borderBottom: `1px solid ${dividerColor}` }}>
             <div>
               <h2 className="text-[19px] font-semibold" style={{ color: titleColor, letterSpacing: "-0.02em" }}>
-                {mode === "edit" ? "Edit Loan" : "Add Loan"}
+                {mode === "edit" ? "Edit Lend" : "Lend Money"}
               </h2>
               <p className="text-[13px] mt-0.5" style={{ color: labelColor }}>
-                {mode === "edit" ? "Update loan details" : "Track money you borrowed"}
+                {mode === "edit" ? "Update lend details" : "Track money you lent to a friend"}
               </p>
             </div>
             <button
@@ -236,158 +199,71 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
 
           {/* Form */}
           <div className="overflow-y-auto flex-1 px-6 py-5 flex flex-col gap-4">
-
-            {/* Type selector */}
-            <div className="flex flex-col gap-2">
-              <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Borrowed From</label>
-              <div
-                className="flex rounded-[12px] overflow-hidden p-[3px] gap-[3px]"
-                style={{ background: inputBg, border: `1px solid ${inputBorder}` }}
-              >
-                {(["friend", "bank"] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, lender_type: t }))}
-                    className="flex-1 h-[34px] rounded-[9px] text-[13px] font-medium capitalize transition-all"
-                    style={{
-                      background: form.lender_type === t
-                        ? (t === "bank" ? "#007aff" : "#ff9500")
-                        : "transparent",
-                      color: form.lender_type === t ? "#ffffff" : labelColor,
-                    }}
-                  >
-                    {t === "bank" ? "🏦 Bank" : "🤝 Friend"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Lender Name */}
+            {/* Friend Name */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
-                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.lender_name ? "#ff3b30" : labelColor }}>
-                  {isFriend ? "Friend Name" : "Bank / Lender Name"}
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.name ? "#ff3b30" : labelColor }}>
+                  Friend Name
                 </label>
                 <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
               </div>
               <input
                 ref={firstInputRef}
                 type="text"
-                placeholder={isFriend ? "e.g. Maha, Arjun" : "e.g. SBI, HDFC Bank"}
-                value={form.lender_name}
-                onChange={set("lender_name")}
-                className="lf-input"
-                style={inputStyle(errors.lender_name)}
+                placeholder="e.g. Priya, Arjun"
+                value={form.name}
+                onChange={set("name")}
+                className="lend-input"
+                style={inputStyle(errors.name)}
                 onFocus={onFocus}
-                onBlur={onBlur(errors.lender_name)}
+                onBlur={onBlur(errors.name)}
               />
-              {errors.lender_name && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Name is required</p>}
+              {errors.name && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Name is required</p>}
             </div>
 
-            {/* Loan Amount + Currency */}
-            <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-1.5">
-                  <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.original_amount ? "#ff3b30" : labelColor }}>
-                    Loan Amount
-                  </label>
-                  <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
-                </div>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  min="0"
-                  value={form.original_amount}
-                  onChange={set("original_amount")}
-                  className="lf-input"
-                  style={inputStyle(errors.original_amount)}
-                  onFocus={onFocus}
-                  onBlur={onBlur(errors.original_amount)}
-                />
-                {errors.original_amount && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Required</p>}
+            {/* Amount */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-1.5">
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.amount ? "#ff3b30" : labelColor }}>
+                  Amount
+                </label>
+                <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
               </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Currency</label>
-                <div className="relative">
-                  <select
-                    value={form.currency}
-                    onChange={set("currency")}
-                    className="lf-input"
-                    style={{ ...inputStyle(), width: 90, paddingRight: 28, appearance: "none", WebkitAppearance: "none", cursor: "pointer" }}
-                    onFocus={onFocus}
-                    onBlur={onBlur()}
-                  >
-                    {CURRENCIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                  </select>
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: labelColor }}><ChevronIcon /></span>
-                </div>
-              </div>
+              <input
+                type="number"
+                placeholder="0.00"
+                min="0"
+                value={form.amount}
+                onChange={set("amount")}
+                className="lend-input"
+                style={inputStyle(errors.amount)}
+                onFocus={onFocus}
+                onBlur={onBlur(errors.amount)}
+              />
+              {errors.amount && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Valid amount is required</p>}
             </div>
-
-            {/* Already repaid toggle */}
-            {!showOutstanding && (
-              <button
-                type="button"
-                onClick={() => setShowOutstanding(true)}
-                className="text-[13px] font-medium text-left"
-                style={{ color: "#007aff" }}
-              >
-                + Already repaid some? Set current outstanding
-              </button>
-            )}
-
-            {showOutstanding && (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Current Outstanding</label>
-                  <button
-                    type="button"
-                    onClick={() => { setShowOutstanding(false); setForm((f) => ({ ...f, outstanding_amount: "" })); }}
-                    className="text-[12px]"
-                    style={{ color: "var(--text-tertiary)" }}
-                  >
-                    Remove
-                  </button>
-                </div>
-                <input
-                  type="number"
-                  placeholder={form.original_amount || "0.00"}
-                  min="0"
-                  value={form.outstanding_amount}
-                  onChange={set("outstanding_amount")}
-                  className="lf-input"
-                  style={inputStyle()}
-                  onFocus={onFocus}
-                  onBlur={onBlur()}
-                />
-                <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>Leave blank to use loan amount</p>
-              </div>
-            )}
 
             {/* Date + Due Date */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-2">
-                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Borrowed On</label>
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Date Lent</label>
                 <input
                   type="date"
-                  value={form.borrowed_date}
-                  onChange={set("borrowed_date")}
-                  className="lf-input"
+                  value={form.date}
+                  onChange={set("date")}
+                  className="lend-input"
                   style={inputStyle()}
                   onFocus={onFocus}
                   onBlur={onBlur()}
                 />
               </div>
-
               <div className="flex flex-col gap-2">
                 <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Due Date</label>
                 <input
                   type="date"
                   value={form.due_date}
                   onChange={set("due_date")}
-                  className="lf-input"
+                  className="lend-input"
                   style={inputStyle()}
                   onFocus={onFocus}
                   onBlur={onBlur()}
@@ -400,10 +276,10 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
               <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: labelColor }}>Notes</label>
               <input
                 type="text"
-                placeholder="Optional notes"
+                placeholder="Optional — reason, context, etc."
                 value={form.notes}
                 onChange={set("notes")}
-                className="lf-input"
+                className="lend-input"
                 style={inputStyle()}
                 onFocus={onFocus}
                 onBlur={onBlur()}
@@ -428,21 +304,21 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
               disabled={saving}
               className="h-10 px-6 rounded-[12px] text-[14px] font-semibold text-white"
               style={{
-                background: saving ? "#5ac8fa" : "#007aff",
+                background: saving ? "#5ac8fa" : "#34c759",
                 transition: "background 150ms ease, transform 150ms ease",
               }}
               onMouseEnter={(e) => {
                 if (!saving) {
-                  (e.currentTarget as HTMLElement).style.background = "#0071eb";
+                  (e.currentTarget as HTMLElement).style.background = "#2ab54a";
                   (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
                 }
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = saving ? "#5ac8fa" : "#007aff";
+                (e.currentTarget as HTMLElement).style.background = saving ? "#5ac8fa" : "#34c759";
                 (e.currentTarget as HTMLElement).style.transform = "none";
               }}
             >
-              {saving ? "Saving..." : mode === "edit" ? "Update" : "Save"}
+              {saving ? "Saving..." : mode === "edit" ? "Update" : "Save Lend"}
             </button>
           </div>
         </div>
