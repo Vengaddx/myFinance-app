@@ -6,7 +6,7 @@ import { AssetCategory } from "../data/assets";
 import AddAssetModal, { AssetFormData } from "./AddAssetModal";
 import AddLiabilityModal, { LiabilityFormData } from "./AddLiabilityModal";
 import AddLendModal, { LendFormData } from "./AddLendModal";
-import AddExpenseModal, { ExpenseFormData, EMPTY_EXPENSE_FORM, EXPENSE_CATEGORIES } from "./AddExpenseModal";
+import AddExpenseModal, { ExpenseFormData, EXPENSE_CATEGORIES } from "./AddExpenseModal";
 import RepayLiabilityModal from "./RepayLiabilityModal";
 import LiabilityLogsModal, { LendLogEntry } from "./LiabilityLogsModal";
 import MarkReceivedModal from "./MarkReceivedModal";
@@ -226,15 +226,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function LenderTypeBadge({ type }: { type: string }) {
-  const isBank = type === "bank";
-  return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-medium" style={{ color: isBank ? "#007aff" : "#ff9500" }}>
-      <span className="w-[5px] h-[5px] rounded-full shrink-0" style={{ background: isBank ? "#007aff" : "#ff9500" }} />
-      {isBank ? "Bank" : "Friend"}
-    </span>
-  );
-}
 
 const ASSET_ICON_SVG: Record<AssetCategory, React.ReactNode> = {
   stocks: (
@@ -547,7 +538,6 @@ const [viewingLogsLiabilityName, setViewingLogsLiabilityName] = useState("");
 const [viewingLendLogs, setViewingLendLogs] = useState<LendLogEntry[] | null>(null);
 const [receivingLend, setReceivingLend] = useState<{ id: string; name: string; outstanding: number; currency: string } | null>(null);
 const [receivedModalOpen, setReceivedModalOpen] = useState(false);
-const [loansFilter, setLoansFilter] = useState<"all" | "banks" | "friends">("all");
 const [lendModalOpen, setLendModalOpen] = useState(false);
 const [editingLendId, setEditingLendId] = useState<string | null>(null);
 const [editingLendData, setEditingLendData] = useState<LendFormData | null>(null);
@@ -1149,15 +1139,6 @@ onDataChanged?.();
   notes: l.notes || "",
 }));
 
-  // Liabilities tab: bank loans only (friend loans live in Friends tab)
-  const filteredLiabilities = useMemo(() => mappedLiabilities.filter((l) => {
-    if (l.liabilityType === "friend") return false;
-    const q = search.toLowerCase().trim();
-    return (
-      l.name.toLowerCase().includes(q) ||
-      l.lenderName.toLowerCase().includes(q)
-    );
-  }), [mappedLiabilities, search]);
 
   // Friends tab: lended assets (positive) + friend liabilities (negative)
   const friendsLended = useMemo(() => mappedAssets.filter((a) => a.category === "lended").map((a) => ({
@@ -1181,16 +1162,18 @@ onDataChanged?.();
     status: l.status,
   })), [mappedLiabilities]);
 
-  type FriendLended  = typeof friendsLended[number];
-  type FriendBorrowed = typeof friendsBorrowed[number];
-  type FriendItem = FriendLended | FriendBorrowed;
-
-  const filteredFriends = useMemo((): FriendItem[] => {
+  // All borrowed (bank + friend) filtered by search — for unified loans view
+  const filteredAllBorrowed = useMemo(() => {
     const q = search.toLowerCase().trim();
-    const lended  = friendsLended.filter((f)  => f.name.toLowerCase().includes(q));
-    const borrowed = friendsBorrowed.filter((f) => f.name.toLowerCase().includes(q));
-    return [...lended, ...borrowed];
-  }, [friendsLended, friendsBorrowed, search]);
+    return mappedLiabilities.filter((l) =>
+      l.lenderName.toLowerCase().includes(q) || l.name.toLowerCase().includes(q)
+    );
+  }, [mappedLiabilities, search]);
+
+  const filteredAllLent = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return friendsLended.filter((f) => f.name.toLowerCase().includes(q));
+  }, [friendsLended, search]);
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter((e) => {
@@ -1333,64 +1316,29 @@ onDataChanged?.();
       ws = XLSX.utils.json_to_sheet(rows);
       fileName = `expenses_${expenseMonthKey}.xlsx`;
     } else {
-      const bankRows = loansFilter !== "friends"
-        ? filteredLiabilities.map((l) => ({
-            Name: l.name,
-            Lender: l.lenderName,
-            Direction: "You Borrowed (Bank)",
-            Currency: l.currency,
-            "Original Amount": l.originalAmount,
-            "Outstanding Amount": l.outstandingAmount,
-            "Borrowed Date": l.borrowedDate ?? "",
-            "Due Date": l.dueDate ?? "",
-            Status: l.status,
-            Notes: l.notes,
-          }))
-        : [];
-
-      const lendedRows = loansFilter !== "banks"
-        ? filteredFriends
-            .filter((f) => f.kind === "lended")
-            .map((f) => {
-              const fl = f as typeof friendsLended[number];
-              return {
-                Name: fl.name,
-                Lender: "—",
-                Direction: "You Lent",
-                Currency: fl.currency,
-                "Original Amount": fl.amount,
-                "Outstanding Amount": fl.amount,
-                "Borrowed Date": "",
-                "Due Date": "",
-                Status: "active",
-                Notes: "",
-              };
-            })
-        : [];
-
-      const borrowedRows = loansFilter !== "banks"
-        ? filteredFriends
-            .filter((f) => f.kind === "borrowed")
-            .map((f) => {
-              const fb = f as typeof friendsBorrowed[number];
-              return {
-                Name: fb.name,
-                Lender: fb.name,
-                Direction: "You Borrowed (Friend)",
-                Currency: fb.currency,
-                "Original Amount": fb.originalAmount,
-                "Outstanding Amount": fb.amount,
-                "Borrowed Date": fb.borrowedDate ?? "",
-                "Due Date": fb.dueDate ?? "",
-                Status: fb.status,
-                Notes: "",
-              };
-            })
-        : [];
-
-      const rows = [...bankRows, ...lendedRows, ...borrowedRows];
+      const lentRows = filteredAllLent.map((f) => ({
+        Name: f.name,
+        Direction: "You Lent",
+        "Amount Owed": f.amount,
+        Currency: f.currency,
+        "Loan Amount": f.amount,
+        "Date": "",
+        "Due Date": "",
+        Status: "active",
+      }));
+      const borrowedRows = filteredAllBorrowed.map((l) => ({
+        Name: l.lenderName,
+        Direction: "You Borrowed",
+        "Amount Owed": l.outstandingAmount,
+        Currency: l.currency,
+        "Loan Amount": l.originalAmount,
+        "Date": l.borrowedDate ?? "",
+        "Due Date": l.dueDate ?? "",
+        Status: l.status,
+      }));
+      const rows = [...lentRows, ...borrowedRows];
       ws = XLSX.utils.json_to_sheet(rows);
-      fileName = `liabilities_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      fileName = `loans_${new Date().toISOString().slice(0, 10)}.xlsx`;
     }
 
     const wb = XLSX.utils.book_new();
@@ -1466,7 +1414,7 @@ onDataChanged?.();
   };
 
   const addButton = (
-    sectionTab === "liabilities" && loansFilter === "friends" ? (
+    sectionTab === "liabilities" ? (
       <div className="flex items-center gap-2 shrink-0">
         <button onClick={handleAddLend} className="btn-lift flex items-center gap-1.5 h-[34px] px-3 rounded-[10px] text-[13px] font-semibold text-white shrink-0" style={{ background: "#34c759" }}>
           <PlusIcon /><span className="hidden sm:inline">Lend</span>
@@ -1483,7 +1431,7 @@ onDataChanged?.();
       >
         <PlusIcon />
         <span className="hidden sm:inline">
-          {sectionTab === "expenses" ? "Add Expense" : sectionTab === "liabilities" ? (loansFilter === "banks" ? "Add Loan" : "Add Liability") : "Add Asset"}
+          {sectionTab === "expenses" ? "Add Expense" : "Add Asset"}
         </span>
         <span className="sm:hidden">Add</span>
       </button>
@@ -1734,33 +1682,6 @@ onDataChanged?.();
         </div>
         )}
 
-        {/* Loans: All / Banks / Friends sub-filter */}
-        {sectionTab === "liabilities" && (
-          <div className="flex items-center gap-1 px-4 sm:px-5 md:px-6 py-2.5 overflow-x-auto scrollbar-hide" style={{ borderBottom: "1px solid var(--separator-subtle)" }}>
-            {([
-              { key: "all",     label: "All" },
-              { key: "banks",   label: "Banks" },
-              { key: "friends", label: "Friends" },
-            ] as const).map((f) => {
-              const isActive = loansFilter === f.key;
-              return (
-                <button
-                  key={f.key}
-                  onClick={() => setLoansFilter(f.key)}
-                  className="shrink-0 px-3 py-1 rounded-full text-[12.5px] font-medium"
-                  style={{
-                    background: isActive ? (isDark ? "rgba(255,255,255,0.12)" : "#1d1d1f") : "transparent",
-                    color: isActive ? "#ffffff" : "var(--text-secondary)",
-                    border: isActive && isDark ? "1px solid rgba(255,255,255,0.2)" : "1px solid transparent",
-                    transition: "background 180ms ease-out, color 180ms ease-out",
-                  }}
-                >
-                  {f.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
 
         {/* Expense: month selector row */}
         {sectionTab === "expenses" && (
@@ -1852,9 +1773,6 @@ onDataChanged?.();
           // Sum individual pnl values so bank/cash (pnl=0) don't inflate P&L
           const pnl  = filtered.reduce((s, a) => s + a.pnl, 0) + kitePnl;
           const pct  = inv > 0 ? (pnl / inv) * 100 : 0;
-          const activeFilteredLibs = filteredLiabilities.filter((l) => l.status === "active");
-          const outstanding   = activeFilteredLibs.reduce((s, l) => s + l.outstandingAmount, 0);
-          const totalBorrowed = activeFilteredLibs.reduce((s, l) => s + l.originalAmount, 0);
           const expTotal = filteredExpenses.reduce((s, e) => s + e.amount, 0);
           const expClaim = filteredExpenses.filter((e) => e.claim_eligible).reduce((s, e) => s + e.amount, 0);
           const expSW    = filteredExpenses.filter((e) => e.splitwise_applicable && !e.splitwise_added).reduce((s, e) => s + e.amount, 0);
@@ -1878,25 +1796,9 @@ onDataChanged?.();
                   </p>
                 </div>
               </>)}
-              {sectionTab === "liabilities" && loansFilter !== "friends" && (<>
-                <div>
-                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Outstanding</p>
-                  <p className="text-[19px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.025em" }}>{fmtINR(outstanding)}</p>
-                </div>
-                {sep}
-                <div>
-                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Borrowed</p>
-                  <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{fmtINR(totalBorrowed)}</p>
-                </div>
-                {sep}
-                <div>
-                  <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Count</p>
-                  <p className="text-[19px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>{activeFilteredLibs.length}</p>
-                </div>
-              </>)}
-              {sectionTab === "liabilities" && loansFilter === "friends" && (() => {
-                const lentTotal     = filteredFriends.filter((f) => f.kind === "lended").reduce((s, f) => s + f.amount, 0);
-                const borrowedTotal = filteredFriends.filter((f) => f.kind === "borrowed").reduce((s, f) => s + f.amount, 0);
+              {sectionTab === "liabilities" && (() => {
+                const lentTotal     = filteredAllLent.reduce((s, f) => s + f.amount, 0);
+                const borrowedTotal = filteredAllBorrowed.filter((l) => l.status === "active").reduce((s, l) => s + l.outstandingAmount, 0);
                 const net = lentTotal - borrowedTotal;
                 return (<>
                   <div>
@@ -2259,7 +2161,6 @@ onDataChanged?.();
         </>)}
 
         {sectionTab === "liabilities" && (() => {
-          // Helper to open edit for a bank/borrowed liability
           const openEditLiab = (id: string) => {
             const raw = liabilities.find((x) => x.id === id);
             if (!raw) return;
@@ -2267,48 +2168,65 @@ onDataChanged?.();
             setEditingLiabilityData({ lender_name: raw.lender_name, lender_type: raw.lender_type, liability_name: raw.liability_name || "", original_amount: String(raw.original_amount ?? ""), outstanding_amount: String(raw.outstanding_amount ?? ""), currency: raw.currency || "INR", borrowed_date: raw.borrowed_date || "", due_date: raw.due_date || "", notes: raw.notes || "" });
             setLiabilityModalOpen(true);
           };
-          const showBanks   = loansFilter !== "friends";
-          const showFriends = loansFilter !== "banks";
-          const isAll       = loansFilter === "all";
-          const noResults   = (showBanks && filteredLiabilities.length === 0 && !showFriends) || (showFriends && filteredFriends.length === 0 && !showBanks) || (isAll && filteredLiabilities.length === 0 && filteredFriends.length === 0);
-          const sectionLabel = (label: string, emoji: string) => (
-            <div className="px-4 sm:px-5 md:px-6 py-1.5 flex items-center gap-2" style={{ borderBottom: "1px solid var(--separator-subtle)", background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)" }}>
-              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>{emoji} {label}</span>
+          const sectionHeader = (label: string, color: string) => (
+            <div className="px-4 sm:px-5 md:px-6 py-1.5 flex items-center gap-2" style={{ borderBottom: "1px solid var(--separator-subtle)", background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)" }}>
+              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color }}>{label}</span>
             </div>
           );
+          const isEmpty = filteredAllLent.length === 0 && filteredAllBorrowed.length === 0;
           return (<>
             {/* ── MOBILE ── */}
             <div className="md:hidden">
-              {showBanks && filteredLiabilities.length > 0 && (<>
-                {isAll && sectionLabel("Banks", "🏦")}
-                {filteredLiabilities.map((l, idx) => {
-                  const isLast = idx === filteredLiabilities.length - 1 && (!showFriends || filteredFriends.length === 0);
+              {filteredAllLent.length > 0 && (<>
+                {sectionHeader("You Lent", "#34c759")}
+                {filteredAllLent.map((f, idx) => {
+                  const isLast = idx === filteredAllLent.length - 1 && filteredAllBorrowed.length === 0;
+                  return (
+                    <div key={f.id} className="px-4 sm:px-5 py-4" style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}>
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{f.name}</p>
+                        <p className="text-[17px] font-bold shrink-0" style={{ color: "#34c759", letterSpacing: "-0.02em" }}>+{fmtAmt(f.amount, f.currency)}</p>
+                      </div>
+                      <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
+                        <button onClick={() => { const a = mappedAssets.find((a) => a.id === f.id); if (a) openEditLend(a); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}><EditIcon /> Edit</button>
+                        {f.amount > 0 && <button onClick={() => { setReceivingLend({ id: f.id, name: f.name, outstanding: f.amount, currency: f.currency }); setReceivedModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>Received</button>}
+                        <button onClick={() => { setViewingLendLogs(getLendLogs(f.id)); setViewingLogsLiabilityName(f.name); setLogsModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}>Logs</button>
+                        <button onClick={() => handleDelete(f.id)} className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>)}
+
+              {filteredAllBorrowed.length > 0 && (<>
+                {sectionHeader("You Borrowed", "#ff3b30")}
+                {filteredAllBorrowed.map((l, idx) => {
+                  const isLast = idx === filteredAllBorrowed.length - 1;
                   return (
                     <div key={l.id} className="px-4 sm:px-5 py-4" style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{l.lenderName}</p>
-                          {l.name !== l.lenderName && <p className="text-[13px] mt-0.5 truncate" style={{ color: "var(--text-secondary)" }}>{l.name}</p>}
                           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                            <LenderTypeBadge type={l.liabilityType} /><StatusBadge status={l.status} />
+                            <StatusBadge status={l.status} />
                             {daysSince(l.borrowedDate) != null && <span className="text-[12px] font-semibold" style={{ color: "var(--text-tertiary)" }}>{daysSince(l.borrowedDate)}d ago</span>}
                           </div>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-[17px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.02em" }}>{fmtAmt(l.outstandingAmount, l.currency)}</p>
-                          <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--text-tertiary)" }}>of {fmtAmt(l.originalAmount, l.currency)}</p>
+                          {l.outstandingAmount !== l.originalAmount && <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--text-tertiary)" }}>of {fmtAmt(l.originalAmount, l.currency)}</p>}
                         </div>
                       </div>
                       {(l.borrowedDate || l.dueDate) && (
                         <div className="flex items-center gap-4 mt-2">
-                          {l.borrowedDate && <div><p className="text-[10px] uppercase font-semibold" style={{ color: "var(--text-tertiary)", letterSpacing: "0.07em" }}>Borrowed</p><p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>{fmtDate(l.borrowedDate)}</p></div>}
+                          {l.borrowedDate && <div><p className="text-[10px] uppercase font-semibold" style={{ color: "var(--text-tertiary)", letterSpacing: "0.07em" }}>Date</p><p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>{fmtDate(l.borrowedDate)}</p></div>}
                           {l.dueDate && <div><p className="text-[10px] uppercase font-semibold" style={{ color: "var(--text-tertiary)", letterSpacing: "0.07em" }}>Due</p><p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>{fmtDate(l.dueDate)}</p></div>}
                         </div>
                       )}
                       <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
                         <button onClick={() => openEditLiab(l.id)} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}><EditIcon /> Edit</button>
-                        {l.status === "active" && <button onClick={() => { setRepayingLiability({ id: l.id, name: l.name, outstanding: l.outstandingAmount, currency: l.currency }); setRepayModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>Repay</button>}
-                        <button onClick={() => { setViewingLendLogs(null); setViewingLogsLiabilityId(l.id); setViewingLogsLiabilityName(l.name); setLogsModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}>Logs</button>
+                        {l.status === "active" && <button onClick={() => { setRepayingLiability({ id: l.id, name: l.lenderName, outstanding: l.outstandingAmount, currency: l.currency }); setRepayModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>Repay</button>}
+                        <button onClick={() => { setViewingLendLogs(null); setViewingLogsLiabilityId(l.id); setViewingLogsLiabilityName(l.lenderName); setLogsModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}>Logs</button>
                         <button onClick={() => handleDeleteLiability(l.id)} className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
                       </div>
                     </div>
@@ -2316,107 +2234,38 @@ onDataChanged?.();
                 })}
               </>)}
 
-              {showFriends && filteredFriends.length > 0 && (<>
-                {isAll && sectionLabel("Friends", "🤝")}
-                {filteredFriends.map((item, idx) => {
-                  const isLast = idx === filteredFriends.length - 1;
-                  if (item.kind === "lended") {
-                    const f = item as typeof friendsLended[number];
-                    return (
-                      <div key={f.id} className="px-4 sm:px-5 py-4" style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{f.name}</p>
-                            <span className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full mt-1" style={{ background: "rgba(52,199,89,0.12)", color: "#1e7a3e" }}>YOU LENT</span>
-                          </div>
-                          <p className="text-[17px] font-bold shrink-0" style={{ color: "#34c759", letterSpacing: "-0.02em" }}>+{fmtAmt(f.amount, f.currency)}</p>
-                        </div>
-                        <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
-                          <button onClick={() => { const a = mappedAssets.find((a) => a.id === f.id); if (a) openEditLend(a); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}><EditIcon /> Edit</button>
-                          {f.amount > 0 && <button onClick={() => { setReceivingLend({ id: f.id, name: f.name, outstanding: f.amount, currency: f.currency }); setReceivedModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>Received</button>}
-                          <button onClick={() => { setViewingLendLogs(getLendLogs(f.id)); setViewingLogsLiabilityName(f.name); setLogsModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}>Logs</button>
-                          <button onClick={() => handleDelete(f.id)} className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
-                        </div>
-                      </div>
-                    );
-                  } else {
-                    const f = item as typeof friendsBorrowed[number];
-                    return (
-                      <div key={f.id} className="px-4 sm:px-5 py-4" style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{f.name}</p>
-                            {f.label && <p className="text-[13px] mt-0.5 truncate" style={{ color: "var(--text-secondary)" }}>{f.label}</p>}
-                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                              <span className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,59,48,0.1)", color: "#c0281f" }}>YOU BORROWED</span>
-                              <StatusBadge status={f.status} />
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-[17px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.02em" }}>-{fmtAmt(f.amount, f.currency)}</p>
-                            <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--text-tertiary)" }}>of {fmtAmt(f.originalAmount, f.currency)}</p>
-                          </div>
-                        </div>
-                        {(f.borrowedDate || f.dueDate) && (
-                          <div className="flex items-center gap-4 mt-2">
-                            {f.borrowedDate && <div><p className="text-[10px] uppercase font-semibold" style={{ color: "var(--text-tertiary)", letterSpacing: "0.07em" }}>Borrowed</p><p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>{fmtDate(f.borrowedDate)}</p></div>}
-                            {f.dueDate && <div><p className="text-[10px] uppercase font-semibold" style={{ color: "var(--text-tertiary)", letterSpacing: "0.07em" }}>Due</p><p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>{fmtDate(f.dueDate)}</p></div>}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
-                          <button onClick={() => openEditLiab(f.id)} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}><EditIcon /> Edit</button>
-                          {f.status === "active" && <button onClick={() => { setRepayingLiability({ id: f.id, name: f.label ?? f.name, outstanding: f.amount, currency: f.currency }); setRepayModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>Repay</button>}
-                          <button onClick={() => { setViewingLendLogs(null); setViewingLogsLiabilityId(f.id); setViewingLogsLiabilityName(f.label ?? f.name); setLogsModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}>Logs</button>
-                          <button onClick={() => handleDeleteLiability(f.id)} className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
-                        </div>
-                      </div>
-                    );
-                  }
-                })}
-              </>)}
-
-              {noResults && (
+              {isEmpty && (
                 <div className="py-16 flex flex-col items-center gap-2">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>{loansFilter === "friends" ? "🤝" : "🏦"}</div>
-                  <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No {loansFilter === "friends" ? "friend transactions" : loansFilter === "banks" ? "bank loans" : "loans"}</p>
-                  <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>{loansFilter === "friends" ? "Track money you lent or borrowed from friends" : "Add a loan or debt to track it here"}</p>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>🤝</div>
+                  <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No loans yet</p>
+                  <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Track money you lent or borrowed</p>
                 </div>
               )}
             </div>
 
             {/* ── DESKTOP ── */}
             <div className="hidden md:block" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100dvh - 280px)" }}>
-              {/* Banks table */}
-              {showBanks && filteredLiabilities.length > 0 && (<>
-                {isAll && <div className="px-6 py-2 flex items-center gap-2" style={{ borderBottom: "1px solid var(--separator-subtle)", background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)" }}><span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>🏦 Banks</span></div>}
+              {/* You Lent */}
+              {filteredAllLent.length > 0 && (<>
+                {sectionHeader("You Lent", "#34c759")}
                 <table className="w-full">
                   <thead style={{ position: "sticky", top: 0, zIndex: 10, boxShadow: isDark ? "0 1px 0 rgba(255,255,255,0.07)" : "0 1px 0 rgba(0,0,0,0.07)" }}>
                     <tr>
-                      <th className="py-3 pl-6 pr-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>LENDER / LIABILITY</th>
-                      <th className="py-3 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>OUTSTANDING</th>
-                      <th className="py-3 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>ORIGINAL</th>
-                      <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>BORROWED</th>
-                      <th className="py-3 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>DAYS</th>
-                      <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>DUE</th>
-                      <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>STATUS</th>
+                      <th className="py-3 pl-6 pr-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>NAME</th>
+                      <th className="py-3 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>AMOUNT OWED</th>
                       <th className="py-3 pr-6 pl-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredLiabilities.map((l, idx) => (
-                      <tr key={l.id} style={{ borderBottom: idx === filteredLiabilities.length - 1 ? "none" : "1px solid var(--separator-subtle)" }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                        <td className="pl-6 pr-4 py-4"><div className="flex items-center gap-2"><p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{l.lenderName}</p><LenderTypeBadge type={l.liabilityType} /></div>{l.name !== l.lenderName && <p className="text-[13px] mt-0.5" style={{ color: "var(--text-secondary)" }}>{l.name}</p>}</td>
-                        <td className="px-4 py-4 text-right"><span className="text-[15px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.01em" }}>{fmtAmt(l.outstandingAmount, l.currency)}</span></td>
-                        <td className="px-4 py-4 text-right"><span className="text-[15px] font-semibold" style={{ color: "var(--text-secondary)", letterSpacing: "-0.01em" }}>{fmtAmt(l.originalAmount, l.currency)}</span></td>
-                        <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(l.borrowedDate)}</td>
-                        <td className="px-4 py-4 text-right">{(() => { const d = daysSince(l.borrowedDate); return d != null ? <span className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>{d}<span className="text-[12px] font-normal ml-0.5" style={{ color: "var(--text-tertiary)" }}>d</span></span> : <span style={{ color: "var(--text-tertiary)" }}>—</span>; })()}</td>
-                        <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(l.dueDate)}</td>
-                        <td className="px-4 py-4"><StatusBadge status={l.status} /></td>
+                    {filteredAllLent.map((f, idx) => (
+                      <tr key={f.id} style={{ borderBottom: idx === filteredAllLent.length - 1 ? "none" : "1px solid var(--separator-subtle)" }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                        <td className="pl-6 pr-4 py-4"><p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{f.name}</p></td>
+                        <td className="px-4 py-4 text-right"><span className="text-[15px] font-bold" style={{ color: "#34c759", letterSpacing: "-0.01em" }}>+{fmtAmt(f.amount, f.currency)}</span></td>
                         <td className="pr-6 pl-4 py-4"><div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => openEditLiab(l.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} title="Edit"><EditIcon /></button>
-                          {l.status === "active" && <button onClick={() => { setRepayingLiability({ id: l.id, name: l.name, outstanding: l.outstandingAmount, currency: l.currency }); setRepayModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }} title="Repay">Repay</button>}
-                          <button onClick={() => { setViewingLendLogs(null); setViewingLogsLiabilityId(l.id); setViewingLogsLiabilityName(l.name); setLogsModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }} title="Logs">Logs</button>
-                          <button onClick={() => handleDeleteLiability(l.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")} title="Delete"><TrashIcon /></button>
+                          <button onClick={() => { const a = mappedAssets.find((a) => a.id === f.id); if (a) openEditLend(a); }} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} title="Edit"><EditIcon /></button>
+                          {f.amount > 0 && <button onClick={() => { setReceivingLend({ id: f.id, name: f.name, outstanding: f.amount, currency: f.currency }); setReceivedModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>Received</button>}
+                          <button onClick={() => { setViewingLendLogs(getLendLogs(f.id)); setViewingLogsLiabilityName(f.name); setLogsModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }}>Logs</button>
+                          <button onClick={() => handleDelete(f.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
                         </div></td>
                       </tr>
                     ))}
@@ -2424,15 +2273,14 @@ onDataChanged?.();
                 </table>
               </>)}
 
-              {/* Friends table */}
-              {showFriends && filteredFriends.length > 0 && (<>
-                {isAll && <div className="px-6 py-2 flex items-center gap-2" style={{ borderTop: filteredLiabilities.length > 0 ? "1px solid var(--separator-subtle)" : "none", borderBottom: "1px solid var(--separator-subtle)", background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)" }}><span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>🤝 Friends</span></div>}
+              {/* You Borrowed */}
+              {filteredAllBorrowed.length > 0 && (<>
+                {sectionHeader("You Borrowed", "#ff3b30")}
                 <table className="w-full">
                   <thead style={{ position: "sticky", top: 0, zIndex: 10, boxShadow: isDark ? "0 1px 0 rgba(255,255,255,0.07)" : "0 1px 0 rgba(0,0,0,0.07)" }}>
                     <tr>
-                      <th className="py-3 pl-6 pr-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>FRIEND</th>
-                      <th className="py-3 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>AMOUNT</th>
-                      <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>TYPE</th>
+                      <th className="py-3 pl-6 pr-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>NAME</th>
+                      <th className="py-3 px-4 text-right text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>OUTSTANDING</th>
                       <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>DATE</th>
                       <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>DUE</th>
                       <th className="py-3 px-4 text-left text-[11px] font-semibold uppercase" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}>STATUS</th>
@@ -2440,55 +2288,33 @@ onDataChanged?.();
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredFriends.map((item, idx) => {
-                      const isLast = idx === filteredFriends.length - 1;
-                      if (item.kind === "lended") {
-                        const f = item as typeof friendsLended[number];
-                        return (
-                          <tr key={f.id} style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                            <td className="pl-6 pr-4 py-4"><p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{f.name}</p></td>
-                            <td className="px-4 py-4 text-right"><span className="text-[15px] font-bold" style={{ color: "#34c759", letterSpacing: "-0.01em" }}>+{fmtAmt(f.amount, f.currency)}</span></td>
-                            <td className="px-4 py-4"><span className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(52,199,89,0.12)", color: "#1e7a3e" }}>YOU LENT</span></td>
-                            <td className="px-4 py-4 text-[14px]" style={{ color: "var(--text-secondary)" }}>—</td>
-                            <td className="px-4 py-4 text-[14px]" style={{ color: "var(--text-secondary)" }}>—</td>
-                            <td className="px-4 py-4"><span className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(52,199,89,0.1)", color: "#34c759" }}>Active</span></td>
-                            <td className="pr-6 pl-4 py-4"><div className="flex items-center justify-end gap-1.5">
-                              <button onClick={() => { const a = mappedAssets.find((a) => a.id === f.id); if (a) openEditLend(a); }} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} title="Edit"><EditIcon /></button>
-                              {f.amount > 0 && <button onClick={() => { setReceivingLend({ id: f.id, name: f.name, outstanding: f.amount, currency: f.currency }); setReceivedModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }} title="Mark Received">Received</button>}
-                              <button onClick={() => { setViewingLendLogs(getLendLogs(f.id)); setViewingLogsLiabilityName(f.name); setLogsModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }} title="Logs">Logs</button>
-                              <button onClick={() => handleDelete(f.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")} title="Delete"><TrashIcon /></button>
-                            </div></td>
-                          </tr>
-                        );
-                      } else {
-                        const f = item as typeof friendsBorrowed[number];
-                        return (
-                          <tr key={f.id} style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                            <td className="pl-6 pr-4 py-4"><p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{f.name}</p>{f.label && <p className="text-[13px] mt-0.5" style={{ color: "var(--text-secondary)" }}>{f.label}</p>}</td>
-                            <td className="px-4 py-4 text-right"><span className="text-[15px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.01em" }}>-{fmtAmt(f.amount, f.currency)}</span><p className="text-[12px] mt-0.5 font-medium text-right" style={{ color: "var(--text-tertiary)" }}>of {fmtAmt(f.originalAmount, f.currency)}</p></td>
-                            <td className="px-4 py-4"><span className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,59,48,0.1)", color: "#c0281f" }}>YOU BORROWED</span></td>
-                            <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(f.borrowedDate)}</td>
-                            <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(f.dueDate)}</td>
-                            <td className="px-4 py-4"><StatusBadge status={f.status} /></td>
-                            <td className="pr-6 pl-4 py-4"><div className="flex items-center justify-end gap-1.5">
-                              <button onClick={() => openEditLiab(f.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} title="Edit"><EditIcon /></button>
-                              {f.status === "active" && <button onClick={() => { setRepayingLiability({ id: f.id, name: f.label ?? f.name, outstanding: f.amount, currency: f.currency }); setRepayModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }} title="Repay">Repay</button>}
-                              <button onClick={() => { setViewingLendLogs(null); setViewingLogsLiabilityId(f.id); setViewingLogsLiabilityName(f.label ?? f.name); setLogsModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }} title="Logs">Logs</button>
-                              <button onClick={() => handleDeleteLiability(f.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")} title="Delete"><TrashIcon /></button>
-                            </div></td>
-                          </tr>
-                        );
-                      }
-                    })}
+                    {filteredAllBorrowed.map((l, idx) => (
+                      <tr key={l.id} style={{ borderBottom: idx === filteredAllBorrowed.length - 1 ? "none" : "1px solid var(--separator-subtle)" }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                        <td className="pl-6 pr-4 py-4"><p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{l.lenderName}</p></td>
+                        <td className="px-4 py-4 text-right">
+                          <span className="text-[15px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.01em" }}>{fmtAmt(l.outstandingAmount, l.currency)}</span>
+                          {l.outstandingAmount !== l.originalAmount && <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--text-tertiary)" }}>of {fmtAmt(l.originalAmount, l.currency)}</p>}
+                        </td>
+                        <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(l.borrowedDate)}</td>
+                        <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(l.dueDate)}</td>
+                        <td className="px-4 py-4"><StatusBadge status={l.status} /></td>
+                        <td className="pr-6 pl-4 py-4"><div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => openEditLiab(l.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} title="Edit"><EditIcon /></button>
+                          {l.status === "active" && <button onClick={() => { setRepayingLiability({ id: l.id, name: l.lenderName, outstanding: l.outstandingAmount, currency: l.currency }); setRepayModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>Repay</button>}
+                          <button onClick={() => { setViewingLendLogs(null); setViewingLogsLiabilityId(l.id); setViewingLogsLiabilityName(l.lenderName); setLogsModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }}>Logs</button>
+                          <button onClick={() => handleDeleteLiability(l.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
+                        </div></td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </>)}
 
-              {noResults && (
+              {isEmpty && (
                 <div className="py-16 flex flex-col items-center gap-2">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>{loansFilter === "friends" ? "🤝" : "🏦"}</div>
-                  <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No {loansFilter === "friends" ? "friend transactions" : loansFilter === "banks" ? "bank loans" : "loans"}</p>
-                  <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>{loansFilter === "friends" ? "Track money you lent or borrowed from friends" : "Add a loan or debt to track it here"}</p>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>🤝</div>
+                  <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No loans yet</p>
+                  <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Track money you lent or borrowed</p>
                 </div>
               )}
             </div>
