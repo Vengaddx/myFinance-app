@@ -1333,18 +1333,62 @@ onDataChanged?.();
       ws = XLSX.utils.json_to_sheet(rows);
       fileName = `expenses_${expenseMonthKey}.xlsx`;
     } else {
-      const rows = filteredLiabilities.map((l) => ({
-        Name: l.name,
-        Lender: l.lenderName,
-        Type: l.liabilityType,
-        Currency: l.currency,
-        "Original Amount": l.originalAmount,
-        "Outstanding Amount": l.outstandingAmount,
-        "Borrowed Date": l.borrowedDate ?? "",
-        "Due Date": l.dueDate ?? "",
-        Status: l.status,
-        Notes: l.notes,
-      }));
+      const bankRows = loansFilter !== "friends"
+        ? filteredLiabilities.map((l) => ({
+            Name: l.name,
+            Lender: l.lenderName,
+            Direction: "You Borrowed (Bank)",
+            Currency: l.currency,
+            "Original Amount": l.originalAmount,
+            "Outstanding Amount": l.outstandingAmount,
+            "Borrowed Date": l.borrowedDate ?? "",
+            "Due Date": l.dueDate ?? "",
+            Status: l.status,
+            Notes: l.notes,
+          }))
+        : [];
+
+      const lendedRows = loansFilter !== "banks"
+        ? filteredFriends
+            .filter((f) => f.kind === "lended")
+            .map((f) => {
+              const fl = f as typeof friendsLended[number];
+              return {
+                Name: fl.name,
+                Lender: "—",
+                Direction: "You Lent",
+                Currency: fl.currency,
+                "Original Amount": fl.amount,
+                "Outstanding Amount": fl.amount,
+                "Borrowed Date": "",
+                "Due Date": "",
+                Status: "active",
+                Notes: "",
+              };
+            })
+        : [];
+
+      const borrowedRows = loansFilter !== "banks"
+        ? filteredFriends
+            .filter((f) => f.kind === "borrowed")
+            .map((f) => {
+              const fb = f as typeof friendsBorrowed[number];
+              return {
+                Name: fb.name,
+                Lender: fb.name,
+                Direction: "You Borrowed (Friend)",
+                Currency: fb.currency,
+                "Original Amount": fb.originalAmount,
+                "Outstanding Amount": fb.amount,
+                "Borrowed Date": fb.borrowedDate ?? "",
+                "Due Date": fb.dueDate ?? "",
+                Status: fb.status,
+                Notes: "",
+              };
+            })
+        : [];
+
+      const rows = [...bankRows, ...lendedRows, ...borrowedRows];
       ws = XLSX.utils.json_to_sheet(rows);
       fileName = `liabilities_${new Date().toISOString().slice(0, 10)}.xlsx`;
     }
