@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import * as XLSX from "xlsx";
 import { AssetCategory } from "../data/assets";
 import AddAssetModal, { AssetFormData } from "./AddAssetModal";
 import AddLiabilityModal, { LiabilityFormData } from "./AddLiabilityModal";
@@ -1285,65 +1284,242 @@ onDataChanged?.();
     }
   };
 
-  const handleDownload = () => {
-    let ws: XLSX.WorkSheet;
-    let fileName: string;
+  const handleGlobalDownload = async () => {
+    try {
+      const ExcelJSModule = await import("exceljs");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ExcelJS: any = (ExcelJSModule as any).default ?? ExcelJSModule;
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "MyFinance";
+      workbook.created = new Date();
 
-    if (sectionTab === "assets") {
-      const rows = filtered.map((a) => ({
-        Name: a.name,
-        Category: CATEGORY_META[a.category as AssetCategory]?.label ?? a.category,
-        "Current Value (₹)": a.curVal,
-        "P&L (₹)": a.pnl,
-        "P&L (%)": parseFloat(a.pnlPct.toFixed(2)),
-        "Allocation (%)": a.allocation,
+      // ─── Design tokens ─────────────────────────────────────────
+      const C = {
+        BLUE:       "FF2563EB",
+        BLUE_DARK:  "FF1E3A8A",
+        GREEN:      "FF16A34A",
+        RED:        "FFDC2626",
+        WHITE:      "FFFFFFFF",
+        ROW_ALT:    "FFF8FAFC",
+        BORDER:     "FFE2E8F0",
+        BORDER_HDR: "FF1D4ED8",
+        MUTED:      "FF64748B",
+      };
+
+      const thin = (argb: string) => ({ style: "thin" as const, color: { argb } });
+      const medium = (argb: string) => ({ style: "medium" as const, color: { argb } });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const styleHeader = (row: any) => {
+        row.height = 28;
+        row.eachCell((cell: any) => {
+          cell.font = { bold: true, color: { argb: C.WHITE }, size: 11 };
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: C.BLUE } };
+          cell.alignment = { vertical: "middle", horizontal: "center" };
+          cell.border = { bottom: medium(C.BORDER_HDR), right: thin(C.BORDER_HDR) };
+        });
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const styleDataRow = (row: any, idx: number) => {
+        const bg = idx % 2 === 0 ? C.WHITE : C.ROW_ALT;
+        row.height = 21;
+        row.eachCell({ includeEmpty: true }, (cell: any) => {
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: bg } };
+          cell.alignment = { vertical: "middle" };
+          cell.border = { top: thin(C.BORDER), left: thin(C.BORDER), bottom: thin(C.BORDER), right: thin(C.BORDER) };
+        });
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const styleTotalRow = (row: any) => {
+        row.height = 26;
+        row.eachCell({ includeEmpty: true }, (cell: any) => {
+          cell.font = { bold: true, color: { argb: C.WHITE }, size: 11 };
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: C.BLUE_DARK } };
+          cell.alignment = { vertical: "middle" };
+          cell.border = { top: medium(C.BORDER_HDR) };
+        });
+      };
+
+      // ─── SHEET 1: ASSETS ───────────────────────────────────────
+      const ws1 = workbook.addWorksheet("Assets", {
+        views: [{ state: "frozen", xSplit: 0, ySplit: 1 }],
+      });
+
+      ws1.columns = [
+        { key: "name",       width: 34, header: "Asset Name" },
+        { key: "category",   width: 20, header: "Category" },
+        { key: "curVal",     width: 22, header: "Current Value (₹)" },
+        { key: "invested",   width: 20, header: "Invested (₹)" },
+        { key: "pnl",        width: 18, header: "P&L (₹)" },
+        { key: "pnlPct",     width: 13, header: "P&L (%)" },
+        { key: "allocation", width: 14, header: "Allocation (%)" },
+      ];
+
+      styleHeader(ws1.getRow(1));
+
+      const totalPortfolioVal =
+        mappedAssets.reduce((s, a) => s + a.curVal, 0) +
+        kiteUiAssets.reduce((s, a) => s + a.curVal, 0);
+
+      const assetsForReport = [
+        ...mappedAssets.map((a) => ({
+          name: a.name,
+          category: CATEGORY_META[a.category as AssetCategory]?.label ?? a.category,
+          curVal: a.curVal,
+          invested: a.invested,
+          pnl: a.pnl,
+          pnlPct: a.pnlPct,
+          allocation: totalPortfolioVal > 0 ? (a.curVal / totalPortfolioVal) * 100 : 0,
+        })),
+        ...kiteUiAssets.map((h) => ({
+          name: h.name + (h.accountLabel ? ` (${h.accountLabel})` : ""),
+          category: "Stocks & ETFs",
+          curVal: h.curVal,
+          invested: h.invested,
+          pnl: h.pnl,
+          pnlPct: h.pnlPct,
+          allocation: totalPortfolioVal > 0 ? (h.curVal / totalPortfolioVal) * 100 : 0,
+        })),
+      ];
+
+      assetsForReport.forEach((a, idx) => {
+        const row = ws1.addRow({
+          name: a.name,
+          category: a.category,
+          curVal: a.curVal,
+          invested: a.invested,
+          pnl: a.pnl,
+          pnlPct: parseFloat(a.pnlPct.toFixed(2)),
+          allocation: parseFloat(a.allocation.toFixed(2)),
+        });
+        styleDataRow(row, idx);
+        row.getCell("curVal").numFmt = "#,##0.00";
+        row.getCell("invested").numFmt = "#,##0.00";
+        row.getCell("pnl").numFmt = "#,##0.00";
+        row.getCell("pnlPct").numFmt = "0.00";
+        row.getCell("allocation").numFmt = "0.00";
+        const pnlColor = a.pnl >= 0 ? C.GREEN : C.RED;
+        row.getCell("pnl").font = { color: { argb: pnlColor } };
+        row.getCell("pnlPct").font = { color: { argb: pnlColor } };
+      });
+
+      const aTotalCurVal = assetsForReport.reduce((s, a) => s + a.curVal, 0);
+      const aTotalInv    = assetsForReport.reduce((s, a) => s + a.invested, 0);
+      const aTotalPnl    = aTotalCurVal - aTotalInv;
+      const aTotalPnlPct = aTotalInv > 0 ? (aTotalPnl / aTotalInv) * 100 : 0;
+
+      const totRow1 = ws1.addRow({
+        name: "TOTAL",
+        category: `${assetsForReport.length} assets`,
+        curVal: aTotalCurVal,
+        invested: aTotalInv,
+        pnl: aTotalPnl,
+        pnlPct: parseFloat(aTotalPnlPct.toFixed(2)),
+        allocation: 100,
+      });
+      styleTotalRow(totRow1);
+      totRow1.getCell("curVal").numFmt = "#,##0.00";
+      totRow1.getCell("invested").numFmt = "#,##0.00";
+      totRow1.getCell("pnl").numFmt = "#,##0.00";
+      totRow1.getCell("pnlPct").numFmt = "0.00";
+      totRow1.getCell("allocation").numFmt = "0.00";
+
+      // ─── SHEET 2: LIABILITIES ──────────────────────────────────
+      const ws2 = workbook.addWorksheet("Liabilities", {
+        views: [{ state: "frozen", xSplit: 0, ySplit: 1 }],
+      });
+
+      ws2.columns = [
+        { key: "name",        width: 30, header: "Name" },
+        { key: "direction",   width: 15, header: "Direction" },
+        { key: "type",        width: 12, header: "Type" },
+        { key: "original",    width: 22, header: "Original Amount (₹)" },
+        { key: "outstanding", width: 22, header: "Outstanding (₹)" },
+        { key: "currency",    width: 11, header: "Currency" },
+        { key: "dueDate",     width: 14, header: "Due Date" },
+        { key: "status",      width: 12, header: "Status" },
+      ];
+
+      styleHeader(ws2.getRow(1));
+
+      const lentData = mappedAssets
+        .filter((a) => a.category === "lended")
+        .map((a) => ({
+          name: a.name,
+          direction: "You Lent",
+          type: "Friend",
+          original: a.invested > 0 ? a.invested : a.curVal,
+          outstanding: a.curVal,
+          currency: "INR",
+          dueDate: "",
+          status: "Active",
+        }));
+
+      const borrowedData = mappedLiabilities.map((l) => ({
+        name: l.name,
+        direction: "You Borrowed",
+        type: l.liabilityType === "friend" ? "Friend" : "Bank",
+        original: l.originalAmount,
+        outstanding: l.outstandingAmount,
+        currency: l.currency,
+        dueDate: l.dueDate ?? "",
+        status: l.status.charAt(0).toUpperCase() + l.status.slice(1),
       }));
-      ws = XLSX.utils.json_to_sheet(rows);
-      fileName = `assets_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    } else if (sectionTab === "expenses") {
-      const rows = filteredExpenses.map((e) => ({
-        Title: e.title,
-        Category: e.category,
-        "Amount (₹)": e.amount,
-        Date: e.expense_date,
-        Month: e.month_key,
-        "Claim Eligible": e.claim_eligible ? "Yes" : "No",
-        "Claim Submitted": e.claim_submitted ? "Yes" : "No",
-        "Splitwise Applicable": e.splitwise_applicable ? "Yes" : "No",
-        "Splitwise Added": e.splitwise_added ? "Yes" : "No",
-        Notes: e.notes ?? "",
-      }));
-      ws = XLSX.utils.json_to_sheet(rows);
-      fileName = `expenses_${expenseMonthKey}.xlsx`;
-    } else {
-      const lentRows = filteredAllLent.map((f) => ({
-        Name: f.name,
-        Direction: "You Lent",
-        "Amount Owed": f.amount,
-        Currency: f.currency,
-        "Loan Amount": f.amount,
-        "Date": "",
-        "Due Date": "",
-        Status: "active",
-      }));
-      const borrowedRows = filteredAllBorrowed.map((l) => ({
-        Name: l.lenderName,
-        Direction: "You Borrowed",
-        "Amount Owed": l.outstandingAmount,
-        Currency: l.currency,
-        "Loan Amount": l.originalAmount,
-        "Date": l.borrowedDate ?? "",
-        "Due Date": l.dueDate ?? "",
-        Status: l.status,
-      }));
-      const rows = [...lentRows, ...borrowedRows];
-      ws = XLSX.utils.json_to_sheet(rows);
-      fileName = `loans_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+      [...lentData, ...borrowedData].forEach((l, idx) => {
+        const row = ws2.addRow(l);
+        styleDataRow(row, idx);
+        row.getCell("original").numFmt = "#,##0.00";
+        row.getCell("outstanding").numFmt = "#,##0.00";
+        row.getCell("direction").font = {
+          color: { argb: l.direction === "You Lent" ? C.GREEN : C.RED },
+          bold: true,
+        };
+        row.getCell("status").font = {
+          color: { argb: l.status.toLowerCase() === "active" ? C.GREEN : C.MUTED },
+        };
+      });
+
+      const lTotalOriginal    = [...lentData, ...borrowedData].reduce((s, l) => s + l.original, 0);
+      const lTotalOutstanding = [...lentData, ...borrowedData].reduce((s, l) => s + l.outstanding, 0);
+      const lTotalLent        = lentData.reduce((s, l) => s + l.outstanding, 0);
+      const lTotalBorrowed    = borrowedData.reduce((s, l) => s + l.outstanding, 0);
+
+      const totRow2 = ws2.addRow({
+        name: "TOTAL",
+        direction: `${lentData.length} lent · ${borrowedData.length} borrowed`,
+        type: "",
+        original: lTotalOriginal,
+        outstanding: lTotalOutstanding,
+        currency: "",
+        dueDate: `Lent: ₹${lTotalLent.toLocaleString("en-IN")}`,
+        status: `Owed: ₹${lTotalBorrowed.toLocaleString("en-IN")}`,
+      });
+      styleTotalRow(totRow2);
+      totRow2.getCell("original").numFmt = "#,##0.00";
+      totRow2.getCell("outstanding").numFmt = "#,##0.00";
+
+      // ─── Download ───────────────────────────────────────────────
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `myfinance_report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast("Report downloaded", "success");
+    } catch (err) {
+      console.error("Report download failed:", err);
+      showToast("Failed to generate report", "error");
     }
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, sectionTab === "assets" ? "Assets" : "Liabilities");
-    XLSX.writeFile(wb, fileName);
   };
 
   const handleAddClick = () => {
@@ -1644,7 +1820,7 @@ onDataChanged?.();
               />
             </div>
 
-            <button onClick={handleDownload} title="Download as Excel" className="icon-btn hidden md:flex w-[34px] h-[34px] items-center justify-center rounded-[10px] text-[#aeaeb2] hover:text-[#1d1d1f] hover:bg-black/5">
+            <button onClick={handleGlobalDownload} title="Download Full Report" className="icon-btn hidden md:flex w-[34px] h-[34px] items-center justify-center rounded-[10px] text-[#aeaeb2] hover:text-[#1d1d1f] hover:bg-black/5">
               <DownloadIcon />
             </button>
 
