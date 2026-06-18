@@ -85,7 +85,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
     height: 42,
     padding: "0 14px",
     borderRadius: 12,
-    border: `1px solid ${hasError ? "#ff3b30" : inputBorder}`,
+    border: `1px solid ${hasError ? "#DC2626" : inputBorder}`,
     background: hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg,
     fontSize: 16,
     color: inputColor,
@@ -101,7 +101,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
   };
 
   const onBlur = (hasError?: boolean) => (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.borderColor = hasError ? "#ff3b30" : inputBorder;
+    e.currentTarget.style.borderColor = hasError ? "#DC2626" : inputBorder;
     e.currentTarget.style.boxShadow = "none";
     e.currentTarget.style.background = hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg;
   };
@@ -177,7 +177,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
               style={{ background: isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.05)" }}
             >
               <span className="text-[13px] font-medium" style={{ color: labelColor }}>Outstanding balance</span>
-              <span className="text-[15px] font-bold" style={{ color: "#ff3b30" }}>
+              <span className="text-[15px] font-bold" style={{ color: "#DC2626" }}>
                 {currencySymbol}{outstanding.toLocaleString("en-IN")}
               </span>
             </div>
@@ -188,10 +188,10 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
             {/* Amount */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
-                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: (errors.amount || errors.amountExceeds) ? "#ff3b30" : labelColor }}>
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: (errors.amount || errors.amountExceeds) ? "#DC2626" : labelColor }}>
                   Repayment Amount
                 </label>
-                <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
+                <span className="text-[#DC2626] text-[12px] leading-none">*</span>
               </div>
               <input
                 ref={amountRef}
@@ -205,8 +205,8 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
                 onFocus={onFocus}
                 onBlur={onBlur(errors.amount || errors.amountExceeds)}
               />
-              {errors.amount && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Enter a valid amount</p>}
-              {errors.amountExceeds && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Cannot exceed outstanding ({currencySymbol}{outstanding.toLocaleString("en-IN")})</p>}
+              {errors.amount && <p className="text-[12px]" style={{ color: "#DC2626" }}>Enter a valid amount</p>}
+              {errors.amountExceeds && <p className="text-[12px]" style={{ color: "#DC2626" }}>Cannot exceed outstanding ({currencySymbol}{outstanding.toLocaleString("en-IN")})</p>}
             </div>
 
             {/* Date */}
@@ -255,7 +255,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
               disabled={saving}
               className="h-10 px-6 rounded-[12px] text-[14px] font-semibold text-white"
               style={{
-                background: saving ? "#5ac8fa" : "#34c759",
+                background: saving ? "#5ac8fa" : "#16A34A",
                 transition: "background 150ms ease, transform 150ms ease",
               }}
               onMouseEnter={(e) => {
@@ -265,7 +265,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
                 }
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = saving ? "#5ac8fa" : "#34c759";
+                (e.currentTarget as HTMLElement).style.background = saving ? "#5ac8fa" : "#16A34A";
                 (e.currentTarget as HTMLElement).style.transform = "none";
               }}
             >

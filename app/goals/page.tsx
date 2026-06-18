@@ -207,7 +207,7 @@ const MILESTONES = [
   50_000_000, 100_000_000,
 ];
 
-const COMPARE_COLORS = ["#007aff", "#AEDD00", "#ff9f0a", "#bf5af2", "#ff6b6b"];
+const COMPARE_COLORS = ["#2563EB", "#AEDD00", "#ff9f0a", "#bf5af2", "#ff6b6b"];
 const MAX_COMPARE = 5;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -235,7 +235,7 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: any[] }
       <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: point.events.length ? 10 : 0 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
           <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--text-secondary)" }}>
-            <span style={{ width: 10, height: 3, borderRadius: 2, background: "#007aff", display: "inline-block", flexShrink: 0 }} />
+            <span style={{ width: 10, height: 3, borderRadius: 2, background: "#2563EB", display: "inline-block", flexShrink: 0 }} />
             Planned
           </span>
           <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>{fmtINR(point.netWorth)}</span>
@@ -243,10 +243,10 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: any[] }
         {hasActual && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--text-secondary)" }}>
-              <span style={{ width: 10, height: 3, borderRadius: 2, background: "#34c759", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ width: 10, height: 3, borderRadius: 2, background: "#16A34A", display: "inline-block", flexShrink: 0 }} />
               Actual
             </span>
-            <span style={{ fontWeight: 700, fontSize: 14, color: "#34c759" }}>{fmtINR(point.actualNetWorth!)}</span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "#16A34A" }}>{fmtINR(point.actualNetWorth!)}</span>
           </div>
         )}
       </div>
@@ -255,7 +255,7 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: any[] }
           key={ev.id}
           style={{
             fontSize: 12,
-            color: ev.event_type === "expense" ? "#ff3b30" : "#34c759",
+            color: ev.event_type === "expense" ? "#DC2626" : "#16A34A",
             display: "flex",
             gap: 6,
             alignItems: "center",
@@ -309,7 +309,7 @@ function CompareTooltip({
       </div>
       {compareScenarios.map((s) => {
         const val = typeof point[s.id] === "number" ? (point[s.id] as number) : null;
-        const color = colorMap[s.id] ?? "#007aff";
+        const color = colorMap[s.id] ?? "#2563EB";
         return (
           <div
             key={s.id}
@@ -372,7 +372,7 @@ function SliderRow({
   step,
   onChange,
   display,
-  accentColor = "#007aff",
+  accentColor = "#2563EB",
 }: {
   label: string;
   hint?: string;
@@ -451,7 +451,7 @@ function FIREView({
   }, [monthsToFIRE]);
   const passiveMonthly = useMemo(() => fireCorpus > 0 ? (fireCorpus * (swrPct / 100)) / 12 : 0, [fireCorpus, swrPct]);
 
-  const progressColor = progress >= 100 ? "#34c759" : progress >= 50 ? "#007aff" : "#ff9500";
+  const progressColor = progress >= 100 ? "#16A34A" : progress >= 50 ? "#2563EB" : "#D97706";
   const timeLabel = monthsToFIRE == null
     ? "60+ yrs"
     : monthsToFIRE === 0
@@ -477,7 +477,7 @@ function FIREView({
         </p>
         <p style={{
           margin: 0, fontSize: 48, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1,
-          color: monthsToFIRE === 0 ? "#34c759" : monthsToFIRE == null ? "#ff9500" : "var(--text-primary)",
+          color: monthsToFIRE === 0 ? "#16A34A" : monthsToFIRE == null ? "#D97706" : "var(--text-primary)",
         }}>
           {timeLabel}
         </p>
@@ -498,7 +498,7 @@ function FIREView({
           <div style={{ height: 8, borderRadius: 4, background: "rgba(120,120,128,0.12)", overflow: "hidden" }}>
             <div style={{
               height: "100%", borderRadius: 4, width: `${progress}%`,
-              background: progress >= 100 ? "#34c759" : `linear-gradient(90deg, #ff9500 0%, #007aff 60%, #34c759 100%)`,
+              background: progress >= 100 ? "#16A34A" : `linear-gradient(90deg, #D97706 0%, #2563EB 60%, #16A34A 100%)`,
               transition: "width 300ms ease",
             }} />
           </div>
@@ -512,9 +512,9 @@ function FIREView({
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           {[
             { label: "Corpus Needed", value: fmtINR(fireCorpus), color: "var(--text-primary)" },
-            { label: "Monthly Passive", value: `${fmtINR(passiveMonthly)}/mo`, color: "#34c759" },
-            { label: "Gap Remaining", value: fireCorpus > currentNetWorth ? fmtINR(fireCorpus - currentNetWorth) : "Achieved!", color: "#ff9500" },
-            { label: "Annual Expenses", value: fmtINR(monthlyExp * 12), color: "#ff3b30" },
+            { label: "Monthly Passive", value: `${fmtINR(passiveMonthly)}/mo`, color: "#16A34A" },
+            { label: "Gap Remaining", value: fireCorpus > currentNetWorth ? fmtINR(fireCorpus - currentNetWorth) : "Achieved!", color: "#D97706" },
+            { label: "Annual Expenses", value: fmtINR(monthlyExp * 12), color: "#DC2626" },
           ].map((s) => (
             <div key={s.label} style={{ background: "rgba(120,120,128,0.06)", borderRadius: 14, padding: "12px 14px" }}>
               <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>{s.label}</p>
@@ -539,7 +539,7 @@ function FIREView({
             step={5000}
             onChange={setMonthlyExp}
             display={fmtINR(monthlyExp)}
-            accentColor="#ff3b30"
+            accentColor="#DC2626"
           />
           <SliderRow
             label="Monthly Investment"
@@ -549,7 +549,7 @@ function FIREView({
             step={5000}
             onChange={setMonthlyInv}
             display={fmtINR(monthlyInv)}
-            accentColor="#34c759"
+            accentColor="#16A34A"
           />
           <SliderRow
             label="Expected ROI / year"
@@ -559,7 +559,7 @@ function FIREView({
             step={0.5}
             onChange={setRoiPct}
             display={`${roiPct}%`}
-            accentColor="#007aff"
+            accentColor="#2563EB"
           />
           <SliderRow
             label="Safe Withdrawal Rate"
@@ -909,7 +909,7 @@ export default function GoalsPage() {
       const points = calculateProjection(eff, evs);
       return {
         scenario: s,
-        color: compareColorMap[s.id] ?? "#007aff",
+        color: compareColorMap[s.id] ?? "#2563EB",
         finalNW: points[points.length - 1]?.netWorth ?? 0,
       };
     });
@@ -1072,7 +1072,7 @@ export default function GoalsPage() {
                       ? `${color}22`
                       : "var(--surface)"
                     : active
-                    ? "#007aff"
+                    ? "#2563EB"
                     : "var(--surface)",
                   color: compareMode
                     ? inCompare
@@ -1087,7 +1087,7 @@ export default function GoalsPage() {
                         ? color
                         : "var(--separator)"
                       : active
-                      ? "#007aff"
+                      ? "#2563EB"
                       : "var(--separator)"
                   }`,
                   cursor: "pointer",
@@ -1140,7 +1140,7 @@ export default function GoalsPage() {
                       style={{
                         background: "none",
                         border: "none",
-                        color: active ? "rgba(255,255,255,0.6)" : "#ff3b30",
+                        color: active ? "rgba(255,255,255,0.6)" : "#DC2626",
                         cursor: "pointer",
                         padding: "0 2px",
                         fontSize: 16,
@@ -1173,7 +1173,7 @@ export default function GoalsPage() {
                 borderRadius: 20,
                 background: "transparent",
                 border: "1.5px dashed var(--separator)",
-                color: "#007aff",
+                color: "#2563EB",
                 cursor: "pointer",
                 fontWeight: 600,
                 fontSize: 13,
@@ -1244,7 +1244,7 @@ export default function GoalsPage() {
                 justifyContent: "center",
               }}
             >
-              <IconTrendingUp size={38} stroke="#007aff" />
+              <IconTrendingUp size={38} stroke="#2563EB" />
             </div>
             <div>
               <h2
@@ -1275,7 +1275,7 @@ export default function GoalsPage() {
               style={{
                 padding: "13px 32px",
                 borderRadius: 24,
-                background: "#007aff",
+                background: "#2563EB",
                 color: "#fff",
                 border: "none",
                 fontWeight: 700,
@@ -1776,7 +1776,7 @@ export default function GoalsPage() {
                     flexShrink: 0,
                   }}
                 >
-                  <IconArrowUpRight size={16} stroke="#34c759" />
+                  <IconArrowUpRight size={16} stroke="#16A34A" />
                 </div>
                 <span
                   style={{
@@ -1787,11 +1787,11 @@ export default function GoalsPage() {
                   }}
                 >
                   At this pace, you could reach{" "}
-                  <span style={{ color: "#007aff" }}>
+                  <span style={{ color: "#2563EB" }}>
                     {fmtINR(nextMilestone.amount)}
                   </span>{" "}
                   by{" "}
-                  <span style={{ color: "#34c759", fontWeight: 700 }}>
+                  <span style={{ color: "#16A34A", fontWeight: 700 }}>
                     {nextMilestone.point.label}
                   </span>
                 </span>
@@ -1803,20 +1803,20 @@ export default function GoalsPage() {
               {(
                 [
                   {
-                    icon: <IconTrendingUp size={16} stroke="#007aff" />,
+                    icon: <IconTrendingUp size={16} stroke="#2563EB" />,
                     iconBg: "rgba(0,122,255,0.10)",
                     label: "Projected NW",
                     value: fmtINR(metrics.final),
                     sub: `in ${horizonLabel(selectedScenario.months)}`,
-                    color: "#007aff",
+                    color: "#2563EB",
                   },
                   {
-                    icon: <IconPlusCircle size={16} stroke="#34c759" />,
+                    icon: <IconPlusCircle size={16} stroke="#16A34A" />,
                     iconBg: "rgba(52,199,89,0.10)",
                     label: "Contributions",
                     value: fmtINR(metrics.totalContributions),
                     sub: `₹${fmtShort(selectedScenario.monthly_investment)}/mo`,
-                    color: "#34c759",
+                    color: "#16A34A",
                   },
                   {
                     icon: <IconStar size={16} stroke="#AEDD00" />,
@@ -1827,7 +1827,7 @@ export default function GoalsPage() {
                     color: "#AEDD00",
                   },
                   {
-                    icon: <IconTag size={16} stroke={metrics.totalExpenses > 0 ? "#ff3b30" : "var(--text-tertiary)"} />,
+                    icon: <IconTag size={16} stroke={metrics.totalExpenses > 0 ? "#DC2626" : "var(--text-tertiary)"} />,
                     iconBg: metrics.totalExpenses > 0 ? "rgba(255,59,48,0.08)" : "var(--surface-secondary)",
                     label: "Planned Expenses",
                     value: fmtINR(metrics.totalExpenses),
@@ -1835,7 +1835,7 @@ export default function GoalsPage() {
                       metrics.totalIncome > 0
                         ? `+${fmtINR(metrics.totalIncome)} inflows`
                         : "one-time events",
-                    color: metrics.totalExpenses > 0 ? "#ff3b30" : "var(--text-tertiary)",
+                    color: metrics.totalExpenses > 0 ? "#DC2626" : "var(--text-tertiary)",
                   },
                 ] as { icon: React.ReactNode; iconBg: string; label: string; value: string; sub: string; color: string }[]
               ).map((card) => (
@@ -1946,23 +1946,23 @@ export default function GoalsPage() {
                   {/* Planned / Actual legend */}
                   <div style={{ display: "flex", gap: 12, fontSize: 12, color: "var(--text-secondary)", alignItems: "center" }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{ width: 14, height: 3, borderRadius: 2, background: "#007aff", display: "inline-block", flexShrink: 0 }} />
+                      <span style={{ width: 14, height: 3, borderRadius: 2, background: "#2563EB", display: "inline-block", flexShrink: 0 }} />
                       Planned
                     </span>
                     {showActual && (
                       <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                        <span style={{ width: 14, height: 3, borderRadius: 2, background: "#34c759", display: "inline-block", flexShrink: 0 }} />
+                        <span style={{ width: 14, height: 3, borderRadius: 2, background: "#16A34A", display: "inline-block", flexShrink: 0 }} />
                         Actual
                       </span>
                     )}
                     {!showActual && (
                       <>
                         <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff3b30", display: "inline-block", flexShrink: 0 }} />
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#DC2626", display: "inline-block", flexShrink: 0 }} />
                           Expense
                         </span>
                         <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34c759", display: "inline-block", flexShrink: 0 }} />
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#16A34A", display: "inline-block", flexShrink: 0 }} />
                           Income
                         </span>
                       </>
@@ -1974,9 +1974,9 @@ export default function GoalsPage() {
                     style={{
                       padding: "4px 10px",
                       borderRadius: 8,
-                      border: `1px solid ${showActual ? "#34c759" : "var(--separator)"}`,
+                      border: `1px solid ${showActual ? "#16A34A" : "var(--separator)"}`,
                       background: showActual ? "rgba(52,199,89,0.12)" : "none",
-                      color: showActual ? "#34c759" : "var(--text-secondary)",
+                      color: showActual ? "#16A34A" : "var(--text-secondary)",
                       fontSize: 12,
                       fontWeight: 600,
                       cursor: "pointer",
@@ -2005,12 +2005,12 @@ export default function GoalsPage() {
                       >
                         <stop
                           offset="5%"
-                          stopColor="#007aff"
+                          stopColor="#2563EB"
                           stopOpacity={0.22}
                         />
                         <stop
                           offset="95%"
-                          stopColor="#007aff"
+                          stopColor="#2563EB"
                           stopOpacity={0}
                         />
                       </linearGradient>
@@ -2051,7 +2051,7 @@ export default function GoalsPage() {
                     <Area
                       type="monotone"
                       dataKey="netWorth"
-                      stroke="#007aff"
+                      stroke="#2563EB"
                       strokeWidth={2.5}
                       fill="url(#projGradient)"
                       dot={(props: any) => {
@@ -2059,26 +2059,26 @@ export default function GoalsPage() {
                         if (showActual || (!payload?.hasExpense && !payload?.hasIncome)) {
                           return <circle key={key} cx={cx} cy={cy} r={0} fill="none" />;
                         }
-                        const color = payload.hasExpense ? "#ff3b30" : "#34c759";
+                        const color = payload.hasExpense ? "#DC2626" : "#16A34A";
                         return (
                           <circle key={key} cx={cx} cy={cy} r={6} fill={color}
                             stroke="var(--surface)" strokeWidth={2.5} />
                         );
                       }}
-                      activeDot={{ r: 5, fill: "#007aff", stroke: "var(--surface)", strokeWidth: 2 }}
+                      activeDot={{ r: 5, fill: "#2563EB", stroke: "var(--surface)", strokeWidth: 2 }}
                     />
                     {showActual && (
                       <Line
                         type="monotone"
                         dataKey="actualNetWorth"
-                        stroke="#34c759"
+                        stroke="#16A34A"
                         strokeWidth={2.5}
                         dot={(props: any) => {
                           const { cx, cy, key, value } = props;
                           if (value === undefined || value === null) return <circle key={key} r={0} cx={cx} cy={cy} fill="none" />;
-                          return <circle key={key} cx={cx} cy={cy} r={5} fill="#34c759" stroke="var(--surface)" strokeWidth={2} />;
+                          return <circle key={key} cx={cx} cy={cy} r={5} fill="#16A34A" stroke="var(--surface)" strokeWidth={2} />;
                         }}
-                        activeDot={{ r: 5, fill: "#34c759", stroke: "var(--surface)", strokeWidth: 2 }}
+                        activeDot={{ r: 5, fill: "#16A34A", stroke: "var(--surface)", strokeWidth: 2 }}
                         connectNulls={false}
                         isAnimationActive={false}
                       />
@@ -2127,7 +2127,7 @@ export default function GoalsPage() {
                     style={{
                       padding: "6px 14px",
                       borderRadius: 16,
-                      background: "#007aff",
+                      background: "#2563EB",
                       color: "#fff",
                       border: "none",
                       fontWeight: 600,
@@ -2189,9 +2189,9 @@ export default function GoalsPage() {
                           }}
                         >
                           {ev.event_type === "expense" ? (
-                            <IconArrowDown size={17} stroke="#ff3b30" />
+                            <IconArrowDown size={17} stroke="#DC2626" />
                           ) : (
-                            <IconArrowUp size={17} stroke="#34c759" />
+                            <IconArrowUp size={17} stroke="#16A34A" />
                           )}
                         </div>
                         <div
@@ -2229,8 +2229,8 @@ export default function GoalsPage() {
                             fontSize: 13,
                             color:
                               ev.event_type === "expense"
-                                ? "#ff3b30"
-                                : "#34c759",
+                                ? "#DC2626"
+                                : "#16A34A",
                             whiteSpace: "nowrap",
                           }}
                         >
@@ -2261,7 +2261,7 @@ export default function GoalsPage() {
                             style={{
                               background: "none",
                               border: "none",
-                              color: "#ff3b30",
+                              color: "#DC2626",
                               cursor: "pointer",
                               padding: "4px 6px",
                               borderRadius: 8,
@@ -2391,7 +2391,7 @@ export default function GoalsPage() {
                             style={{
                               fontSize: 10,
                               fontWeight: 700,
-                              color: "#34c759",
+                              color: "#16A34A",
                               background: "rgba(52,199,89,0.12)",
                               padding: "2px 6px",
                               borderRadius: 8,
@@ -2486,7 +2486,7 @@ export default function GoalsPage() {
             right: 20,
             padding: "11px 20px",
             borderRadius: 14,
-            background: toast.type === "success" ? "#34c759" : "#ff3b30",
+            background: toast.type === "success" ? "#16A34A" : "#DC2626",
             color: "#fff",
             fontWeight: 600,
             fontSize: 14,

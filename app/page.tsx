@@ -42,15 +42,15 @@ function fmtINR(n: number) {
 }
 
 const allocationColorMap: Record<string, string> = {
-  stocks: "#00C1FF",
-  gold: "#FFBB00",
-  lended: "#1e7a3e",
-  fd: "#0055b3",
-  realestate: "#AEDD00",
-  bank: "#4DA8FF",
-  cash: "#636366",
-  crypto: "#5b30c0",
-  other: "#8E8E93",
+  stocks:     "#3B82F6",
+  gold:       "#F59E0B",
+  lended:     "#22C55E",
+  fd:         "#6366F1",
+  realestate: "#F97316",
+  bank:       "#0EA5E9",
+  cash:       "#94A3B8",
+  crypto:     "#8B5CF6",
+  other:      "#71717A",
 };
 
 const allocationLabelMap: Record<string, string> = {
@@ -337,15 +337,15 @@ export default function Home() {
         }}
       >
         <div
-          className="w-full max-w-[1320px] flex flex-col gap-1.5 px-4 py-3 mt-2 rounded-[16px]"
+          className="w-full max-w-[1320px] flex flex-col gap-1.5 px-4 py-3 mt-2 rounded-lg"
           style={{
-            background: isDark ? "rgba(18,18,20,0.55)" : "rgba(255,255,255,0.62)",
-            backdropFilter: "blur(48px) saturate(220%) brightness(1.06)",
-            WebkitBackdropFilter: "blur(48px) saturate(220%) brightness(1.06)",
-            border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(255,255,255,0.78)",
+            background: isDark ? "rgba(24, 24, 27, 0.97)" : "rgba(255, 255, 255, 0.97)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: isDark ? "1px solid #27272A" : "1px solid #E2E8F0",
             boxShadow: isDark
-              ? "0 8px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.1)"
-              : "0 8px 28px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)",
+              ? "0 4px 20px rgba(0,0,0,0.4)"
+              : "0 4px 20px rgba(0,0,0,0.08)",
           }}
         >
           {/* Row 1: Section label + category */}
@@ -370,7 +370,7 @@ export default function Home() {
               <div className="w-px h-6" style={{ background: "var(--separator)" }} />
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>P&L</p>
-                <p className="text-[13px] font-semibold" style={{ color: (stickyData?.pnl ?? 0) >= 0 ? "#34c759" : "#ff3b30", letterSpacing: "-0.015em" }}>
+                <p className="text-[13px] font-semibold" style={{ color: (stickyData?.pnl ?? 0) >= 0 ? "#16A34A" : "#DC2626", letterSpacing: "-0.015em" }}>
                   {(stickyData?.pnl ?? 0) >= 0 ? "+" : ""}{fmtINR(stickyData?.pnl ?? 0)}
                   <span className="text-[11px] font-medium ml-1" style={{ opacity: 0.75 }}>
                     ({(stickyData?.pnlPct ?? 0) >= 0 ? "+" : ""}{(stickyData?.pnlPct ?? 0).toFixed(1)}%)
@@ -384,7 +384,7 @@ export default function Home() {
             <div className="flex items-center gap-5">
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Outstanding</p>
-                <p className="text-[13px] font-semibold" style={{ color: "#ff3b30", letterSpacing: "-0.015em" }}>
+                <p className="text-[13px] font-semibold" style={{ color: "#DC2626", letterSpacing: "-0.015em" }}>
                   {fmtINR(stickyData.outstanding)}
                 </p>
               </div>
@@ -416,14 +416,14 @@ export default function Home() {
               <div className="w-px h-6" style={{ background: "var(--separator)" }} />
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Claim Eligible</p>
-                <p className="text-[13px] font-semibold" style={{ color: "#007aff", letterSpacing: "-0.015em" }}>
+                <p className="text-[13px] font-semibold" style={{ color: "#2563EB", letterSpacing: "-0.015em" }}>
                   {fmtINR(stickyData.expensesClaimEligible ?? 0)}
                 </p>
               </div>
               <div className="w-px h-6" style={{ background: "var(--separator)" }} />
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>SW Pending</p>
-                <p className="text-[13px] font-semibold" style={{ color: "#ff9500", letterSpacing: "-0.015em" }}>
+                <p className="text-[13px] font-semibold" style={{ color: "#D97706", letterSpacing: "-0.015em" }}>
                   {fmtINR(stickyData.expensesSplitPending ?? 0)}
                 </p>
               </div>
@@ -433,7 +433,7 @@ export default function Home() {
       </div>
 
       <main className="max-w-[1320px] mx-auto px-4 sm:px-5 lg:px-6 py-4 sm:py-5 lg:py-6 lg:pb-6 flex flex-col gap-3 sm:gap-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 7rem)" }}>
-        <div className="grid gap-3 sm:gap-3.5 grid-cols-1 md:grid-cols-2 items-stretch">
+        <div className="grid gap-3 sm:gap-3.5 grid-cols-1 md:grid-cols-2 items-stretch fade-in-up">
           <NetWorthCard
             netWorth={summary.netWorth}
             invested={summary.invested}
@@ -445,7 +445,7 @@ export default function Home() {
             netWorthChange={0}
             onClick={() => router.push("/snapshots")}
           />
-          <div className="hidden md:block h-full">
+          <div className="hidden md:block h-full fade-in-up fade-in-up-1">
             <AllocationCard
               allocationData={summary.allocationData}
               totalAssets={summary.totalAssets}
@@ -455,7 +455,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div ref={sentinelRef}>
+        <div ref={sentinelRef} className="fade-in-up fade-in-up-2">
           <AssetsTable onDataChanged={refreshAll} onSummaryChange={setStickyData} refreshKey={tableRefreshKey} />
         </div>
       </main>

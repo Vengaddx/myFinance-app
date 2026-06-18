@@ -55,9 +55,9 @@ function CashFlowTooltip({ active, payload }: { active?: boolean; payload?: { da
   return (
     <div style={{ background: "var(--surface)", border: "1px solid var(--separator)", borderRadius: 14, padding: "12px 16px", boxShadow: "0 8px 32px rgba(0,0,0,0.24)" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-        <p style={{ margin: 0, fontSize: 13, color: "#34c759" }}>Income {fmtINR(income)}</p>
-        <p style={{ margin: 0, fontSize: 13, color: "#ff3b30" }}>Expenses {fmtINR(expenses)}</p>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: savings >= 0 ? "#34c759" : "#ff3b30" }}>
+        <p style={{ margin: 0, fontSize: 13, color: "#16A34A" }}>Income {fmtINR(income)}</p>
+        <p style={{ margin: 0, fontSize: 13, color: "#DC2626" }}>Expenses {fmtINR(expenses)}</p>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: savings >= 0 ? "#16A34A" : "#DC2626" }}>
           Saved {fmtINR(savings)}
           {income > 0 && ` (${((savings / income) * 100).toFixed(0)}%)`}
         </p>
@@ -155,7 +155,7 @@ export default function CashFlowPage() {
 
   if (authLoading || !session) return <div className="min-h-screen" />;
 
-  const rateColor = current.savingsRate >= 30 ? "#34c759" : current.savingsRate >= 15 ? "#ff9500" : current.income > 0 ? "#ff3b30" : "var(--text-tertiary)";
+  const rateColor = current.savingsRate >= 30 ? "#16A34A" : current.savingsRate >= 15 ? "#D97706" : current.income > 0 ? "#DC2626" : "var(--text-tertiary)";
 
   const card: React.CSSProperties = {
     background: "var(--surface)",
@@ -180,7 +180,7 @@ export default function CashFlowPage() {
           </div>
           <button
             onClick={() => { setEditIncome(null); setShowAddIncome(true); }}
-            style={{ display: "flex", alignItems: "center", gap: 5, padding: "10px 16px", borderRadius: 12, background: "#34c759", border: "none", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "10px 16px", borderRadius: 12, background: "#16A34A", border: "none", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
           >
             + Income
           </button>
@@ -189,9 +189,9 @@ export default function CashFlowPage() {
         {/* This month summary */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
           {[
-            { label: "Income", value: fmtINR(current.income), color: "#34c759" },
-            { label: "Expenses", value: fmtINR(current.expenses), color: "#ff3b30" },
-            { label: "Saved", value: fmtINR(current.savings), color: current.savings >= 0 ? rateColor : "#ff3b30" },
+            { label: "Income", value: fmtINR(current.income), color: "#16A34A" },
+            { label: "Expenses", value: fmtINR(current.expenses), color: "#DC2626" },
+            { label: "Saved", value: fmtINR(current.savings), color: current.savings >= 0 ? rateColor : "#DC2626" },
           ].map((m) => (
             <div key={m.label} style={{ ...card, padding: "14px 16px", textAlign: "center" }}>
               <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>{m.label}</p>
@@ -215,7 +215,7 @@ export default function CashFlowPage() {
             <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>Benchmark</p>
             <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-secondary)" }}>30%+</p>
             {current.income > 0 && (
-              <p style={{ margin: "4px 0 0", fontSize: 12, fontWeight: 600, color: current.savingsRate >= 30 ? "#34c759" : "#ff9500" }}>
+              <p style={{ margin: "4px 0 0", fontSize: 12, fontWeight: 600, color: current.savingsRate >= 30 ? "#16A34A" : "#D97706" }}>
                 {current.savingsRate >= 30 ? "On track ✓" : "Below target"}
               </p>
             )}
@@ -234,13 +234,13 @@ export default function CashFlowPage() {
                 <XAxis dataKey="label" tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis hide />
                 <Tooltip content={<CashFlowTooltip />} cursor={{ fill: "rgba(120,120,128,0.08)", radius: 4 }} />
-                <Bar dataKey="income" fill="#34c759" radius={[5, 5, 0, 0]} />
-                <Bar dataKey="expenses" fill="#ff3b30" radius={[5, 5, 0, 0]} opacity={0.75} />
+                <Bar dataKey="income" fill="#16A34A" radius={[5, 5, 0, 0]} />
+                <Bar dataKey="expenses" fill="#DC2626" radius={[5, 5, 0, 0]} opacity={0.75} />
               </BarChart>
             </ResponsiveContainer>
           )}
           <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
-            {[{ color: "#34c759", label: "Income" }, { color: "#ff3b30", label: "Expenses", opacity: 0.75 }].map((l) => (
+            {[{ color: "#16A34A", label: "Income" }, { color: "#DC2626", label: "Expenses", opacity: 0.75 }].map((l) => (
               <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <div style={{ width: 10, height: 10, borderRadius: 2, background: l.color, opacity: l.opacity ?? 1 }} />
                 <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{l.label}</span>
@@ -267,7 +267,7 @@ export default function CashFlowPage() {
               <p style={{ margin: "0 0 8px", fontSize: 14, color: "var(--text-tertiary)" }}>No income recorded for {monthLabel(selectedMonth)}.</p>
               <button
                 onClick={() => { setEditIncome(null); setShowAddIncome(true); }}
-                style={{ color: "#34c759", background: "none", border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600, fontFamily: "inherit" }}
+                style={{ color: "#16A34A", background: "none", border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600, fontFamily: "inherit" }}
               >
                 + Add income
               </button>
@@ -281,7 +281,7 @@ export default function CashFlowPage() {
                     {r.notes && <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-tertiary)" }}>{r.notes}</p>}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#34c759" }}>{fmtINR(r.amount)}</p>
+                    <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#16A34A" }}>{fmtINR(r.amount)}</p>
                     <button
                       onClick={() => { setEditIncome(r); setShowAddIncome(true); }}
                       style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-tertiary)", fontSize: 13, padding: "4px 6px", fontFamily: "inherit" }}
@@ -290,7 +290,7 @@ export default function CashFlowPage() {
                     </button>
                     <button
                       onClick={() => deleteIncome(r.id)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "#ff3b30", fontSize: 18, lineHeight: 1, padding: "4px" }}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "#DC2626", fontSize: 18, lineHeight: 1, padding: "4px" }}
                     >
                       ×
                     </button>
@@ -300,7 +300,7 @@ export default function CashFlowPage() {
               {current.income > 0 && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--separator)", display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>Total</span>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: "#34c759" }}>{fmtINR(current.income)}</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: "#16A34A" }}>{fmtINR(current.income)}</span>
                 </div>
               )}
             </div>
@@ -328,10 +328,10 @@ export default function CashFlowPage() {
                   >
                     {[
                       <td key="m" style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid var(--separator)" : "none", fontSize: 13, color: "var(--text-secondary)", fontWeight: 500, whiteSpace: "nowrap", paddingRight: 16 }}>{m.label}</td>,
-                      <td key="i" style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid var(--separator)" : "none", fontSize: 13, color: m.income > 0 ? "#34c759" : "var(--text-tertiary)", fontWeight: 600, paddingRight: 16, whiteSpace: "nowrap" }}>{m.income > 0 ? fmtINR(m.income) : "—"}</td>,
-                      <td key="e" style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid var(--separator)" : "none", fontSize: 13, color: m.expenses > 0 ? "#ff3b30" : "var(--text-tertiary)", fontWeight: 600, paddingRight: 16, whiteSpace: "nowrap" }}>{m.expenses > 0 ? fmtINR(m.expenses) : "—"}</td>,
-                      <td key="s" style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid var(--separator)" : "none", fontSize: 13, color: m.income > 0 ? (m.savings >= 0 ? "var(--text-primary)" : "#ff3b30") : "var(--text-tertiary)", paddingRight: 16, whiteSpace: "nowrap" }}>{m.income > 0 ? fmtINR(m.savings) : "—"}</td>,
-                      <td key="r" style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid var(--separator)" : "none", fontSize: 13, fontWeight: 700, color: m.income > 0 ? (m.savingsRate >= 30 ? "#34c759" : m.savingsRate >= 15 ? "#ff9500" : "#ff3b30") : "var(--text-tertiary)", whiteSpace: "nowrap" }}>{m.income > 0 ? `${m.savingsRate.toFixed(0)}%` : "—"}</td>,
+                      <td key="i" style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid var(--separator)" : "none", fontSize: 13, color: m.income > 0 ? "#16A34A" : "var(--text-tertiary)", fontWeight: 600, paddingRight: 16, whiteSpace: "nowrap" }}>{m.income > 0 ? fmtINR(m.income) : "—"}</td>,
+                      <td key="e" style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid var(--separator)" : "none", fontSize: 13, color: m.expenses > 0 ? "#DC2626" : "var(--text-tertiary)", fontWeight: 600, paddingRight: 16, whiteSpace: "nowrap" }}>{m.expenses > 0 ? fmtINR(m.expenses) : "—"}</td>,
+                      <td key="s" style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid var(--separator)" : "none", fontSize: 13, color: m.income > 0 ? (m.savings >= 0 ? "var(--text-primary)" : "#DC2626") : "var(--text-tertiary)", paddingRight: 16, whiteSpace: "nowrap" }}>{m.income > 0 ? fmtINR(m.savings) : "—"}</td>,
+                      <td key="r" style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid var(--separator)" : "none", fontSize: 13, fontWeight: 700, color: m.income > 0 ? (m.savingsRate >= 30 ? "#16A34A" : m.savingsRate >= 15 ? "#D97706" : "#DC2626") : "var(--text-tertiary)", whiteSpace: "nowrap" }}>{m.income > 0 ? `${m.savingsRate.toFixed(0)}%` : "—"}</td>,
                     ]}
                   </tr>
                 ))}

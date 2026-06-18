@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
 
 type Props = {
@@ -15,13 +16,37 @@ type Props = {
 };
 
 function fmtINR(n: number) {
-  return `₹\u202f${n.toLocaleString("en-IN")}`;
+  return `₹ ${n.toLocaleString("en-IN")}`;
 }
 
 function fmtShort(n: number) {
   if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(2)} Cr`;
   if (n >= 100_000) return `₹${(n / 100_000).toFixed(1)} L`;
   return `₹${n.toLocaleString("en-IN")}`;
+}
+
+function useCountUp(target: number, duration = 900) {
+  const [value, setValue] = useState(0);
+  const prevRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const from = prevRef.current;
+    prevRef.current = target;
+    if (from === target) { setValue(target); return; }
+
+    const start = performance.now();
+    const step = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setValue(Math.round(from + (target - from) * eased));
+      if (t < 1) { rafRef.current = requestAnimationFrame(step); }
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
+  }, [target, duration]);
+
+  return value;
 }
 
 function MetricBlock({
@@ -40,18 +65,18 @@ function MetricBlock({
   return (
     <div className={align === "right" ? "text-right" : ""}>
       <p
-        className="text-[10px] font-semibold uppercase mb-1"
-        style={{ color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em" }}
+        className="text-[10px] font-semibold uppercase mb-1.5"
+        style={{ color: "rgba(255,255,255,0.32)", letterSpacing: "0.1em" }}
       >
         {label}
       </p>
       <p
-        className="text-[15px] font-bold leading-none mb-0.5"
-        style={{ color: valueColor ?? "#ffffff", letterSpacing: "-0.02em" }}
+        className="text-[14px] font-semibold leading-none mb-1"
+        style={{ color: valueColor ?? "#ffffff", letterSpacing: "-0.015em" }}
       >
         {value}
       </p>
-      <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.28)" }}>
+      <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.24)" }}>
         {sub}
       </p>
     </div>
@@ -71,66 +96,63 @@ export default function NetWorthCard({
 }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const displayNetWorth = useCountUp(netWorth);
   const up = netWorthChange >= 0;
 
-  const bg = isDark ? "rgba(255,255,255,0.04)" : "#1c1c1e";
-  const border = isDark ? "1px solid rgba(255,255,255,0.1)" : "none";
-  const shadow = isDark
-    ? "0 0 0 1px rgba(255,255,255,0.07), 0 8px 40px rgba(255,255,255,0.04)"
-    : "0 8px 40px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.14)";
+  const bg = isDark ? "#18181B" : "#0F172A";
 
   return (
     <div
-      className="card-lift flex flex-col h-full rounded-[20px] p-5 gap-4 relative overflow-hidden"
+      className="card-lift flex flex-col h-full rounded-lg p-5 sm:p-6 gap-5 relative overflow-hidden"
       style={{
         background: bg,
-        border,
-        boxShadow: shadow,
+        border: isDark ? "1px solid #27272A" : "none",
+        boxShadow: isDark
+          ? "none"
+          : "0 4px 24px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.14)",
         cursor: onClick ? "pointer" : undefined,
-        transition: "opacity 0.15s",
       }}
       onClick={onClick}
     >
       {/* Header */}
       <div className="flex items-center justify-between">
         <p
-          className="text-[11px] font-semibold uppercase"
-          style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.13em" }}
+          className="text-[10px] font-semibold uppercase"
+          style={{ color: "rgba(255,255,255,0.32)", letterSpacing: "0.12em" }}
         >
           Net Worth
         </p>
         {onClick && (
-          <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.28)" }}>
-            Timeline ›
+          <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.24)", letterSpacing: "0.01em" }}>
+            Timeline &rsaquo;
           </span>
         )}
       </div>
 
-      {/* Main number + change */}
+      {/* Main number */}
       <div>
         <p
-          className="text-[38px] font-bold leading-none text-white"
-          style={{ letterSpacing: "-0.03em" }}
+          className="text-[36px] sm:text-[40px] font-bold leading-none text-white"
+          style={{ letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" }}
         >
-          {fmtINR(netWorth)}
-          <span className="text-[20px] font-normal" style={{ color: "rgba(255,255,255,0.25)" }}>
-            .00
-          </span>
+          {fmtINR(displayNetWorth)}
         </p>
-        <div className="flex items-center gap-2 mt-2">
-          <span
-            className="inline-flex items-center gap-1 text-[12px] font-bold px-2.5 py-0.5 rounded-full"
-            style={{
-              color: up ? "#34c759" : "#ff3b30",
-              background: up ? "rgba(52,199,89,0.15)" : "rgba(255,59,48,0.15)",
-            }}
-          >
-            {up ? "▲" : "▼"} {Math.abs(netWorthChange)}%
-          </span>
-          <span className="text-[12px]" style={{ color: "rgba(255,255,255,0.28)" }}>
-            from last snapshot
-          </span>
-        </div>
+        {netWorthChange !== 0 && (
+          <div className="flex items-center gap-2 mt-2.5">
+            <span
+              className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded"
+              style={{
+                color: up ? "#22C55E" : "#EF4444",
+                background: up ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)",
+              }}
+            >
+              {up ? "+" : ""}{netWorthChange}%
+            </span>
+            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.24)" }}>
+              vs last snapshot
+            </span>
+          </div>
+        )}
       </div>
 
       <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
@@ -140,13 +162,13 @@ export default function NetWorthCard({
         <MetricBlock
           label="Invested"
           value={fmtINR(invested)}
-          sub={`${investedPctOfNetWorth}% of Net Worth`}
+          sub={`${investedPctOfNetWorth}% of net worth`}
         />
         <MetricBlock
           label="Total P&L"
           value={`${totalPnl >= 0 ? "+" : ""}${fmtINR(totalPnl)}`}
-          sub={`${totalPnl >= 0 ? "+" : ""}${totalPnlPct}% ROI`}
-          valueColor={totalPnl >= 0 ? "#34c759" : "#ff3b30"}
+          sub={`${totalPnl >= 0 ? "+" : ""}${totalPnlPct}% return`}
+          valueColor={totalPnl >= 0 ? "#22C55E" : "#EF4444"}
           align="right"
         />
       </div>
@@ -158,13 +180,13 @@ export default function NetWorthCard({
         <MetricBlock
           label="Total Assets"
           value={fmtShort(totalAssets)}
-          sub="Gross portfolio value"
+          sub="Gross value"
         />
         <MetricBlock
           label="Liabilities"
           value={fmtShort(liabilities)}
           sub="Total owed"
-          valueColor="#ff3b30"
+          valueColor="#EF4444"
           align="right"
         />
       </div>

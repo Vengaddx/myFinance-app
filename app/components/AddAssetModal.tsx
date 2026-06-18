@@ -160,7 +160,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
     height: 42,
     padding: "0 14px",
     borderRadius: 12,
-    border: `1px solid ${hasError ? "#ff3b30" : inputBorder}`,
+    border: `1px solid ${hasError ? "#DC2626" : inputBorder}`,
     background: hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg,
     fontSize: 16,
     color: inputColor,
@@ -176,7 +176,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
   };
 
   const onBlur = (hasError?: boolean) => (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.currentTarget.style.borderColor = hasError ? "#ff3b30" : inputBorder;
+    e.currentTarget.style.borderColor = hasError ? "#DC2626" : inputBorder;
     e.currentTarget.style.boxShadow = "none";
     e.currentTarget.style.background = hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg;
   };
@@ -252,10 +252,10 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
             {/* Asset Name */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
-                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.name ? "#ff3b30" : labelColor }}>
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.name ? "#DC2626" : labelColor }}>
                   Asset Name
                 </label>
-                <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
+                <span className="text-[#DC2626] text-[12px] leading-none">*</span>
               </div>
               <input
                 ref={firstInputRef}
@@ -268,7 +268,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
                 onFocus={onFocus}
                 onBlur={onBlur(errors.name)}
               />
-              {errors.name && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Asset name is required</p>}
+              {errors.name && <p className="text-[12px]" style={{ color: "#DC2626" }}>Asset name is required</p>}
             </div>
 
             {/* Currency + Asset Type */}
@@ -322,10 +322,10 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
             {/* Current Value / Balance */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
-                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.currentValue ? "#ff3b30" : labelColor }}>
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.currentValue ? "#DC2626" : labelColor }}>
                   {currentValueLabel}
                 </label>
-                <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
+                <span className="text-[#DC2626] text-[12px] leading-none">*</span>
               </div>
               <input
                 type="number"
@@ -339,7 +339,7 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
                 onBlur={onBlur(errors.currentValue)}
               />
               {errors.currentValue && (
-                <p className="text-[12px]" style={{ color: "#ff3b30" }}>
+                <p className="text-[12px]" style={{ color: "#DC2626" }}>
                   {currentValueLabel} is required
                 </p>
               )}
@@ -362,9 +362,9 @@ export default function AddAssetModal({ open, onClose, onSave, initialData = nul
               onClick={handleSave}
               disabled={isSaving}
               className="h-10 px-6 rounded-[12px] text-[14px] font-semibold text-white"
-              style={{ background: isSaving ? "#5aa8ff" : "#007aff", transition: "background 150ms ease, transform 150ms ease", opacity: isSaving ? 0.7 : 1, cursor: isSaving ? "not-allowed" : "pointer" }}
+              style={{ background: isSaving ? "#5aa8ff" : "#2563EB", transition: "background 150ms ease, transform 150ms ease", opacity: isSaving ? 0.7 : 1, cursor: isSaving ? "not-allowed" : "pointer" }}
               onMouseEnter={(e) => { if (!isSaving) { (e.currentTarget as HTMLElement).style.background = "#0071eb"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; } }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isSaving ? "#5aa8ff" : "#007aff"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isSaving ? "#5aa8ff" : "#2563EB"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
             >
               {isSaving ? "Saving…" : (mode === "edit" ? "Update Asset" : "Save Asset")}
             </button>

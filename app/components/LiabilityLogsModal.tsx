@@ -17,11 +17,11 @@ type LogRow = {
 };
 
 const ACTION_META: Record<string, { label: string; color: string }> = {
-  created:      { label: "Created",       color: "#007aff" },
-  repayment:    { label: "Repayment",     color: "#34c759" },
-  received:     { label: "Received",      color: "#34c759" },
-  borrowed_more:{ label: "Borrowed More", color: "#ff9500" },
-  lent_more:    { label: "Lent More",     color: "#ff9500" },
+  created:      { label: "Created",       color: "#2563EB" },
+  repayment:    { label: "Repayment",     color: "#16A34A" },
+  received:     { label: "Received",      color: "#16A34A" },
+  borrowed_more:{ label: "Borrowed More", color: "#D97706" },
+  lent_more:    { label: "Lent More",     color: "#D97706" },
   adjustment:   { label: "Adjustment",    color: "#af52de" },
   closed:       { label: "Closed",        color: "#636366" },
 };

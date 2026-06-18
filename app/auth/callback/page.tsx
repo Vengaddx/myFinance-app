@@ -59,7 +59,7 @@ export default function AuthCallbackPage() {
     >
       <div
         className="w-6 h-6 rounded-full border-2 animate-spin"
-        style={{ borderColor: "#007aff", borderTopColor: "transparent" }}
+        style={{ borderColor: "#2563EB", borderTopColor: "transparent" }}
       />
       <p className="text-[14px]" style={{ color: "var(--text-secondary)" }}>
         Signing you in…

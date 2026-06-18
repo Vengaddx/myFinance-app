@@ -265,7 +265,7 @@ export default function PremiumUpgradeModal({ open, onClose, limitContext }: Pro
                   display: "flex", alignItems: "center", gap: 5,
                   padding: "5px 11px", borderRadius: 9, border: "none",
                   background: copied ? "rgba(52,199,89,0.12)" : "rgba(0,122,255,0.10)",
-                  color: copied ? "#34c759" : "#007aff",
+                  color: copied ? "#16A34A" : "#2563EB",
                   fontWeight: 600, fontSize: 12, cursor: "pointer",
                   fontFamily: "inherit", transition: "all 180ms ease",
                   whiteSpace: "nowrap", marginTop: 2,

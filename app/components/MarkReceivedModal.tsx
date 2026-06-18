@@ -82,7 +82,7 @@ export default function MarkReceivedModal({ open, onClose, onReceive, friendName
 
   const inputStyle = (hasError?: boolean): React.CSSProperties => ({
     width: "100%", height: 42, padding: "0 14px", borderRadius: 12,
-    border: `1px solid ${hasError ? "#ff3b30" : inputBorder}`,
+    border: `1px solid ${hasError ? "#DC2626" : inputBorder}`,
     background: hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg,
     fontSize: 16, color: inputColor, outline: "none", boxSizing: "border-box",
     transition: "border-color 160ms ease, box-shadow 160ms ease, background 160ms ease",
@@ -95,7 +95,7 @@ export default function MarkReceivedModal({ open, onClose, onReceive, friendName
   };
 
   const onBlur = (hasError?: boolean) => (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.borderColor = hasError ? "#ff3b30" : inputBorder;
+    e.currentTarget.style.borderColor = hasError ? "#DC2626" : inputBorder;
     e.currentTarget.style.boxShadow = "none";
     e.currentTarget.style.background = hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg;
   };
@@ -157,7 +157,7 @@ export default function MarkReceivedModal({ open, onClose, onReceive, friendName
           <div className="px-6 pt-4 pb-1 shrink-0">
             <div className="flex items-center justify-between rounded-[12px] px-4 py-3" style={{ background: "rgba(52,199,89,0.08)" }}>
               <span className="text-[13px] font-medium" style={{ color: labelColor }}>Still owed to you</span>
-              <span className="text-[15px] font-bold" style={{ color: "#34c759" }}>
+              <span className="text-[15px] font-bold" style={{ color: "#16A34A" }}>
                 {sym}{outstanding.toLocaleString("en-IN")}
               </span>
             </div>
@@ -167,10 +167,10 @@ export default function MarkReceivedModal({ open, onClose, onReceive, friendName
           <div className="overflow-y-auto flex-1 px-6 py-4 flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
-                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: (errors.amount || errors.amountExceeds) ? "#ff3b30" : labelColor }}>
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: (errors.amount || errors.amountExceeds) ? "#DC2626" : labelColor }}>
                   Amount Received
                 </label>
-                <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
+                <span className="text-[#DC2626] text-[12px] leading-none">*</span>
               </div>
               <input
                 ref={amountRef} type="number" placeholder="0.00" min="0"
@@ -178,8 +178,8 @@ export default function MarkReceivedModal({ open, onClose, onReceive, friendName
                 className="mrf-input" style={inputStyle(errors.amount || errors.amountExceeds)}
                 onFocus={onFocus} onBlur={onBlur(errors.amount || errors.amountExceeds)}
               />
-              {errors.amount && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Enter a valid amount</p>}
-              {errors.amountExceeds && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Cannot exceed outstanding ({sym}{outstanding.toLocaleString("en-IN")})</p>}
+              {errors.amount && <p className="text-[12px]" style={{ color: "#DC2626" }}>Enter a valid amount</p>}
+              {errors.amountExceeds && <p className="text-[12px]" style={{ color: "#DC2626" }}>Cannot exceed outstanding ({sym}{outstanding.toLocaleString("en-IN")})</p>}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -217,9 +217,9 @@ export default function MarkReceivedModal({ open, onClose, onReceive, friendName
               onClick={handleSave}
               disabled={saving}
               className="h-10 px-6 rounded-[12px] text-[14px] font-semibold text-white"
-              style={{ background: saving ? "#5ac8fa" : "#34c759", transition: "background 150ms ease, transform 150ms ease" }}
+              style={{ background: saving ? "#93C5FD" : "#16A34A", transition: "background 150ms ease, transform 150ms ease" }}
               onMouseEnter={(e) => { if (!saving) { (e.currentTarget as HTMLElement).style.background = "#2fb350"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; } }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = saving ? "#5ac8fa" : "#34c759"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = saving ? "#93C5FD" : "#16A34A"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
             >
               {saving ? "Saving..." : "Mark Received"}
             </button>

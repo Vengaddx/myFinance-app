@@ -22,15 +22,15 @@ const CAT_LABELS: Record<string, string> = {
 };
 
 const CAT_COLORS: Record<string, string> = {
-  stocks: "#00C1FF",
-  gold: "#FFBB00",
-  fd: "#0055b3",
-  realestate: "#AEDD00",
-  crypto: "#5b30c0",
-  bank: "#4DA8FF",
-  cash: "#636366",
-  lended: "#1e7a3e",
-  other: "#8E8E93",
+  stocks:     "#3B82F6",
+  gold:       "#F59E0B",
+  fd:         "#6366F1",
+  realestate: "#F97316",
+  crypto:     "#8B5CF6",
+  bank:       "#0EA5E9",
+  cash:       "#94A3B8",
+  lended:     "#22C55E",
+  other:      "#71717A",
 };
 
 type AllocationItem = {
@@ -253,7 +253,7 @@ function RebalanceView({
       <div className="flex items-center justify-between mb-3">
         <div>
           {alertCount > 0 && (
-            <p style={{ margin: 0, fontSize: 12, color: "#ff9500", fontWeight: 600 }}>
+            <p style={{ margin: 0, fontSize: 12, color: "#D97706", fontWeight: 600 }}>
               {alertCount} {alertCount === 1 ? "category" : "categories"} drift &gt;5%
             </p>
           )}
@@ -271,8 +271,8 @@ function RebalanceView({
               <button
                 onClick={saveTargets}
                 disabled={saving}
-                className="text-[12px] font-semibold px-2.5 py-1 rounded-[7px]"
-                style={{ border: "none", background: "#007aff", color: "#fff", cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: saving ? 0.6 : 1 }}
+                className="text-[12px] font-semibold px-2.5 py-1 rounded-md"
+                style={{ border: "none", background: "#2563EB", color: "#fff", cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: saving ? 0.6 : 1 }}
               >
                 {saving ? "…" : "Save"}
               </button>
@@ -312,7 +312,7 @@ function RebalanceView({
             ))}
           </div>
           <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: draftTotal === 100 ? "#34c759" : "#ff9500" }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: draftTotal === 100 ? "#16A34A" : "#D97706" }}>
               Total: {draftTotal.toFixed(0)}%
             </span>
           </div>
@@ -322,7 +322,7 @@ function RebalanceView({
           <p style={{ margin: "0 0 8px", fontSize: 13.5, color: "var(--text-secondary)" }}>No target allocation set.</p>
           <button
             onClick={() => { setDraft({}); setEditMode(true); }}
-            style={{ color: "#007aff", background: "none", border: "none", cursor: "pointer", fontSize: 13.5, fontWeight: 600, fontFamily: "inherit" }}
+            style={{ color: "#2563EB", background: "none", border: "none", cursor: "pointer", fontSize: 13.5, fontWeight: 600, fontFamily: "inherit" }}
           >
             Set targets →
           </button>
@@ -342,7 +342,7 @@ function RebalanceView({
                       <span style={{
                         fontSize: 10.5, fontWeight: 700, padding: "1px 5px", borderRadius: 5,
                         background: drift > 0 ? "rgba(255,149,0,0.12)" : "rgba(255,59,48,0.10)",
-                        color: drift > 0 ? "#ff9500" : "#ff3b30",
+                        color: drift > 0 ? "#D97706" : "#DC2626",
                       }}>
                         {drift > 0 ? "+" : ""}{drift.toFixed(1)}%
                       </span>
@@ -352,7 +352,7 @@ function RebalanceView({
                     {hasTarget && (
                       <span style={{ fontSize: 11.5, color: "var(--text-tertiary)" }}>target {targetPct}%</span>
                     )}
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: isDrift ? (drift > 0 ? "#ff9500" : "#ff3b30") : "var(--text-primary)" }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: isDrift ? (drift > 0 ? "#D97706" : "#DC2626") : "var(--text-primary)" }}>
                       {actualPct.toFixed(1)}%
                     </span>
                   </div>
@@ -367,7 +367,7 @@ function RebalanceView({
                   {hasTarget && (
                     <div style={{
                       position: "absolute", top: -4, width: 2, height: 13,
-                      background: isDrift ? "#ff9500" : "var(--text-tertiary)",
+                      background: isDrift ? "#D97706" : "var(--text-tertiary)",
                       borderRadius: 1, left: `${Math.min(targetPct, 100)}%`,
                       transform: "translateX(-50%)",
                     }} />
@@ -392,11 +392,11 @@ export default function AllocationCard({ allocationData, totalAssets, topHolding
   const firstColumn = allocationData.slice(0, 3);
   const secondColumn = allocationData.slice(3, 6);
 
-  const pillBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
-  const activePillBg = isDark ? "rgba(255,255,255,0.16)" : "#ffffff";
+  const pillBg = isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9";
+  const activePillBg = isDark ? "rgba(255,255,255,0.12)" : "#ffffff";
   const activePillShadow = isDark
-    ? "0 1px 4px rgba(0,0,0,0.4)"
-    : "0 1px 3px rgba(0,0,0,0.12)";
+    ? "0 1px 3px rgba(0,0,0,0.4)"
+    : "0 1px 3px rgba(0,0,0,0.10)";
 
   const TAB_LABELS: Record<View, string> = {
     allocation: "Allocation",
@@ -406,36 +406,36 @@ export default function AllocationCard({ allocationData, totalAssets, topHolding
 
   return (
     <div
-      className="card-lift flex flex-col h-full rounded-[20px] p-5"
+      className="card-lift flex flex-col h-full rounded-lg p-5 sm:p-6"
       style={{
         background: "var(--surface)",
         border: "1px solid var(--separator)",
         boxShadow: isDark
-          ? "0 0 0 1px rgba(255,255,255,0.06), 0 4px 20px rgba(255,255,255,0.03)"
-          : "0 1px 3px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03)",
+          ? "none"
+          : "0 1px 2px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04)",
       }}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-5">
-        <p className="text-[15px] font-semibold" style={{ color: "var(--text-primary)" }}>
+        <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
           {TAB_LABELS[view]}
         </p>
 
         <div className="flex items-center gap-2">
           <div
-            className="flex items-center p-[3px] rounded-[10px]"
-            style={{ background: pillBg }}
+            className="flex items-center p-[3px] rounded-lg"
+            style={{ background: pillBg, border: `1px solid var(--separator)` }}
           >
             {(["allocation", "holdings", "rebalance"] as View[]).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className="px-2.5 py-1 rounded-[8px] text-[11.5px] font-semibold transition-all"
+                className="px-2.5 py-1 rounded-md text-[11.5px] font-semibold"
                 style={{
                   background: view === v ? activePillBg : "transparent",
                   boxShadow: view === v ? activePillShadow : "none",
                   color: view === v ? "var(--text-primary)" : "var(--text-tertiary)",
-                  transition: "background 180ms ease, color 180ms ease, box-shadow 180ms ease",
+                  transition: "background 150ms ease, color 150ms ease, box-shadow 150ms ease",
                 }}
               >
                 {TAB_LABELS[v]}

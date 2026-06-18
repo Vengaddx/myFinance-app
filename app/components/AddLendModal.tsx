@@ -111,7 +111,7 @@ export default function AddLendModal({ open, onClose, onSave, initialData = null
     height: 42,
     padding: "0 14px",
     borderRadius: 12,
-    border: `1px solid ${hasError ? "#ff3b30" : inputBorder}`,
+    border: `1px solid ${hasError ? "#DC2626" : inputBorder}`,
     background: hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg,
     fontSize: 16,
     color: inputColor,
@@ -127,7 +127,7 @@ export default function AddLendModal({ open, onClose, onSave, initialData = null
   };
 
   const onBlur = (hasError?: boolean) => (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    e.currentTarget.style.borderColor = hasError ? "#ff3b30" : inputBorder;
+    e.currentTarget.style.borderColor = hasError ? "#DC2626" : inputBorder;
     e.currentTarget.style.boxShadow = "none";
     e.currentTarget.style.background = hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg;
   };
@@ -202,10 +202,10 @@ export default function AddLendModal({ open, onClose, onSave, initialData = null
             {/* Friend Name */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
-                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.name ? "#ff3b30" : labelColor }}>
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.name ? "#DC2626" : labelColor }}>
                   Friend Name
                 </label>
-                <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
+                <span className="text-[#DC2626] text-[12px] leading-none">*</span>
               </div>
               <input
                 ref={firstInputRef}
@@ -218,16 +218,16 @@ export default function AddLendModal({ open, onClose, onSave, initialData = null
                 onFocus={onFocus}
                 onBlur={onBlur(errors.name)}
               />
-              {errors.name && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Name is required</p>}
+              {errors.name && <p className="text-[12px]" style={{ color: "#DC2626" }}>Name is required</p>}
             </div>
 
             {/* Amount */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
-                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.amount ? "#ff3b30" : labelColor }}>
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.amount ? "#DC2626" : labelColor }}>
                   Amount
                 </label>
-                <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
+                <span className="text-[#DC2626] text-[12px] leading-none">*</span>
               </div>
               <input
                 type="number"
@@ -240,7 +240,7 @@ export default function AddLendModal({ open, onClose, onSave, initialData = null
                 onFocus={onFocus}
                 onBlur={onBlur(errors.amount)}
               />
-              {errors.amount && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Valid amount is required</p>}
+              {errors.amount && <p className="text-[12px]" style={{ color: "#DC2626" }}>Valid amount is required</p>}
             </div>
 
             {/* Date + Due Date */}
@@ -304,7 +304,7 @@ export default function AddLendModal({ open, onClose, onSave, initialData = null
               disabled={saving}
               className="h-10 px-6 rounded-[12px] text-[14px] font-semibold text-white"
               style={{
-                background: saving ? "#5ac8fa" : "#34c759",
+                background: saving ? "#5ac8fa" : "#16A34A",
                 transition: "background 150ms ease, transform 150ms ease",
               }}
               onMouseEnter={(e) => {
@@ -314,7 +314,7 @@ export default function AddLendModal({ open, onClose, onSave, initialData = null
                 }
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = saving ? "#5ac8fa" : "#34c759";
+                (e.currentTarget as HTMLElement).style.background = saving ? "#5ac8fa" : "#16A34A";
                 (e.currentTarget as HTMLElement).style.transform = "none";
               }}
             >

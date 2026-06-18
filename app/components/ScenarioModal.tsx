@@ -310,13 +310,13 @@ export default function ScenarioModal({
                   borderRadius: 20,
                   border: "1px solid",
                   borderColor: isAutoNetWorth
-                    ? "#007aff"
+                    ? "#2563EB"
                     : "var(--separator)",
                   background: isAutoNetWorth
                     ? "rgba(0,122,255,0.12)"
                     : "transparent",
                   color: isAutoNetWorth
-                    ? "#007aff"
+                    ? "#2563EB"
                     : "var(--text-secondary)",
                   cursor: "pointer",
                   fontSize: 11,
@@ -358,7 +358,7 @@ export default function ScenarioModal({
                     top: "50%",
                     transform: "translateY(-50%)",
                     fontSize: 10,
-                    color: "#007aff",
+                    color: "#2563EB",
                     fontWeight: 700,
                     letterSpacing: "0.4px",
                     background: "rgba(0,122,255,0.12)",
@@ -449,11 +449,11 @@ export default function ScenarioModal({
                       padding: "9px 4px",
                       borderRadius: 12,
                       border: "1px solid",
-                      borderColor: active ? "#007aff" : "var(--separator)",
+                      borderColor: active ? "#2563EB" : "var(--separator)",
                       background: active
                         ? "rgba(0,122,255,0.12)"
                         : "var(--surface-secondary)",
-                      color: active ? "#007aff" : "var(--text-primary)",
+                      color: active ? "#2563EB" : "var(--text-primary)",
                       cursor: "pointer",
                       fontWeight: 600,
                       fontSize: 13,
@@ -472,11 +472,11 @@ export default function ScenarioModal({
                   padding: "9px 4px",
                   borderRadius: 12,
                   border: "1px solid",
-                  borderColor: customHorizon ? "#007aff" : "var(--separator)",
+                  borderColor: customHorizon ? "#2563EB" : "var(--separator)",
                   background: customHorizon
                     ? "rgba(0,122,255,0.12)"
                     : "var(--surface-secondary)",
-                  color: customHorizon ? "#007aff" : "var(--text-primary)",
+                  color: customHorizon ? "#2563EB" : "var(--text-primary)",
                   cursor: "pointer",
                   fontWeight: 600,
                   fontSize: 13,
@@ -505,7 +505,7 @@ export default function ScenarioModal({
         {error && (
           <div
             style={{
-              color: "#ff3b30",
+              color: "#DC2626",
               fontSize: 13,
               marginTop: 14,
               padding: "8px 12px",
@@ -543,7 +543,7 @@ export default function ScenarioModal({
               flex: 2,
               padding: "13px",
               borderRadius: 16,
-              background: "#007aff",
+              background: "#2563EB",
               border: "none",
               color: "#fff",
               fontWeight: 700,

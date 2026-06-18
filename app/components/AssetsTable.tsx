@@ -83,28 +83,28 @@ const CATEGORY_META: Record<
   AssetCategory,
   { label: string; bg: string; color: string }
 > = {
-  stocks: { label: "STOCKS & ETFS", bg: "#e8eeff", color: "#2c5ae9" },
-  gold: { label: "COMMODITY", bg: "#fff8e0", color: "#a67c00" },
-  lended: { label: "LENDED", bg: "#e8f5ed", color: "#1e7a3e" },
-  fd: { label: "FIXED DEPOSITS", bg: "#e6f4ff", color: "#0055b3" },
-  realestate: { label: "REAL ESTATE", bg: "#fff0e6", color: "#c0501a" },
-  bank: { label: "BANK ACCOUNT", bg: "#e0f0ff", color: "#0055b3" },
-  cash: { label: "CASH", bg: "#f2f2f7", color: "#636366" },
-  crypto: { label: "CRYPTO", bg: "#ede8ff", color: "#5b30c0" },
-  other: { label: "OTHER", bg: "#f2f2f7", color: "#636366" },
+  stocks:     { label: "STOCKS & ETFS",   bg: "#EFF6FF", color: "#2563EB" },
+  gold:       { label: "COMMODITY",       bg: "#FFFBEB", color: "#D97706" },
+  lended:     { label: "LENDED",          bg: "#F0FDF4", color: "#16A34A" },
+  fd:         { label: "FIXED DEPOSITS",  bg: "#EEF2FF", color: "#4F46E5" },
+  realestate: { label: "REAL ESTATE",     bg: "#FFF7ED", color: "#EA580C" },
+  bank:       { label: "BANK ACCOUNT",    bg: "#F0F9FF", color: "#0284C7" },
+  cash:       { label: "CASH",            bg: "#F8FAFC", color: "#64748B" },
+  crypto:     { label: "CRYPTO",          bg: "#F5F3FF", color: "#7C3AED" },
+  other:      { label: "OTHER",           bg: "#F8FAFC", color: "#71717A" },
 };
 
-const EXPENSE_CATEGORY_META: Record<string, { bg: string; color: string; emoji: string }> = {
-  food:          { bg: "#fff3e0", color: "#bf5a00", emoji: "🍜" },
-  cab:           { bg: "#e3f2fd", color: "#1565c0", emoji: "🚗" },
-  groceries:     { bg: "#e8f5e9", color: "#2e7d32", emoji: "🛒" },
-  shopping:      { bg: "#f3e5f5", color: "#6a1b9a", emoji: "🛍️" },
-  bills:         { bg: "#fffde7", color: "#f57f17", emoji: "💡" },
-  travel:        { bg: "#e0f7fa", color: "#00838f", emoji: "✈️" },
-  medical:       { bg: "#fce4ec", color: "#ad1457", emoji: "💊" },
-  entertainment: { bg: "#fff0f5", color: "#c2185b", emoji: "🎬" },
-  office:        { bg: "#f5f5f5", color: "#424242", emoji: "💼" },
-  other:         { bg: "#f2f2f7", color: "#636366", emoji: "📦" },
+const EXPENSE_CATEGORY_META: Record<string, { bg: string; color: string }> = {
+  food:          { bg: "#FFF7ED", color: "#C2410C" },
+  cab:           { bg: "#EFF6FF", color: "#1D4ED8" },
+  groceries:     { bg: "#F0FDF4", color: "#15803D" },
+  shopping:      { bg: "#FAF5FF", color: "#7E22CE" },
+  bills:         { bg: "#FEFCE8", color: "#A16207" },
+  travel:        { bg: "#ECFEFF", color: "#0E7490" },
+  medical:       { bg: "#FFF1F2", color: "#BE123C" },
+  entertainment: { bg: "#FFF0F5", color: "#9D174D" },
+  office:        { bg: "#F8FAFC", color: "#475569" },
+  other:         { bg: "#F8FAFC", color: "#71717A" },
 };
 
 function getExpenseCategoryMeta(cat: string) {
@@ -219,8 +219,8 @@ function daysSince(d: string | null | undefined): number | null {
 function StatusBadge({ status }: { status: string }) {
   const isActive = status === "active";
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-medium" style={{ color: isActive ? "#34c759" : "#636366" }}>
-      <span className="w-[5px] h-[5px] rounded-full shrink-0" style={{ background: isActive ? "#34c759" : "#636366" }} />
+    <span className="inline-flex items-center gap-1 text-[11px] font-medium" style={{ color: isActive ? "#16A34A" : "#636366" }}>
+      <span className="w-[5px] h-[5px] rounded-full shrink-0" style={{ background: isActive ? "#16A34A" : "#636366" }} />
       {isActive ? "Active" : "Closed"}
     </span>
   );
@@ -295,15 +295,15 @@ const ASSET_ICON_SVG: Record<AssetCategory, React.ReactNode> = {
 };
 
 const ASSET_ICON_STYLE: Record<AssetCategory, { bgLight: string; bgDark: string; color: string }> = {
-  stocks:    { bgLight: "rgba(0,122,255,0.10)",   bgDark: "rgba(0,122,255,0.20)",   color: "#007aff" },
-  gold:      { bgLight: "rgba(200,148,0,0.12)",   bgDark: "rgba(255,184,0,0.18)",   color: "#b8890a" },
-  lended:    { bgLight: "rgba(52,199,89,0.12)",   bgDark: "rgba(52,199,89,0.20)",   color: "#28a745" },
-  fd:        { bgLight: "rgba(0,85,179,0.10)",    bgDark: "rgba(0,85,179,0.22)",    color: "#0055b3" },
-  realestate:{ bgLight: "rgba(90,122,0,0.10)",    bgDark: "rgba(174,221,0,0.18)",   color: "#5a7a00" },
-  bank:      { bgLight: "rgba(0,122,255,0.08)",   bgDark: "rgba(77,168,255,0.18)",  color: "#4da8ff" },
-  cash:      { bgLight: "rgba(99,99,102,0.10)",   bgDark: "rgba(99,99,102,0.20)",   color: "#8e8e93" },
-  crypto:    { bgLight: "rgba(91,48,192,0.10)",   bgDark: "rgba(91,48,192,0.22)",   color: "#7c4ddb" },
-  other:     { bgLight: "rgba(142,142,147,0.10)", bgDark: "rgba(142,142,147,0.18)", color: "#8e8e93" },
+  stocks:     { bgLight: "rgba(37,99,235,0.09)",   bgDark: "rgba(59,130,246,0.16)",  color: "#2563EB" },
+  gold:       { bgLight: "rgba(217,119,6,0.09)",   bgDark: "rgba(245,158,11,0.16)",  color: "#D97706" },
+  lended:     { bgLight: "rgba(22,163,74,0.09)",   bgDark: "rgba(34,197,94,0.16)",   color: "#16A34A" },
+  fd:         { bgLight: "rgba(79,70,229,0.09)",   bgDark: "rgba(99,102,241,0.16)",  color: "#4F46E5" },
+  realestate: { bgLight: "rgba(234,88,12,0.09)",   bgDark: "rgba(249,115,22,0.16)",  color: "#EA580C" },
+  bank:       { bgLight: "rgba(2,132,199,0.09)",   bgDark: "rgba(14,165,233,0.16)",  color: "#0284C7" },
+  cash:       { bgLight: "rgba(100,116,139,0.09)", bgDark: "rgba(148,163,184,0.16)", color: "#64748B" },
+  crypto:     { bgLight: "rgba(124,58,237,0.09)",  bgDark: "rgba(139,92,246,0.16)",  color: "#7C3AED" },
+  other:      { bgLight: "rgba(113,113,122,0.09)", bgDark: "rgba(113,113,122,0.16)", color: "#71717A" },
 };
 
 function AssetIcon({ type, isDark }: { type?: string; isDark?: boolean }) {
@@ -313,7 +313,7 @@ function AssetIcon({ type, isDark }: { type?: string; isDark?: boolean }) {
 
   return (
     <div
-      className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0"
+      className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
       style={{ background: bg, color: style.color }}
     >
       {ASSET_ICON_SVG[category]}
@@ -369,15 +369,15 @@ function PnlCell({ value, pct, neutral }: { value: number; pct: number; neutral?
   return (
     <div className="flex flex-col items-end gap-0.5">
       <span
-        className="text-[14px] font-semibold"
-        style={{ color: pos ? "#007aff" : "#ff3b30" }}
+        className="text-[13.5px] font-semibold"
+        style={{ color: pos ? "#16A34A" : "#DC2626" }}
       >
         {pos ? "+" : ""}
         {fmtINRFull(value)}
       </span>
       <span
-        className="text-[12px]"
-        style={{ color: pos ? "#007aff" : "#ff3b30", opacity: 0.7 }}
+        className="text-[11.5px]"
+        style={{ color: pos ? "#16A34A" : "#DC2626", opacity: 0.7 }}
       >
         {pos ? "+" : ""}
         {pct.toFixed(1)}%
@@ -1416,18 +1416,18 @@ onDataChanged?.();
   const addButton = (
     sectionTab === "liabilities" ? (
       <div className="flex items-center gap-2 shrink-0">
-        <button onClick={handleAddLend} className="btn-lift flex items-center gap-1.5 h-[34px] px-3 rounded-[10px] text-[13px] font-semibold text-white shrink-0" style={{ background: "#34c759" }}>
+        <button onClick={handleAddLend} className="btn-lift flex items-center gap-1.5 h-[34px] px-3 rounded-md text-[13px] font-semibold text-white shrink-0" style={{ background: "#16A34A" }}>
           <PlusIcon /><span className="hidden sm:inline">Lend</span>
         </button>
-        <button onClick={handleAddBorrow} className="btn-lift flex items-center gap-1.5 h-[34px] px-3 rounded-[10px] text-[13px] font-semibold text-white shrink-0" style={{ background: "#ff3b30" }}>
+        <button onClick={handleAddBorrow} className="btn-lift flex items-center gap-1.5 h-[34px] px-3 rounded-md text-[13px] font-semibold text-white shrink-0" style={{ background: "#DC2626" }}>
           <PlusIcon /><span className="hidden sm:inline">Borrow</span>
         </button>
       </div>
     ) : (
       <button
         onClick={handleAddClick}
-        className="btn-lift flex items-center gap-1.5 h-[34px] px-3 sm:px-4 rounded-[10px] text-[13px] sm:text-[14px] font-semibold text-white shrink-0"
-        style={{ background: "#007aff" }}
+        className="btn-lift flex items-center gap-1.5 h-[34px] px-3 sm:px-4 rounded-md text-[13px] sm:text-[13px] font-semibold text-white shrink-0"
+        style={{ background: "#2563EB" }}
       >
         <PlusIcon />
         <span className="hidden sm:inline">
@@ -1580,13 +1580,13 @@ onDataChanged?.();
 />
 
       <div
-        className="rounded-[16px] sm:rounded-[20px] overflow-hidden"
+        className="rounded-lg overflow-hidden"
         style={{
           background: "var(--surface)",
           border: "1px solid var(--separator)",
           boxShadow: isDark
-            ? "0 0 0 1px rgba(255,255,255,0.06), 0 4px 20px rgba(255,255,255,0.03)"
-            : "0 1px 3px rgba(0,0,0,0.04), 0 2px 12px rgba(0,0,0,0.04)",
+            ? "none"
+            : "0 1px 2px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04)",
         }}
       >
         <div
@@ -1594,26 +1594,26 @@ onDataChanged?.();
           style={{ borderBottom: "1px solid var(--separator-subtle)" }}
         >
           <div
-            className="flex items-center gap-0.5 p-[3px] rounded-[12px]"
+            className="flex items-center gap-0.5 p-[3px] rounded-lg"
             style={{
-              background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)",
-              border: isDark ? "1px solid rgba(255,255,255,0.07)" : "1px solid rgba(0,0,0,0.04)",
+              background: isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9",
+              border: `1px solid var(--separator)`,
             }}
           >
             {(["assets", "liabilities", "expenses"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setSectionTab(t)}
-                className="px-3 sm:px-4 py-1.5 rounded-[9px] text-[12.5px] sm:text-[13px] font-semibold capitalize"
+                className="px-3 sm:px-3.5 py-1.5 rounded-md text-[12.5px] sm:text-[13px] font-semibold capitalize"
                 style={{
                   background: sectionTab === t
-                    ? (isDark ? "rgba(255,255,255,0.14)" : "#ffffff")
+                    ? (isDark ? "rgba(255,255,255,0.12)" : "#ffffff")
                     : "transparent",
                   color: sectionTab === t ? "var(--text-primary)" : "var(--text-tertiary)",
                   boxShadow: sectionTab === t
-                    ? (isDark ? "0 1px 4px rgba(0,0,0,0.4)" : "0 1px 3px rgba(0,0,0,0.12)")
+                    ? (isDark ? "0 1px 3px rgba(0,0,0,0.4)" : "0 1px 3px rgba(0,0,0,0.10)")
                     : "none",
-                  transition: "background 180ms ease, color 180ms ease, box-shadow 180ms ease",
+                  transition: "background 150ms ease, color 150ms ease, box-shadow 150ms ease",
                 }}
               >
                 {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -1663,16 +1663,13 @@ onDataChanged?.();
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className="shrink-0 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[12.5px] sm:text-[13px] font-medium"
+                className="shrink-0 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-md text-[12.5px] sm:text-[13px] font-medium"
                 style={{
                   background: isActive
-                    ? isDark ? "rgba(255,255,255,0.12)" : "#1d1d1f"
+                    ? isDark ? "rgba(255,255,255,0.10)" : "#0F172A"
                     : "transparent",
-                  color: isActive
-                    ? isDark ? "#ffffff" : "#ffffff"
-                    : "var(--text-secondary)",
-                  border: isActive && isDark ? "1px solid rgba(255,255,255,0.2)" : "1px solid transparent",
-                  transition: "background 180ms ease-out, color 180ms ease-out",
+                  color: isActive ? "#ffffff" : "var(--text-secondary)",
+                  transition: "background 150ms ease, color 150ms ease",
                 }}
               >
                 {tab.label}
@@ -1695,12 +1692,11 @@ onDataChanged?.();
                 <button
                   key={m.key}
                   onClick={() => setExpenseMonthKey(m.key)}
-                  className="shrink-0 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[12.5px] sm:text-[13px] font-medium"
+                  className="shrink-0 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-md text-[12.5px] sm:text-[13px] font-medium"
                   style={{
-                    background: isActive ? (isDark ? "rgba(255,255,255,0.12)" : "#1d1d1f") : "transparent",
+                    background: isActive ? (isDark ? "rgba(255,255,255,0.10)" : "#0F172A") : "transparent",
                     color: isActive ? "#ffffff" : "var(--text-secondary)",
-                    border: isActive && isDark ? "1px solid rgba(255,255,255,0.2)" : "1px solid transparent",
-                    transition: "background 180ms ease-out, color 180ms ease-out",
+                    transition: "background 150ms ease, color 150ms ease",
                   }}
                 >
                   {m.label}
@@ -1732,7 +1728,7 @@ onDataChanged?.();
                     transition: "background 180ms ease-out, color 180ms ease-out",
                   }}
                 >
-                  {cat !== "all" && <span className="mr-1">{getExpenseCategoryMeta(cat).emoji}</span>}{label}
+                  {label}
                 </button>
               );
             })}
@@ -1740,8 +1736,8 @@ onDataChanged?.();
             <div className="w-px h-4 shrink-0 mx-1" style={{ background: "var(--separator)" }} />
             {/* Quick filters */}
             {([
-              { key: "claim", label: "Claim Eligible", color: "#007aff" },
-              { key: "splitwise", label: "SW Pending", color: "#ff9500" },
+              { key: "claim", label: "Claim Eligible", color: "#2563EB" },
+              { key: "splitwise", label: "SW Pending", color: "#D97706" },
             ] as const).map((qf) => {
               const isActive = expenseQuickFilter === qf.key;
               return (
@@ -1790,7 +1786,7 @@ onDataChanged?.();
                 {sep}
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>P&L</p>
-                  <p className="text-[19px] font-bold" style={{ color: pnl >= 0 ? "#34c759" : "#ff3b30", letterSpacing: "-0.025em" }}>
+                  <p className="text-[19px] font-bold" style={{ color: pnl >= 0 ? "#16A34A" : "#DC2626", letterSpacing: "-0.025em" }}>
                     {pnl >= 0 ? "+" : ""}{fmtINR(pnl)}
                     <span className="text-[13px] font-medium ml-1.5" style={{ opacity: 0.7 }}>({pct >= 0 ? "+" : ""}{pct.toFixed(1)}%)</span>
                   </p>
@@ -1803,17 +1799,17 @@ onDataChanged?.();
                 return (<>
                   <div>
                     <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>You Lent</p>
-                    <p className="text-[19px] font-bold" style={{ color: "#34c759", letterSpacing: "-0.025em" }}>+{fmtINR(lentTotal)}</p>
+                    <p className="text-[19px] font-bold" style={{ color: "#16A34A", letterSpacing: "-0.025em" }}>+{fmtINR(lentTotal)}</p>
                   </div>
                   {sep}
                   <div>
                     <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>You Borrowed</p>
-                    <p className="text-[19px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.025em" }}>-{fmtINR(borrowedTotal)}</p>
+                    <p className="text-[19px] font-bold" style={{ color: "#DC2626", letterSpacing: "-0.025em" }}>-{fmtINR(borrowedTotal)}</p>
                   </div>
                   {sep}
                   <div>
                     <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Net</p>
-                    <p className="text-[19px] font-bold" style={{ color: net >= 0 ? "#34c759" : "#ff3b30", letterSpacing: "-0.025em" }}>{net >= 0 ? "+" : ""}{fmtINR(net)}</p>
+                    <p className="text-[19px] font-bold" style={{ color: net >= 0 ? "#16A34A" : "#DC2626", letterSpacing: "-0.025em" }}>{net >= 0 ? "+" : ""}{fmtINR(net)}</p>
                   </div>
                 </>);
               })()}
@@ -1825,12 +1821,12 @@ onDataChanged?.();
                 {sep}
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Claim Eligible</p>
-                  <p className="text-[19px] font-bold" style={{ color: "#007aff", letterSpacing: "-0.025em" }}>{fmtINR(expClaim)}</p>
+                  <p className="text-[19px] font-bold" style={{ color: "#2563EB", letterSpacing: "-0.025em" }}>{fmtINR(expClaim)}</p>
                 </div>
                 {sep}
                 <div>
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>SW Pending</p>
-                  <p className="text-[19px] font-bold" style={{ color: "#ff9500", letterSpacing: "-0.025em" }}>{fmtINR(expSW)}</p>
+                  <p className="text-[19px] font-bold" style={{ color: "#D97706", letterSpacing: "-0.025em" }}>{fmtINR(expSW)}</p>
                 </div>
                 {sep}
                 <div>
@@ -1908,7 +1904,7 @@ onDataChanged?.();
                       onClick={() => handleDelete(asset.id)}
                       className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]"
                       style={{ color: "var(--text-tertiary)" }}
-                      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")}
+                      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#DC2626")}
                       onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
                     >
                       <TrashIcon />
@@ -1959,9 +1955,14 @@ onDataChanged?.();
 
           {filtered.length === 0 && kiteGroupedRows.length === 0 && (
             <div className="py-16 flex flex-col items-center gap-2">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>📊</div>
-              <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No assets yet</p>
-              <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Tap "Add Asset" to get started</p>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "var(--surface-secondary)", color: "var(--text-tertiary)" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+              </div>
+              <p className="text-[14px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No assets yet</p>
+              <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>Add your first asset to get started</p>
             </div>
           )}
         </div>
@@ -2060,7 +2061,7 @@ onDataChanged?.();
                                 onClick={() => handleDelete(asset.id)}
                                 className="icon-btn w-5 h-5 flex items-center justify-center rounded-md"
                                 style={{ color: "var(--text-tertiary)" }}
-                                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")}
+                                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#DC2626")}
                                 onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
                                 title="Delete"
                               >
@@ -2152,9 +2153,14 @@ onDataChanged?.();
 
           {filtered.length === 0 && kiteGroupedRows.length === 0 && (
             <div className="py-16 flex flex-col items-center gap-2">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[22px]" style={{ background: "var(--surface-secondary)" }}>📊</div>
-              <p className="text-[15px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No assets yet</p>
-              <p className="text-[13px]" style={{ color: "var(--text-tertiary)" }}>Add your first asset to get started</p>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "var(--surface-secondary)", color: "var(--text-tertiary)" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+              </div>
+              <p className="text-[14px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No assets yet</p>
+              <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>Add your first asset to get started</p>
             </div>
           )}
         </div>
@@ -2178,20 +2184,20 @@ onDataChanged?.();
             {/* ── MOBILE ── */}
             <div className="md:hidden">
               {filteredAllLent.length > 0 && (<>
-                {sectionHeader("You Lent", "#34c759")}
+                {sectionHeader("You Lent", "#16A34A")}
                 {filteredAllLent.map((f, idx) => {
                   const isLast = idx === filteredAllLent.length - 1 && filteredAllBorrowed.length === 0;
                   return (
                     <div key={f.id} className="px-4 sm:px-5 py-4" style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}>
                       <div className="flex items-start justify-between gap-3">
                         <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{f.name}</p>
-                        <p className="text-[17px] font-bold shrink-0" style={{ color: "#34c759", letterSpacing: "-0.02em" }}>+{fmtAmt(f.amount, f.currency)}</p>
+                        <p className="text-[17px] font-bold shrink-0" style={{ color: "#16A34A", letterSpacing: "-0.02em" }}>+{fmtAmt(f.amount, f.currency)}</p>
                       </div>
                       <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
                         <button onClick={() => { const a = mappedAssets.find((a) => a.id === f.id); if (a) openEditLend(a); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}><EditIcon /> Edit</button>
-                        {f.amount > 0 && <button onClick={() => { setReceivingLend({ id: f.id, name: f.name, outstanding: f.amount, currency: f.currency }); setReceivedModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>Received</button>}
+                        {f.amount > 0 && <button onClick={() => { setReceivingLend({ id: f.id, name: f.name, outstanding: f.amount, currency: f.currency }); setReceivedModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-semibold" style={{ color: "#16A34A", background: "rgba(52,199,89,0.1)" }}>Received</button>}
                         <button onClick={() => { setViewingLendLogs(getLendLogs(f.id)); setViewingLogsLiabilityName(f.name); setLogsModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}>Logs</button>
-                        <button onClick={() => handleDelete(f.id)} className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
+                        <button onClick={() => handleDelete(f.id)} className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#DC2626")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
                       </div>
                     </div>
                   );
@@ -2199,7 +2205,7 @@ onDataChanged?.();
               </>)}
 
               {filteredAllBorrowed.length > 0 && (<>
-                {sectionHeader("You Borrowed", "#ff3b30")}
+                {sectionHeader("You Borrowed", "#DC2626")}
                 {filteredAllBorrowed.map((l, idx) => {
                   const isLast = idx === filteredAllBorrowed.length - 1;
                   return (
@@ -2213,7 +2219,7 @@ onDataChanged?.();
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-[17px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.02em" }}>{fmtAmt(l.outstandingAmount, l.currency)}</p>
+                          <p className="text-[17px] font-bold" style={{ color: "#DC2626", letterSpacing: "-0.02em" }}>{fmtAmt(l.outstandingAmount, l.currency)}</p>
                           {l.outstandingAmount !== l.originalAmount && <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--text-tertiary)" }}>of {fmtAmt(l.originalAmount, l.currency)}</p>}
                         </div>
                       </div>
@@ -2225,9 +2231,9 @@ onDataChanged?.();
                       )}
                       <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
                         <button onClick={() => openEditLiab(l.id)} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}><EditIcon /> Edit</button>
-                        {l.status === "active" && <button onClick={() => { setRepayingLiability({ id: l.id, name: l.lenderName, outstanding: l.outstandingAmount, currency: l.currency }); setRepayModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>Repay</button>}
+                        {l.status === "active" && <button onClick={() => { setRepayingLiability({ id: l.id, name: l.lenderName, outstanding: l.outstandingAmount, currency: l.currency }); setRepayModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-semibold" style={{ color: "#16A34A", background: "rgba(52,199,89,0.1)" }}>Repay</button>}
                         <button onClick={() => { setViewingLendLogs(null); setViewingLogsLiabilityId(l.id); setViewingLogsLiabilityName(l.lenderName); setLogsModalOpen(true); }} className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium" style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}>Logs</button>
-                        <button onClick={() => handleDeleteLiability(l.id)} className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
+                        <button onClick={() => handleDeleteLiability(l.id)} className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#DC2626")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
                       </div>
                     </div>
                   );
@@ -2247,7 +2253,7 @@ onDataChanged?.();
             <div className="hidden md:block" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100dvh - 280px)" }}>
               {/* You Lent */}
               {filteredAllLent.length > 0 && (<>
-                {sectionHeader("You Lent", "#34c759")}
+                {sectionHeader("You Lent", "#16A34A")}
                 <table className="w-full">
                   <thead style={{ position: "sticky", top: 0, zIndex: 10, boxShadow: isDark ? "0 1px 0 rgba(255,255,255,0.07)" : "0 1px 0 rgba(0,0,0,0.07)" }}>
                     <tr>
@@ -2260,12 +2266,12 @@ onDataChanged?.();
                     {filteredAllLent.map((f, idx) => (
                       <tr key={f.id} style={{ borderBottom: idx === filteredAllLent.length - 1 ? "none" : "1px solid var(--separator-subtle)" }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
                         <td className="pl-6 pr-4 py-4"><p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{f.name}</p></td>
-                        <td className="px-4 py-4 text-right"><span className="text-[15px] font-bold" style={{ color: "#34c759", letterSpacing: "-0.01em" }}>+{fmtAmt(f.amount, f.currency)}</span></td>
+                        <td className="px-4 py-4 text-right"><span className="text-[15px] font-bold" style={{ color: "#16A34A", letterSpacing: "-0.01em" }}>+{fmtAmt(f.amount, f.currency)}</span></td>
                         <td className="pr-6 pl-4 py-4"><div className="flex items-center justify-end gap-1.5">
                           <button onClick={() => { const a = mappedAssets.find((a) => a.id === f.id); if (a) openEditLend(a); }} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} title="Edit"><EditIcon /></button>
-                          {f.amount > 0 && <button onClick={() => { setReceivingLend({ id: f.id, name: f.name, outstanding: f.amount, currency: f.currency }); setReceivedModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>Received</button>}
+                          {f.amount > 0 && <button onClick={() => { setReceivingLend({ id: f.id, name: f.name, outstanding: f.amount, currency: f.currency }); setReceivedModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "#16A34A", background: "rgba(52,199,89,0.1)" }}>Received</button>}
                           <button onClick={() => { setViewingLendLogs(getLendLogs(f.id)); setViewingLogsLiabilityName(f.name); setLogsModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }}>Logs</button>
-                          <button onClick={() => handleDelete(f.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
+                          <button onClick={() => handleDelete(f.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#DC2626")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
                         </div></td>
                       </tr>
                     ))}
@@ -2275,7 +2281,7 @@ onDataChanged?.();
 
               {/* You Borrowed */}
               {filteredAllBorrowed.length > 0 && (<>
-                {sectionHeader("You Borrowed", "#ff3b30")}
+                {sectionHeader("You Borrowed", "#DC2626")}
                 <table className="w-full">
                   <thead style={{ position: "sticky", top: 0, zIndex: 10, boxShadow: isDark ? "0 1px 0 rgba(255,255,255,0.07)" : "0 1px 0 rgba(0,0,0,0.07)" }}>
                     <tr>
@@ -2292,7 +2298,7 @@ onDataChanged?.();
                       <tr key={l.id} style={{ borderBottom: idx === filteredAllBorrowed.length - 1 ? "none" : "1px solid var(--separator-subtle)" }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
                         <td className="pl-6 pr-4 py-4"><p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{l.lenderName}</p></td>
                         <td className="px-4 py-4 text-right">
-                          <span className="text-[15px] font-bold" style={{ color: "#ff3b30", letterSpacing: "-0.01em" }}>{fmtAmt(l.outstandingAmount, l.currency)}</span>
+                          <span className="text-[15px] font-bold" style={{ color: "#DC2626", letterSpacing: "-0.01em" }}>{fmtAmt(l.outstandingAmount, l.currency)}</span>
                           {l.outstandingAmount !== l.originalAmount && <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--text-tertiary)" }}>of {fmtAmt(l.originalAmount, l.currency)}</p>}
                         </td>
                         <td className="px-4 py-4 text-[14px] font-medium" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{fmtDate(l.borrowedDate)}</td>
@@ -2300,9 +2306,9 @@ onDataChanged?.();
                         <td className="px-4 py-4"><StatusBadge status={l.status} /></td>
                         <td className="pr-6 pl-4 py-4"><div className="flex items-center justify-end gap-1.5">
                           <button onClick={() => openEditLiab(l.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} title="Edit"><EditIcon /></button>
-                          {l.status === "active" && <button onClick={() => { setRepayingLiability({ id: l.id, name: l.lenderName, outstanding: l.outstandingAmount, currency: l.currency }); setRepayModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "#34c759", background: "rgba(52,199,89,0.1)" }}>Repay</button>}
+                          {l.status === "active" && <button onClick={() => { setRepayingLiability({ id: l.id, name: l.lenderName, outstanding: l.outstandingAmount, currency: l.currency }); setRepayModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "#16A34A", background: "rgba(52,199,89,0.1)" }}>Repay</button>}
                           <button onClick={() => { setViewingLendLogs(null); setViewingLogsLiabilityId(l.id); setViewingLogsLiabilityName(l.lenderName); setLogsModalOpen(true); }} className="h-6 px-2 rounded-[6px] text-[11px] font-semibold" style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }}>Logs</button>
-                          <button onClick={() => handleDeleteLiability(l.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ff3b30")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
+                          <button onClick={() => handleDeleteLiability(l.id)} className="icon-btn w-6 h-6 flex items-center justify-center rounded-md" style={{ color: "var(--text-tertiary)" }} onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#DC2626")} onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}><TrashIcon /></button>
                         </div></td>
                       </tr>
                     ))}
@@ -2339,7 +2345,9 @@ onDataChanged?.();
                   {/* Row 1: title + amount */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[16px] shrink-0 mt-0.5" style={{ background: meta.bg }}>{meta.emoji}</div>
+                      <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 mt-0.5" style={{ background: meta.bg, color: meta.color }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
+                      </div>
                       <div className="min-w-0">
                       <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
                         {e.title}
@@ -2370,7 +2378,7 @@ onDataChanged?.();
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
                           style={{
                             background: e.claim_submitted ? "rgba(52,199,89,0.12)" : "rgba(0,122,255,0.1)",
-                            color: e.claim_submitted ? "#34c759" : "#007aff",
+                            color: e.claim_submitted ? "#16A34A" : "#2563EB",
                           }}>
                           {e.claim_submitted ? "✓ Claimed" : "Claim Pending"}
                         </span>
@@ -2379,7 +2387,7 @@ onDataChanged?.();
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
                           style={{
                             background: e.splitwise_added ? "rgba(52,199,89,0.12)" : "rgba(255,149,0,0.1)",
-                            color: e.splitwise_added ? "#34c759" : "#ff9500",
+                            color: e.splitwise_added ? "#16A34A" : "#D97706",
                           }}>
                           {e.splitwise_added ? "✓ SW Done" : "SW Pending"}
                         </span>
@@ -2397,7 +2405,7 @@ onDataChanged?.();
                     <button onClick={() => handleDeleteExpense(e.id)}
                       className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]"
                       style={{ color: "var(--text-tertiary)" }}
-                      onMouseEnter={(ev) => ((ev.currentTarget as HTMLElement).style.color = "#ff3b30")}
+                      onMouseEnter={(ev) => ((ev.currentTarget as HTMLElement).style.color = "#DC2626")}
                       onMouseLeave={(ev) => ((ev.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}>
                       <TrashIcon />
                     </button>
@@ -2445,7 +2453,9 @@ onDataChanged?.();
                     >
                       <td className="pl-6 pr-4 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[16px] shrink-0" style={{ background: meta.bg }}>{meta.emoji}</div>
+                          <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0" style={{ background: meta.bg, color: meta.color }}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
+                          </div>
                           <div>
                             <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{e.title}</p>
                             <span className="inline-flex items-center gap-1 text-[11px] font-medium mt-0.5" style={{ color: meta.color }}>
@@ -2469,7 +2479,7 @@ onDataChanged?.();
                       <td className="px-4 py-4">
                         {e.claim_eligible ? (
                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                            style={{ background: e.claim_submitted ? "rgba(52,199,89,0.12)" : "rgba(0,122,255,0.1)", color: e.claim_submitted ? "#34c759" : "#007aff" }}>
+                            style={{ background: e.claim_submitted ? "rgba(52,199,89,0.12)" : "rgba(0,122,255,0.1)", color: e.claim_submitted ? "#16A34A" : "#2563EB" }}>
                             {e.claim_submitted ? "✓ Claimed" : "Pending"}
                           </span>
                         ) : <span style={{ color: "var(--text-tertiary)" }}>—</span>}
@@ -2477,7 +2487,7 @@ onDataChanged?.();
                       <td className="px-4 py-4">
                         {e.splitwise_applicable ? (
                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                            style={{ background: e.splitwise_added ? "rgba(52,199,89,0.12)" : "rgba(255,149,0,0.1)", color: e.splitwise_added ? "#34c759" : "#ff9500" }}>
+                            style={{ background: e.splitwise_added ? "rgba(52,199,89,0.12)" : "rgba(255,149,0,0.1)", color: e.splitwise_added ? "#16A34A" : "#D97706" }}>
                             {e.splitwise_added ? "✓ Added" : "Pending"}
                           </span>
                         ) : <span style={{ color: "var(--text-tertiary)" }}>—</span>}
@@ -2492,7 +2502,7 @@ onDataChanged?.();
                           <button onClick={() => handleDeleteExpense(e.id)}
                             className="icon-btn w-6 h-6 flex items-center justify-center rounded-md"
                             style={{ color: "var(--text-tertiary)" }}
-                            onMouseEnter={(ev) => ((ev.currentTarget as HTMLElement).style.color = "#ff3b30")}
+                            onMouseEnter={(ev) => ((ev.currentTarget as HTMLElement).style.color = "#DC2626")}
                             onMouseLeave={(ev) => ((ev.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
                             title="Delete">
                             <TrashIcon />
