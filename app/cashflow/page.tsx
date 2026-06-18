@@ -232,23 +232,50 @@ export default function CashFlowPage() {
     <div className="min-h-screen" style={{ paddingTop: "calc(50px + env(safe-area-inset-top))" }}>
       <Navbar />
       <main
-        className="max-w-[580px] mx-auto px-4 sm:px-5 py-5 flex flex-col gap-4"
+        className="max-w-[1100px] mx-auto px-4 sm:px-5 lg:px-6 py-5"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 7rem)" }}
       >
-        {/* ── Header ──────────────────────────────────────────────── */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+        {/* ── Top bar: title + month pills ──────────────────────── */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.02em", flexShrink: 0 }}>
             Cash Flow
           </h1>
+
+          {/* Month pills — scrollable */}
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide flex-1" style={{ paddingBottom: 2 }}>
+            {months.map((mk) => {
+              const isSelected = mk === selectedMonth;
+              return (
+                <button
+                  key={mk}
+                  onClick={() => setSelectedMonth(mk)}
+                  style={{
+                    flexShrink: 0,
+                    padding: "5px 13px",
+                    borderRadius: 20,
+                    border: `1px solid ${isSelected ? "#2563EB" : "var(--separator)"}`,
+                    background: isSelected ? "#2563EB" : "transparent",
+                    color: isSelected ? "#fff" : "var(--text-secondary)",
+                    fontSize: 13, fontWeight: isSelected ? 600 : 500,
+                    cursor: "pointer", fontFamily: "inherit",
+                    transition: "all 150ms ease",
+                  }}
+                >
+                  {monthLabel(mk)}
+                </button>
+              );
+            })}
+          </div>
+
           <button
             onClick={() => { setEditIncome(null); setShowAddIncome(true); }}
             style={{
-              display: "flex", alignItems: "center", gap: 5,
-              padding: "8px 14px", borderRadius: 10,
+              flexShrink: 0, display: "flex", alignItems: "center", gap: 5,
+              padding: "7px 14px", borderRadius: 10,
               background: isDark ? "rgba(255,255,255,0.08)" : "#F1F5F9",
               border: `1px solid ${isDark ? "#27272A" : "#E2E8F0"}`,
               color: "var(--text-primary)", fontWeight: 600, fontSize: 13,
-              cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
+              cursor: "pointer", fontFamily: "inherit",
             }}
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 4v16M4 12h16" /></svg>
@@ -256,237 +283,185 @@ export default function CashFlowPage() {
           </button>
         </div>
 
-        {/* ── Month selector ─────────────────────────────────────── */}
-        <div
-          className="flex gap-1.5 overflow-x-auto scrollbar-hide"
-          style={{ paddingBottom: 2 }}
-        >
-          {months.map((mk) => {
-            const isSelected = mk === selectedMonth;
-            return (
-              <button
-                key={mk}
-                onClick={() => setSelectedMonth(mk)}
-                style={{
-                  flexShrink: 0,
-                  padding: "6px 14px",
-                  borderRadius: 20,
-                  border: `1px solid ${isSelected ? "#2563EB" : "var(--separator)"}`,
-                  background: isSelected ? "#2563EB" : "transparent",
-                  color: isSelected ? "#fff" : "var(--text-secondary)",
-                  fontSize: 13, fontWeight: isSelected ? 600 : 500,
-                  cursor: "pointer", fontFamily: "inherit",
-                  transition: "all 150ms ease",
-                }}
-              >
-                {monthLabel(mk)}
-              </button>
-            );
-          })}
-        </div>
+        {/* ── 2-column grid ─────────────────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
 
-        {/* ── Hero card ──────────────────────────────────────────── */}
-        <div style={card}>
-          <p style={{ margin: "0 0 16px", fontSize: 12, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
-            {monthLabelFull(selectedMonth)}
-          </p>
+          {/* ── LEFT: Hero + Insights ────────────────────────────── */}
+          <div className="flex flex-col gap-4">
 
-          {dataLoading ? (
-            <div style={{ height: 80, background: "var(--surface-secondary)", borderRadius: 12, animation: "pulse 1.5s ease-in-out infinite" }} />
-          ) : !hasIncome ? (
-            <div style={{ textAlign: "center", padding: "12px 0 4px" }}>
-              <p style={{ margin: "0 0 4px", fontSize: 15, color: "var(--text-secondary)" }}>No income recorded for this month.</p>
-              <button
-                onClick={() => { setEditIncome(null); setShowAddIncome(true); }}
-                style={{ color: "#2563EB", background: "none", border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600, fontFamily: "inherit" }}
-              >
-                + Add income to get started
-              </button>
+            {/* Hero card */}
+            <div style={card}>
+              <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
+                {monthLabelFull(selectedMonth)}
+              </p>
+
+              {dataLoading ? (
+                <div style={{ height: 96, background: "var(--surface-secondary)", borderRadius: 12 }} />
+              ) : !hasIncome ? (
+                <div style={{ padding: "8px 0 4px" }}>
+                  <p style={{ margin: "0 0 8px", fontSize: 14, color: "var(--text-secondary)" }}>No income recorded yet.</p>
+                  <button
+                    onClick={() => { setEditIncome(null); setShowAddIncome(true); }}
+                    style={{ color: "#2563EB", background: "none", border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600, fontFamily: "inherit", padding: 0 }}
+                  >
+                    + Add income to get started
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Big savings number */}
+                  <p style={{ margin: "0 0 2px", fontSize: 13, color: "var(--text-secondary)" }}>
+                    {saved >= 0 ? "You saved" : "You overspent by"}
+                  </p>
+                  <p style={{ margin: 0, fontSize: 40, fontWeight: 700, letterSpacing: "-0.04em", color: saved >= 0 ? "var(--text-primary)" : "#DC2626", lineHeight: 1.1 }}>
+                    {fmtINR(Math.abs(saved))}
+                  </p>
+
+                  {/* Rate badge */}
+                  <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 20, background: isDark ? "rgba(255,255,255,0.06)" : "var(--surface-secondary)", border: "1px solid var(--separator)" }}>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: rc, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: rc }}>{current.savingsRate.toFixed(1)}% savings rate</span>
+                    <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>· target 30%</span>
+                  </div>
+
+                  {/* Income / Expenses */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr", gap: 0, marginTop: 20, paddingTop: 18, borderTop: "1px solid var(--separator)" }}>
+                    <div style={{ paddingRight: 16 }}>
+                      <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>Income</p>
+                      <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#16A34A", letterSpacing: "-0.02em" }}>{fmtINR(current.income)}</p>
+                    </div>
+                    <div style={{ background: "var(--separator)" }} />
+                    <div style={{ paddingLeft: 16 }}>
+                      <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>Expenses</p>
+                      <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#DC2626", letterSpacing: "-0.02em" }}>{fmtINR(current.expenses)}</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-          ) : (
-            <>
-              {/* Big savings number */}
-              <div style={{ marginBottom: 16 }}>
-                <p style={{ margin: "0 0 4px", fontSize: 13, color: "var(--text-secondary)" }}>
-                  {saved >= 0 ? "You saved" : "You overspent by"}
-                </p>
-                <p style={{ margin: 0, fontSize: 38, fontWeight: 700, letterSpacing: "-0.04em", color: saved >= 0 ? "var(--text-primary)" : "#DC2626", lineHeight: 1.1 }}>
-                  {fmtINR(Math.abs(saved))}
-                </p>
-                {/* Rate badge */}
-                <div style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 20, background: isDark ? "rgba(255,255,255,0.06)" : "var(--surface-secondary)", border: "1px solid var(--separator)" }}>
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: rc, flexShrink: 0 }} />
-                  <span style={{ fontSize: 12, fontWeight: 600, color: rc }}>
-                    {current.savingsRate.toFixed(1)}% savings rate
-                  </span>
-                  <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>
-                    · target 30%
-                  </span>
+
+            {/* Insights */}
+            {!dataLoading && insights.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {insights.map((ins, i) => {
+                  const dotColor = ins.type === "positive" ? "#16A34A" : ins.type === "negative" ? "#DC2626" : "#2563EB";
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "11px 16px", borderRadius: 14,
+                        background: "var(--surface)",
+                        border: "1px solid var(--separator)",
+                        boxShadow: isDark ? "none" : "0 1px 3px rgba(0,0,0,0.04)",
+                      }}
+                    >
+                      <div style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
+                      <p style={{ margin: 0, fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>{ins.text}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* ── RIGHT: Chart + Income sources ───────────────────── */}
+          <div className="flex flex-col gap-4">
+
+            {/* Chart card */}
+            <div style={card}>
+              <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.6px" }}>Savings Rate</p>
+              <p style={{ margin: "0 0 16px", fontSize: 12, color: "var(--text-tertiary)" }}>6 months · click bar to select · dashed = 30% target</p>
+
+              {dataLoading ? (
+                <div style={{ height: 160, background: "var(--surface-secondary)", borderRadius: 12 }} />
+              ) : (
+                <ResponsiveContainer width="100%" height={160}>
+                  <BarChart
+                    data={monthData}
+                    barCategoryGap="30%"
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    onClick={(d: any) => {
+                      const mk = d?.activePayload?.[0]?.payload?.month_key;
+                      if (mk) setSelectedMonth(mk);
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <XAxis dataKey="label" tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<RateTooltip />} cursor={{ fill: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", radius: 6 }} />
+                    <ReferenceLine y={30} stroke={isDark ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.18)"} strokeDasharray="4 3" strokeWidth={1.5} />
+                    <Bar dataKey="savingsRate" radius={[5, 5, 0, 0]}>
+                      {monthData.map((m) => (
+                        <Cell
+                          key={m.month_key}
+                          fill={
+                            m.month_key === selectedMonth
+                              ? rateColor(m.savingsRate, m.income > 0)
+                              : m.income > 0
+                                ? rateColor(m.savingsRate, true) + "55"
+                                : (isDark ? "#27272A" : "#E2E8F0")
+                          }
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+
+            {/* Income sources card */}
+            <div style={card}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <div>
+                  <p style={{ margin: "0 0 1px", fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.6px" }}>Income Sources</p>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--text-secondary)", fontWeight: 500 }}>{monthLabelFull(selectedMonth)}</p>
                 </div>
+                <button
+                  onClick={() => { setEditIncome(null); setShowAddIncome(true); }}
+                  style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 11px", borderRadius: 8, background: "transparent", border: `1px solid ${isDark ? "#27272A" : "#E2E8F0"}`, color: "#2563EB", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 4v16M4 12h16" /></svg>
+                  Add
+                </button>
               </div>
 
-              {/* Income / Expenses row */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr", gap: 0 }}>
-                <div style={{ paddingRight: 16 }}>
-                  <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>Income</p>
-                  <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#16A34A", letterSpacing: "-0.02em" }}>{fmtINR(current.income)}</p>
+              {dataLoading ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {[1, 2].map((i) => <div key={i} style={{ height: 18, borderRadius: 8, background: "var(--surface-secondary)" }} />)}
                 </div>
-                <div style={{ background: "var(--separator)" }} />
-                <div style={{ paddingLeft: 16 }}>
-                  <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>Expenses</p>
-                  <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#DC2626", letterSpacing: "-0.02em" }}>{fmtINR(current.expenses)}</p>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* ── Savings rate trend ─────────────────────────────────── */}
-        <div style={card}>
-          <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.6px" }}>Savings Rate Trend</p>
-          <p style={{ margin: "0 0 16px", fontSize: 12, color: "var(--text-tertiary)" }}>6-month view · dashed line = 30% target</p>
-
-          {dataLoading ? (
-            <div style={{ height: 140, background: "var(--surface-secondary)", borderRadius: 12 }} />
-          ) : (
-            <ResponsiveContainer width="100%" height={140}>
-              <BarChart
-                data={monthData}
-                barCategoryGap="30%"
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                onClick={(d: any) => {
-                  const mk = d?.activePayload?.[0]?.payload?.month_key;
-                  if (mk) setSelectedMonth(mk);
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <XAxis
-                  dataKey="label"
-                  tick={{ fill: "var(--text-tertiary)", fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip content={<RateTooltip />} cursor={{ fill: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", radius: 6 }} />
-                <ReferenceLine
-                  y={30}
-                  stroke={isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.18)"}
-                  strokeDasharray="4 3"
-                  strokeWidth={1.5}
-                />
-                <Bar dataKey="savingsRate" radius={[5, 5, 0, 0]}>
-                  {monthData.map((m) => (
-                    <Cell
-                      key={m.month_key}
-                      fill={
-                        m.month_key === selectedMonth
-                          ? rateColor(m.savingsRate, m.income > 0)
-                          : m.income > 0
-                            ? isDark
-                              ? rateColor(m.savingsRate, true) + "55"
-                              : rateColor(m.savingsRate, true) + "55"
-                            : (isDark ? "#27272A" : "#E2E8F0")
-                      }
-                    />
+              ) : currentIncome.length === 0 ? (
+                <p style={{ margin: 0, fontSize: 13, color: "var(--text-tertiary)", padding: "10px 0" }}>No income recorded yet.</p>
+              ) : (
+                <div>
+                  {currentIncome.map((r, i) => (
+                    <div
+                      key={r.id}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: i < currentIncome.length - 1 ? "1px solid var(--separator)" : "none" }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{r.source}</p>
+                        {r.notes && <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--text-tertiary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.notes}</p>}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 10 }}>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#16A34A", letterSpacing: "-0.01em" }}>{fmtINR(r.amount)}</p>
+                        <button onClick={() => { setEditIncome(r); setShowAddIncome(true); }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-tertiary)", fontSize: 12, fontWeight: 500, padding: "2px 5px", fontFamily: "inherit", borderRadius: 5 }}>Edit</button>
+                        <button onClick={() => deleteIncome(r.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#DC2626", display: "flex", alignItems: "center", padding: "2px 3px" }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" /></svg>
+                        </button>
+                      </div>
+                    </div>
                   ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        {/* ── Insights ───────────────────────────────────────────── */}
-        {!dataLoading && insights.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {insights.map((ins, i) => {
-              const dotColor = ins.type === "positive" ? "#16A34A" : ins.type === "negative" ? "#DC2626" : "#2563EB";
-              return (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 10,
-                    padding: "12px 16px", borderRadius: 14,
-                    background: "var(--surface)",
-                    border: "1px solid var(--separator)",
-                    boxShadow: isDark ? "none" : "0 1px 3px rgba(0,0,0,0.04)",
-                  }}
-                >
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
-                  <p style={{ margin: 0, fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>{ins.text}</p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* ── Income sources ─────────────────────────────────────── */}
-        <div style={card}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <div>
-              <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.6px" }}>Income</p>
-              <p style={{ margin: 0, fontSize: 14, color: "var(--text-secondary)", fontWeight: 500 }}>{monthLabelFull(selectedMonth)}</p>
-            </div>
-            <button
-              onClick={() => { setEditIncome(null); setShowAddIncome(true); }}
-              style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: 8, background: "transparent", border: `1px solid ${isDark ? "#27272A" : "#E2E8F0"}`, color: "#2563EB", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
-            >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 4v16M4 12h16" /></svg>
-              Add
-            </button>
-          </div>
-
-          {dataLoading ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {[1, 2].map((i) => (
-                <div key={i} style={{ height: 20, borderRadius: 8, background: "var(--surface-secondary)" }} />
-              ))}
-            </div>
-          ) : currentIncome.length === 0 ? (
-            <p style={{ margin: 0, fontSize: 14, color: "var(--text-tertiary)", textAlign: "center", padding: "12px 0" }}>
-              No income recorded yet.
-            </p>
-          ) : (
-            <div>
-              {currentIncome.map((r, i) => (
-                <div
-                  key={r.id}
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "11px 0",
-                    borderBottom: i < currentIncome.length - 1 ? "1px solid var(--separator)" : "none",
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{r.source}</p>
-                    {r.notes && (
-                      <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-tertiary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.notes}</p>
-                    )}
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, marginLeft: 12 }}>
-                    <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#16A34A", letterSpacing: "-0.01em" }}>{fmtINR(r.amount)}</p>
-                    <button
-                      onClick={() => { setEditIncome(r); setShowAddIncome(true); }}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-tertiary)", fontSize: 12, fontWeight: 500, padding: "3px 6px", fontFamily: "inherit", borderRadius: 6 }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteIncome(r.id)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "#DC2626", fontSize: 16, lineHeight: 1, padding: "3px 4px", display: "flex", alignItems: "center" }}
-                    >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" /></svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              {currentIncome.length > 1 && (
-                <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--separator)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Total</span>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: "#16A34A" }}>{fmtINR(current.income)}</span>
+                  {currentIncome.length > 1 && (
+                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--separator)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Total</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: "#16A34A" }}>{fmtINR(current.income)}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
+
+          </div>
         </div>
       </main>
 
