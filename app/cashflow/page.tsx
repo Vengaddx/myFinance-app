@@ -283,6 +283,40 @@ export default function CashFlowPage() {
           </button>
         </div>
 
+        {/* ── Overall summary strip ─────────────────────────────── */}
+        {!dataLoading && (() => {
+          const withData = monthData.filter((m) => m.income > 0);
+          const totalIncome   = withData.reduce((s, m) => s + m.income, 0);
+          const totalExpenses = withData.reduce((s, m) => s + m.expenses, 0);
+          const totalSavings  = totalIncome - totalExpenses;
+          const overallRate   = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
+          if (withData.length === 0) return null;
+          const rc2 = rateColor(overallRate, true);
+          return (
+            <div style={{ ...card, padding: "14px 20px", marginBottom: 16, display: "flex", flexWrap: "wrap", gap: "12px 32px", alignItems: "center" }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.6px", flexShrink: 0 }}>
+                {withData.length}-Month Overall
+              </span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 28px", flex: 1 }}>
+                {[
+                  { label: "Total Income",   value: fmtINR(totalIncome),   color: "#16A34A" },
+                  { label: "Total Expenses", value: fmtINR(totalExpenses), color: "#DC2626" },
+                  { label: "Total Savings",  value: fmtINR(totalSavings),  color: totalSavings >= 0 ? "var(--text-primary)" : "#DC2626" },
+                ].map(({ label, value, color }) => (
+                  <div key={label}>
+                    <p style={{ margin: "0 0 1px", fontSize: 10, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</p>
+                    <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color, letterSpacing: "-0.01em" }}>{value}</p>
+                  </div>
+                ))}
+                <div>
+                  <p style={{ margin: "0 0 1px", fontSize: 10, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Savings Rate</p>
+                  <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: rc2, letterSpacing: "-0.01em" }}>{overallRate.toFixed(1)}%</p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ── 2-column grid ─────────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
 
@@ -461,6 +495,98 @@ export default function CashFlowPage() {
               )}
             </div>
 
+          </div>
+        </div>
+
+        {/* ── Monthly breakdown table ───────────────────────────── */}
+        <div style={{ ...card, marginTop: 16, padding: 0, overflow: "hidden" }}>
+          <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid var(--separator)" }}>
+            <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.6px" }}>Monthly Breakdown</p>
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--separator)" }}>
+                  {["Month", "Income", "Expenses", "Savings", "Savings Rate"].map((h) => (
+                    <th key={h} style={{ padding: "10px 20px", textAlign: h === "Month" ? "left" : "right", fontSize: 10, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap" }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {dataLoading
+                  ? [1, 2, 3, 4, 5, 6].map((i) => (
+                    <tr key={i}>
+                      {[1, 2, 3, 4, 5].map((j) => (
+                        <td key={j} style={{ padding: "12px 20px" }}>
+                          <div style={{ height: 14, borderRadius: 6, background: "var(--surface-secondary)", width: j === 1 ? 60 : 80 }} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                  : monthData.map((m, i) => {
+                    const isSelected = m.month_key === selectedMonth;
+                    const rc3 = rateColor(m.savingsRate, m.income > 0);
+                    return (
+                      <tr
+                        key={m.month_key}
+                        onClick={() => setSelectedMonth(m.month_key)}
+                        style={{
+                          borderBottom: i < monthData.length - 1 ? "1px solid var(--separator)" : "none",
+                          background: isSelected ? (isDark ? "rgba(37,99,235,0.08)" : "rgba(37,99,235,0.04)") : "transparent",
+                          cursor: "pointer",
+                          transition: "background 120ms",
+                        }}
+                      >
+                        <td style={{ padding: "12px 20px", fontWeight: isSelected ? 700 : 500, color: isSelected ? "#2563EB" : "var(--text-primary)", whiteSpace: "nowrap" }}>
+                          {monthLabelFull(m.month_key)}
+                        </td>
+                        <td style={{ padding: "12px 20px", textAlign: "right", fontWeight: 600, color: m.income > 0 ? "#16A34A" : "var(--text-tertiary)" }}>
+                          {m.income > 0 ? fmtINR(m.income) : "—"}
+                        </td>
+                        <td style={{ padding: "12px 20px", textAlign: "right", fontWeight: 600, color: m.expenses > 0 ? "#DC2626" : "var(--text-tertiary)" }}>
+                          {m.expenses > 0 ? fmtINR(m.expenses) : "—"}
+                        </td>
+                        <td style={{ padding: "12px 20px", textAlign: "right", fontWeight: 600, color: m.income > 0 ? (m.savings >= 0 ? "var(--text-primary)" : "#DC2626") : "var(--text-tertiary)" }}>
+                          {m.income > 0 ? fmtINR(m.savings) : "—"}
+                        </td>
+                        <td style={{ padding: "12px 20px", textAlign: "right" }}>
+                          {m.income > 0 ? (
+                            <span style={{ fontWeight: 700, color: rc3 }}>{m.savingsRate.toFixed(1)}%</span>
+                          ) : (
+                            <span style={{ color: "var(--text-tertiary)" }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                }
+              </tbody>
+              {/* Overall totals row */}
+              {!dataLoading && (() => {
+                const withData = monthData.filter((m) => m.income > 0);
+                if (withData.length === 0) return null;
+                const totalIncome   = withData.reduce((s, m) => s + m.income, 0);
+                const totalExpenses = withData.reduce((s, m) => s + m.expenses, 0);
+                const totalSavings  = totalIncome - totalExpenses;
+                const overallRate   = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
+                const rc4 = rateColor(overallRate, true);
+                return (
+                  <tfoot>
+                    <tr style={{ borderTop: `2px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)"}`, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)" }}>
+                      <td style={{ padding: "12px 20px", fontSize: 11, fontWeight: 700, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                        {withData.length}-Month Total
+                      </td>
+                      <td style={{ padding: "12px 20px", textAlign: "right", fontWeight: 700, color: "#16A34A" }}>{fmtINR(totalIncome)}</td>
+                      <td style={{ padding: "12px 20px", textAlign: "right", fontWeight: 700, color: "#DC2626" }}>{fmtINR(totalExpenses)}</td>
+                      <td style={{ padding: "12px 20px", textAlign: "right", fontWeight: 700, color: totalSavings >= 0 ? "var(--text-primary)" : "#DC2626" }}>{fmtINR(totalSavings)}</td>
+                      <td style={{ padding: "12px 20px", textAlign: "right", fontWeight: 700, color: rc4 }}>{overallRate.toFixed(1)}%</td>
+                    </tr>
+                  </tfoot>
+                );
+              })()}
+            </table>
           </div>
         </div>
       </main>
