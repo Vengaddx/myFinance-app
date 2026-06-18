@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     console.error("[kite/disconnect] DB cleanup error:", err);
   }
 
-  const response = NextResponse.redirect(new URL("/stocks", req.url));
+  const response = NextResponse.redirect(new URL("/settings", req.url));
 
   const remaining = Object.keys(accounts).length;
   if (remaining === 0) {

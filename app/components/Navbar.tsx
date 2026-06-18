@@ -10,7 +10,6 @@ import Link from "next/link";
 
 const NAV_ITEMS = [
   { label: "Portfolio", id: "portfolio" },
-  { label: "Stocks",    id: "stocks" },
   { label: "Goals",     id: "goals" },
   { label: "Cash Flow", id: "cashflow" },
 ];
@@ -22,15 +21,6 @@ function PortfolioIcon() {
       <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
       <line x1="12" y1="12" x2="12" y2="16" />
       <line x1="8" y1="14" x2="16" y2="14" />
-    </svg>
-  );
-}
-
-function StocksIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-      <polyline points="16 7 22 7 22 13" />
     </svg>
   );
 }
@@ -175,7 +165,6 @@ function UserDropdown({
 
 const NAV_ICONS: Record<string, React.ReactNode> = {
   portfolio: <PortfolioIcon />,
-  stocks:    <StocksIcon />,
   goals:     <GoalsIcon />,
   cashflow:  <CashFlowIcon />,
 };
@@ -189,7 +178,6 @@ export default function Navbar() {
   const [showDonate, setShowDonate] = useState(false);
 
   const activeTab =
-    pathname === "/stocks"   ? "stocks"   :
     pathname === "/goals"    ? "goals"    :
     pathname === "/cashflow" ? "cashflow" :
     "portfolio";
@@ -498,7 +486,7 @@ export default function Navbar() {
                 key={item.id}
                 ref={(el) => { bottomBtnRefs.current[idx] = el; }}
                 onClick={() => router.push(item.id === "portfolio" ? "/" : `/${item.id}`)}
-                className={`relative z-10 flex flex-col items-center gap-[3px] px-[18px] py-[5px] active:scale-95${item.id === "stocks" ? " hidden" : ""}`}
+                className="relative z-10 flex flex-col items-center gap-[3px] px-[18px] py-[5px] active:scale-95"
                 style={{
                   borderRadius: 24,
                   transition: "transform 120ms ease",

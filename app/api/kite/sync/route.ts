@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   const kiteToken = accounts[label];
   if (!kiteToken) {
-    return NextResponse.redirect(new URL("/stocks?sync=error", req.url));
+    return NextResponse.redirect(new URL("/settings?sync=error", req.url));
   }
 
   // Get Supabase user (auth stored in cookies by createBrowserClient)
@@ -60,13 +60,13 @@ export async function POST(req: NextRequest) {
     const data = await res.json();
     if (!res.ok) {
       console.error("[kite/sync] Kite error:", data);
-      return NextResponse.redirect(new URL("/stocks?sync=error", req.url));
+      return NextResponse.redirect(new URL("/settings?sync=error", req.url));
     }
     holdings = data.data ?? [];
   } catch (err) {
     clearTimeout(timer);
     console.error("[kite/sync] fetch error:", err);
-    return NextResponse.redirect(new URL("/stocks?sync=error", req.url));
+    return NextResponse.redirect(new URL("/settings?sync=error", req.url));
   }
 
   const now = new Date().toISOString();
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
 
   if (deleteError) {
     console.error("[kite/sync] DB delete error:", deleteError.message);
-    return NextResponse.redirect(new URL("/stocks?sync=error", req.url));
+    return NextResponse.redirect(new URL("/settings?sync=error", req.url));
   }
 
   if (rows.length > 0) {
@@ -104,9 +104,9 @@ export async function POST(req: NextRequest) {
 
     if (insertError) {
       console.error("[kite/sync] DB insert error:", insertError.message);
-      return NextResponse.redirect(new URL("/stocks?sync=error", req.url));
+      return NextResponse.redirect(new URL("/settings?sync=error", req.url));
     }
   }
 
-  return NextResponse.redirect(new URL("/stocks?sync=done", req.url));
+  return NextResponse.redirect(new URL("/settings?sync=done", req.url));
 }
