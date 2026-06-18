@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get("status");
 
   if (status !== "success" || !requestToken) {
-    return NextResponse.redirect(new URL("/stocks?kite=error", req.url));
+    return NextResponse.redirect(new URL("/settings?kite=error", req.url));
   }
 
   const apiKey = process.env.KITE_API_KEY!;
@@ -43,21 +43,21 @@ export async function GET(req: NextRequest) {
 
     if (!res.ok || !token || !userId) {
       console.error("[kite/callback] token exchange failed:", data);
-      return NextResponse.redirect(new URL("/stocks?kite=error", req.url));
+      return NextResponse.redirect(new URL("/settings?kite=error", req.url));
     }
 
     accessToken = token;
     kiteUserId = userId; // e.g. "WMQ571"
   } catch (err) {
     console.error("[kite/callback] fetch error:", err);
-    return NextResponse.redirect(new URL("/stocks?kite=error", req.url));
+    return NextResponse.redirect(new URL("/settings?kite=error", req.url));
   }
 
   // Use Kite user ID as the account label — unique, no user input needed
   const accounts = parseAccounts(req.cookies.get("kite_accounts")?.value);
   accounts[kiteUserId] = accessToken;
 
-  const response = NextResponse.redirect(new URL("/stocks?kite=connected", req.url));
+  const response = NextResponse.redirect(new URL("/settings?kite=connected", req.url));
   response.cookies.set("kite_accounts", encodeURIComponent(JSON.stringify(accounts)), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
