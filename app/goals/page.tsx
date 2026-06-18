@@ -419,6 +419,8 @@ function SliderRow({
   );
 }
 
+const COAST_HORIZON_YEARS = 25;
+
 function FIREView({
   currentNetWorth,
   avgMonthlyExpenses,
@@ -441,145 +443,215 @@ function FIREView({
     }
   }, [expensesLoaded, avgMonthlyExpenses, initialized]);
 
-  const fireCorpus = useMemo(() => swrPct > 0 ? (monthlyExp * 12) / (swrPct / 100) : 0, [monthlyExp, swrPct]);
-  const progress = useMemo(() => fireCorpus > 0 ? Math.min((currentNetWorth / fireCorpus) * 100, 100) : 0, [currentNetWorth, fireCorpus]);
-  const monthsToFIRE = useMemo(() => calcMonthsToFIRE(currentNetWorth, monthlyInv, roiPct, fireCorpus), [currentNetWorth, monthlyInv, roiPct, fireCorpus]);
-  const fireYear = useMemo(() => {
+  const fireCorpus    = useMemo(() => swrPct > 0 ? (monthlyExp * 12) / (swrPct / 100) : 0, [monthlyExp, swrPct]);
+  const progress      = useMemo(() => fireCorpus > 0 ? Math.min((currentNetWorth / fireCorpus) * 100, 100) : 0, [currentNetWorth, fireCorpus]);
+  const monthsToFIRE  = useMemo(() => calcMonthsToFIRE(currentNetWorth, monthlyInv, roiPct, fireCorpus), [currentNetWorth, monthlyInv, roiPct, fireCorpus]);
+  const passiveMonthly = useMemo(() => fireCorpus > 0 ? (fireCorpus * (swrPct / 100)) / 12 : 0, [fireCorpus, swrPct]);
+  const fireDate      = useMemo(() => {
     if (monthsToFIRE == null || monthsToFIRE === 0) return null;
     const d = new Date(new Date().getFullYear(), new Date().getMonth() + monthsToFIRE, 1);
     return d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
   }, [monthsToFIRE]);
-  const passiveMonthly = useMemo(() => fireCorpus > 0 ? (fireCorpus * (swrPct / 100)) / 12 : 0, [fireCorpus, swrPct]);
 
-  const progressColor = progress >= 100 ? "#16A34A" : progress >= 50 ? "#2563EB" : "#D97706";
+  // Coast FIRE: amount needed now to grow to corpus over COAST_HORIZON_YEARS, investing nothing further
+  const coastFIRE     = useMemo(() => (roiPct > 0 && fireCorpus > 0) ? fireCorpus / Math.pow(1 + roiPct / 100, COAST_HORIZON_YEARS) : 0, [fireCorpus, roiPct]);
+  const coastAchieved = coastFIRE > 0 && currentNetWorth >= coastFIRE;
+
+  // Sensitivity: +₹10K/mo investment
+  const monthsPlus10K         = useMemo(() => calcMonthsToFIRE(currentNetWorth, monthlyInv + 10000, roiPct, fireCorpus), [currentNetWorth, monthlyInv, roiPct, fireCorpus]);
+  const invSensitivityMonths  = useMemo(() => (monthsToFIRE != null && monthsPlus10K != null) ? monthsToFIRE - monthsPlus10K : null, [monthsToFIRE, monthsPlus10K]);
+
+  // Sensitivity: −10% expenses
+  const reducedExpMonths      = useMemo(() => {
+    const newCorpus = swrPct > 0 ? (monthlyExp * 0.9 * 12) / (swrPct / 100) : 0;
+    return calcMonthsToFIRE(currentNetWorth, monthlyInv, roiPct, newCorpus);
+  }, [currentNetWorth, monthlyInv, roiPct, monthlyExp, swrPct]);
+  const expSensitivityMonths  = useMemo(() => (monthsToFIRE != null && reducedExpMonths != null) ? monthsToFIRE - reducedExpMonths : null, [monthsToFIRE, reducedExpMonths]);
+
   const timeLabel = monthsToFIRE == null
-    ? "60+ yrs"
+    ? "60+ years"
     : monthsToFIRE === 0
-    ? "You're FIRE!"
+    ? "Achieved!"
     : monthsToFIRE < 12
     ? `${monthsToFIRE} months`
     : `${(monthsToFIRE / 12).toFixed(1)} years`;
 
+  const progressColor = progress >= 100 ? "#16A34A" : "#2563EB";
+
+  const insights: { text: string; type: "positive" | "negative" | "neutral" }[] = useMemo(() => {
+    const out: typeof insights = [];
+
+    if (progress > 0) {
+      out.push({
+        text: `You are ${progress.toFixed(1)}% of the way to your FIRE corpus${fireDate ? ` — on track for ${fireDate}` : ""}`,
+        type: progress >= 50 ? "positive" : progress >= 25 ? "neutral" : "negative",
+      });
+    }
+    if (invSensitivityMonths != null && invSensitivityMonths > 1) {
+      const label = invSensitivityMonths >= 12 ? `${(invSensitivityMonths / 12).toFixed(1)} years` : `${invSensitivityMonths} months`;
+      out.push({ text: `Investing ₹10K more every month shaves ${label} off your FIRE date`, type: "neutral" });
+    }
+    if (coastAchieved) {
+      out.push({ text: `Coast FIRE achieved — your corpus grows on its own over ${COAST_HORIZON_YEARS} years, even without further contributions`, type: "positive" });
+    } else if (coastFIRE > 0 && currentNetWorth > 0) {
+      const gap = coastFIRE - currentNetWorth;
+      out.push({ text: `Coast FIRE is ${fmtINR(gap)} away — reach it and your money takes over without any further investment`, type: "neutral" });
+    }
+    if (expSensitivityMonths != null && expSensitivityMonths > 1) {
+      const label = expSensitivityMonths >= 12 ? `${(expSensitivityMonths / 12).toFixed(1)} years` : `${expSensitivityMonths} months`;
+      out.push({ text: `Cutting expenses by 10% could retire you ${label} sooner — and permanently lowers the corpus you need`, type: "neutral" });
+    }
+    if (passiveMonthly > 0) {
+      out.push({ text: `At FIRE, your portfolio generates ${fmtINR(passiveMonthly)}/month in passive income`, type: "positive" });
+    }
+
+    return out.slice(0, 4);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progress, fireDate, invSensitivityMonths, coastAchieved, coastFIRE, currentNetWorth, expSensitivityMonths, passiveMonthly, monthlyExp]);
+
   const card: React.CSSProperties = {
     background: "var(--surface)",
-    borderRadius: 22,
+    borderRadius: 20,
     border: "1px solid var(--separator)",
-    boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 2px 12px rgba(0,0,0,0.04)",
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-      {/* ── Left: Outcome card ── */}
-      <div style={{ ...card, padding: "24px" }}>
-        <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.7px", color: "var(--text-tertiary)" }}>
-          Time to FIRE
-        </p>
-        <p style={{
-          margin: 0, fontSize: 48, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1,
-          color: monthsToFIRE === 0 ? "#16A34A" : monthsToFIRE == null ? "#D97706" : "var(--text-primary)",
-        }}>
-          {timeLabel}
-        </p>
-        {fireYear && (
-          <p style={{ margin: "6px 0 0", fontSize: 14, color: "var(--text-secondary)", fontWeight: 500 }}>
-            Estimated retirement — <strong style={{ color: "var(--text-primary)" }}>{fireYear}</strong>
-          </p>
-        )}
-
-        <div style={{ height: 1, background: "var(--separator)", margin: "20px 0" }} />
-
-        {/* Progress */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <span style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 500 }}>Progress to FIRE</span>
-            <span style={{ fontSize: 15, fontWeight: 800, color: progressColor }}>{progress.toFixed(1)}%</span>
+      {/* ── Hero strip ─────────────────────────────────────────── */}
+      <div style={{ ...card, padding: "24px 28px" }}>
+        {/* Net Worth → Corpus progress row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 22, flexWrap: "wrap" }}>
+          <div style={{ minWidth: 120 }}>
+            <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>Current Net Worth</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.03em" }}>{fmtINR(currentNetWorth)}</p>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#16A34A", background: "rgba(22,163,74,0.10)", padding: "2px 7px", borderRadius: 8, letterSpacing: "0.3px" }}>Live</span>
+            </div>
           </div>
-          <div style={{ height: 8, borderRadius: 4, background: "rgba(120,120,128,0.12)", overflow: "hidden" }}>
-            <div style={{
-              height: "100%", borderRadius: 4, width: `${progress}%`,
-              background: progress >= 100 ? "#16A34A" : `linear-gradient(90deg, #D97706 0%, #2563EB 60%, #16A34A 100%)`,
-              transition: "width 300ms ease",
-            }} />
+          <div style={{ flex: 1, minWidth: 80 }}>
+            <div style={{ height: 5, borderRadius: 3, background: "rgba(120,120,128,0.12)", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${progress}%`, borderRadius: 3, background: progressColor, transition: "width 400ms ease" }} />
+            </div>
+            <div style={{ marginTop: 5, textAlign: "center", fontSize: 11, fontWeight: 700, color: progressColor }}>{progress.toFixed(1)}%</div>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
-            <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Now: {fmtINR(currentNetWorth)}</span>
-            <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Goal: {fmtINR(fireCorpus)}</span>
+          <div style={{ minWidth: 100, textAlign: "right" }}>
+            <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>FIRE Corpus</p>
+            <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-secondary)", letterSpacing: "-0.03em" }}>{fmtINR(fireCorpus)}</p>
           </div>
         </div>
 
-        {/* 4 stat pills */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {/* Big time to FIRE */}
+        <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.6px", color: "var(--text-tertiary)" }}>Time to FIRE</p>
+        <p style={{
+          margin: 0, fontSize: 52, fontWeight: 800, letterSpacing: "-0.05em", lineHeight: 1,
+          color: monthsToFIRE === 0 ? "#16A34A" : "var(--text-primary)",
+        }}>
+          {timeLabel}
+        </p>
+        {fireDate && (
+          <p style={{ margin: "6px 0 0", fontSize: 14, color: "var(--text-secondary)" }}>
+            Target retirement — <strong style={{ color: "var(--text-primary)" }}>{fireDate}</strong>
+          </p>
+        )}
+
+        {/* 3 stats */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, paddingTop: 20, marginTop: 20, borderTop: "1px solid var(--separator)" }}>
           {[
-            { label: "Corpus Needed", value: fmtINR(fireCorpus), color: "var(--text-primary)" },
-            { label: "Monthly Passive", value: `${fmtINR(passiveMonthly)}/mo`, color: "#16A34A" },
-            { label: "Gap Remaining", value: fireCorpus > currentNetWorth ? fmtINR(fireCorpus - currentNetWorth) : "Achieved!", color: "#D97706" },
-            { label: "Annual Expenses", value: fmtINR(monthlyExp * 12), color: "#DC2626" },
-          ].map((s) => (
-            <div key={s.label} style={{ background: "rgba(120,120,128,0.06)", borderRadius: 14, padding: "12px 14px" }}>
-              <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>{s.label}</p>
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: s.color, letterSpacing: "-0.01em" }}>{s.value}</p>
+            { label: "Monthly Passive Income", value: fmtINR(passiveMonthly) + "/mo", color: "#16A34A" },
+            { label: "Gap Remaining",          value: fireCorpus > currentNetWorth ? fmtINR(fireCorpus - currentNetWorth) : "Achieved!", color: fireCorpus > currentNetWorth ? "var(--text-primary)" : "#16A34A" },
+            { label: "Annual Expenses",         value: fmtINR(monthlyExp * 12),   color: "#DC2626" },
+          ].map(({ label, value, color }) => (
+            <div key={label}>
+              <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>{label}</p>
+              <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color, letterSpacing: "-0.01em" }}>{value}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Right: Parameters card ── */}
-      <div style={{ ...card, padding: "24px" }}>
-        <p style={{ margin: "0 0 20px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.7px", color: "var(--text-tertiary)" }}>
-          Adjust Parameters
-        </p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          <SliderRow
-            label="Monthly Expenses"
-            hint={expensesLoaded && avgMonthlyExpenses > 0 ? `avg ${fmtShort(avgMonthlyExpenses)}` : undefined}
-            value={monthlyExp}
-            min={10000}
-            max={500000}
-            step={5000}
-            onChange={setMonthlyExp}
-            display={fmtINR(monthlyExp)}
-            accentColor="#DC2626"
-          />
-          <SliderRow
-            label="Monthly Investment"
-            value={monthlyInv}
-            min={5000}
-            max={500000}
-            step={5000}
-            onChange={setMonthlyInv}
-            display={fmtINR(monthlyInv)}
-            accentColor="#16A34A"
-          />
-          <SliderRow
-            label="Expected ROI / year"
-            value={roiPct}
-            min={4}
-            max={30}
-            step={0.5}
-            onChange={setRoiPct}
-            display={`${roiPct}%`}
-            accentColor="#2563EB"
-          />
-          <SliderRow
-            label="Safe Withdrawal Rate"
-            hint="4% rule = 25× expenses"
-            value={swrPct}
-            min={2}
-            max={6}
-            step={0.5}
-            onChange={setSwrPct}
-            display={`${swrPct}%`}
-            accentColor="#bf5af2"
-          />
+      {/* ── Parameters | Insights ──────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+
+        {/* Parameters */}
+        <div style={{ ...card, padding: "22px 24px" }}>
+          <p style={{ margin: "0 0 18px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.7px", color: "var(--text-tertiary)" }}>
+            Adjust Parameters
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+            <SliderRow
+              label="Monthly Expenses"
+              hint={expensesLoaded && avgMonthlyExpenses > 0 ? `avg ${fmtShort(avgMonthlyExpenses)}` : undefined}
+              value={monthlyExp} min={10000} max={500000} step={5000}
+              onChange={setMonthlyExp} display={fmtINR(monthlyExp)} accentColor="#DC2626"
+            />
+            <SliderRow
+              label="Monthly Investment"
+              value={monthlyInv} min={5000} max={500000} step={5000}
+              onChange={setMonthlyInv} display={fmtINR(monthlyInv)} accentColor="#16A34A"
+            />
+            <SliderRow
+              label="Expected ROI / year"
+              value={roiPct} min={4} max={30} step={0.5}
+              onChange={setRoiPct} display={`${roiPct}%`} accentColor="#2563EB"
+            />
+            <SliderRow
+              label="Safe Withdrawal Rate"
+              hint="4% rule = 25× expenses"
+              value={swrPct} min={2} max={6} step={0.5}
+              onChange={setSwrPct} display={`${swrPct}%`} accentColor="#9333EA"
+            />
+          </div>
+          <p style={{ margin: "18px 0 0", fontSize: 12, color: "var(--text-tertiary)", lineHeight: 1.6, paddingTop: 16, borderTop: "1px solid var(--separator)" }}>
+            Corpus = Annual expenses ÷ SWR · The 4% rule means you need 25× your annual spending.
+          </p>
         </div>
 
-        <div style={{ height: 1, background: "var(--separator)", margin: "20px 0" }} />
+        {/* Insights + Coast FIRE */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* Insight chips */}
+          {insights.map((ins, i) => {
+            const dot = ins.type === "positive" ? "#16A34A" : ins.type === "negative" ? "#DC2626" : "#2563EB";
+            return (
+              <div key={i} style={{
+                ...card, padding: "13px 16px",
+                display: "flex", gap: 10, alignItems: "flex-start",
+              }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: dot, flexShrink: 0, marginTop: 4 }} />
+                <p style={{ margin: 0, fontSize: 13, color: "var(--text-primary)", lineHeight: 1.55, fontWeight: 500 }}>{ins.text}</p>
+              </div>
+            );
+          })}
 
-        <p style={{ margin: 0, fontSize: 12, color: "var(--text-tertiary)", lineHeight: 1.6 }}>
-          Corpus = Annual expenses ÷ SWR · Classic 4% rule means you need 25× your annual spending.
-          Returns compound monthly. Net worth grows with your monthly investment.
-        </p>
+          {/* Coast FIRE card */}
+          {coastFIRE > 0 && (
+            <div style={{
+              ...card, padding: "16px 18px",
+              border: coastAchieved ? "1px solid rgba(22,163,74,0.25)" : "1px solid var(--separator)",
+              background: coastAchieved ? "rgba(22,163,74,0.04)" : "var(--surface)",
+            }}>
+              <p style={{ margin: "0 0 4px", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: coastAchieved ? "#16A34A" : "var(--text-tertiary)" }}>
+                Coast FIRE · {COAST_HORIZON_YEARS}Y horizon
+              </p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
+                <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: coastAchieved ? "#16A34A" : "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                  {fmtINR(coastFIRE)}
+                </p>
+                {!coastAchieved && currentNetWorth > 0 && (
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--text-tertiary)" }}>
+                    {fmtINR(coastFIRE - currentNetWorth)} away
+                  </p>
+                )}
+              </div>
+              <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                {coastAchieved
+                  ? `You have enough — it grows to ${fmtINR(fireCorpus)} without another rupee invested.`
+                  : `Once you hit this number, you can stop investing and still retire with ${fmtINR(fireCorpus)} in ${COAST_HORIZON_YEARS} years.`}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
