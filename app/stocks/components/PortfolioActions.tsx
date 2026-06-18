@@ -3,9 +3,9 @@
 // Color palette for account badges — index matches order accounts were added
 const ACCOUNT_BADGE_COLORS = [
   { bg: "rgba(174,221,0,0.12)", color: "#5a7a00", border: "rgba(174,221,0,0.26)" }, // green — primary
-  { bg: "rgba(0,122,255,0.10)", color: "#007aff", border: "rgba(0,122,255,0.22)" }, // blue
+  { bg: "rgba(0,122,255,0.10)", color: "#2563EB", border: "rgba(0,122,255,0.22)" }, // blue
   { bg: "rgba(175,82,222,0.10)", color: "#af52de", border: "rgba(175,82,222,0.22)" }, // purple
-  { bg: "rgba(255,149,0,0.10)", color: "#ff9500", border: "rgba(255,149,0,0.22)" }, // orange
+  { bg: "rgba(255,149,0,0.10)", color: "#D97706", border: "rgba(255,149,0,0.22)" }, // orange
 ];
 
 export default function PortfolioActions({ accounts }: { accounts: string[] }) {

@@ -59,12 +59,12 @@ function UsageRow({
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)" }}>{label}</span>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: atLimit ? "#ff3b30" : nearLimit ? "#ff9500" : "var(--text-secondary)" }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: atLimit ? "#DC2626" : nearLimit ? "#D97706" : "var(--text-secondary)" }}>
             {used} / {limit}
           </span>
           <span style={{
             fontSize: 11, fontWeight: 600,
-            color: atLimit ? "#ff3b30" : nearLimit ? "#ff9500" : "var(--text-tertiary)",
+            color: atLimit ? "#DC2626" : nearLimit ? "#D97706" : "var(--text-tertiary)",
             background: atLimit ? "rgba(255,59,48,0.10)" : nearLimit ? "rgba(255,149,0,0.10)" : "var(--surface-secondary)",
             padding: "2px 8px", borderRadius: 6,
           }}>
@@ -77,7 +77,7 @@ function UsageRow({
           height: "100%",
           width: `${pct}%`,
           borderRadius: 3,
-          background: atLimit ? "#ff3b30" : nearLimit ? "#ff9500" : accent,
+          background: atLimit ? "#DC2626" : nearLimit ? "#D97706" : accent,
           transition: "width 500ms cubic-bezier(0.34,1.15,0.64,1)",
         }} />
       </div>
@@ -164,7 +164,7 @@ export default function SettingsPage() {
             style={{
               display: "flex", alignItems: "center", gap: 3,
               background: "none", border: "none", cursor: "pointer",
-              color: "#007aff", fontSize: 14, fontWeight: 500,
+              color: "#2563EB", fontSize: 14, fontWeight: 500,
               padding: "4px 0", fontFamily: "inherit",
             }}
           >
@@ -296,25 +296,25 @@ export default function SettingsPage() {
                 label="Assets"
                 used={usage?.assets ?? 0}
                 limit={limits.assets}
-                accent="#007aff"
+                accent="#2563EB"
               />
               <UsageRow
                 label="Liabilities"
                 used={usage?.liabilities ?? 0}
                 limit={limits.liabilities}
-                accent="#ff3b30"
+                accent="#DC2626"
               />
               <UsageRow
                 label="Expenses this month"
                 used={usage?.expensesThisMonth ?? 0}
                 limit={limits.expensesPerMonth}
-                accent="#ff9500"
+                accent="#D97706"
               />
               <UsageRow
                 label="Goal scenarios"
                 used={usage?.scenarios ?? 0}
                 limit={limits.scenarios}
-                accent="#34c759"
+                accent="#16A34A"
               />
             </div>
           )}

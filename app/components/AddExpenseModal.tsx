@@ -149,7 +149,7 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
     height: 38,
     padding: "0 12px",
     borderRadius: 10,
-    border: `1px solid ${hasError ? "#ff3b30" : inputBorder}`,
+    border: `1px solid ${hasError ? "#DC2626" : inputBorder}`,
     background: hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg,
     fontSize: 16,
     color: inputColor,
@@ -165,7 +165,7 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
   };
 
   const onBlurInput = (hasError?: boolean) => (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.currentTarget.style.borderColor = hasError ? "#ff3b30" : inputBorder;
+    e.currentTarget.style.borderColor = hasError ? "#DC2626" : inputBorder;
     e.currentTarget.style.boxShadow = "none";
     e.currentTarget.style.background = hasError
       ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)")
@@ -178,7 +178,7 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
       onClick={onChange}
       style={{
         width: 40, height: 24, borderRadius: 12,
-        background: checked ? "#34c759" : (isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"),
+        background: checked ? "#16A34A" : (isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"),
         border: "none", cursor: "pointer", position: "relative", flexShrink: 0,
         transition: "background 200ms ease",
       }}
@@ -275,7 +275,7 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
               onFocus={onFocusInput}
               onBlur={onBlurInput(errors.title)}
             />
-            {errors.title && <p className="text-[11px] -mt-1.5" style={{ color: "#ff3b30" }}>Title is required</p>}
+            {errors.title && <p className="text-[11px] -mt-1.5" style={{ color: "#DC2626" }}>Title is required</p>}
 
             {/* Amount + Currency toggle on same row */}
             <div className="flex gap-2">
@@ -303,7 +303,7 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
                     className="rounded-[8px] text-[12px] font-semibold transition-all"
                     style={{
                       width: 46, height: 34,
-                      background: form.currency === cur ? "#007aff" : "transparent",
+                      background: form.currency === cur ? "#2563EB" : "transparent",
                       color: form.currency === cur ? "#ffffff" : labelColor,
                     }}
                   >
@@ -312,12 +312,12 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
                 ))}
               </div>
             </div>
-            {errors.amount && <p className="text-[11px] -mt-1.5" style={{ color: "#ff3b30" }}>Amount is required</p>}
+            {errors.amount && <p className="text-[11px] -mt-1.5" style={{ color: "#DC2626" }}>Amount is required</p>}
 
             {/* SAR rate + live preview — compact single row */}
             {form.currency === "SAR" && (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-[9px]" style={{ background: "rgba(0,122,255,0.07)", border: "1px solid rgba(0,122,255,0.15)" }}>
-                <p className="text-[12px] font-medium shrink-0" style={{ color: "#007aff" }}>1﷼ =</p>
+                <p className="text-[12px] font-medium shrink-0" style={{ color: "#2563EB" }}>1﷼ =</p>
                 <input
                   type="number"
                   value={form.sar_rate}
@@ -325,11 +325,11 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
                   className="ef-input"
                   style={{ width: 64, height: 32, fontSize: 16, padding: "0 8px", border: "none", background: "transparent", color: inputColor, outline: "none", boxSizing: "border-box" }}
                 />
-                <p className="text-[12px] font-medium shrink-0" style={{ color: "#007aff" }}>₹</p>
+                <p className="text-[12px] font-medium shrink-0" style={{ color: "#2563EB" }}>₹</p>
                 {inrPreview !== null && (
                   <>
                     <div className="w-px h-3.5 ml-1 shrink-0" style={{ background: "rgba(0,122,255,0.3)" }} />
-                    <p className="text-[12px] font-semibold ml-1 shrink-0" style={{ color: "#007aff" }}>
+                    <p className="text-[12px] font-semibold ml-1 shrink-0" style={{ color: "#2563EB" }}>
                       ≈ ₹{inrPreview.toLocaleString("en-IN")}
                     </p>
                   </>
@@ -425,7 +425,7 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
               onClick={handleSave}
               disabled={saving}
               className="h-10 px-6 rounded-[11px] text-[14px] font-semibold text-white flex-1"
-              style={{ background: saving ? "#5ac8fa" : "#007aff", transition: "background 150ms ease, transform 150ms ease" }}
+              style={{ background: saving ? "#5ac8fa" : "#2563EB", transition: "background 150ms ease, transform 150ms ease" }}
               onMouseEnter={(e) => {
                 if (!saving) {
                   (e.currentTarget as HTMLElement).style.background = "#0071eb";
@@ -433,7 +433,7 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
                 }
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = saving ? "#5ac8fa" : "#007aff";
+                (e.currentTarget as HTMLElement).style.background = saving ? "#5ac8fa" : "#2563EB";
                 (e.currentTarget as HTMLElement).style.transform = "none";
               }}
             >

@@ -21,9 +21,9 @@ export interface HoldingData {
 // Colors assigned per unique account label (stable order)
 const ACCOUNT_BADGE_COLORS = [
   { bg: "rgba(174,221,0,0.12)", color: "#5a7a00" },
-  { bg: "rgba(0,122,255,0.10)", color: "#007aff" },
+  { bg: "rgba(0,122,255,0.10)", color: "#2563EB" },
   { bg: "rgba(175,82,222,0.10)", color: "#af52de" },
-  { bg: "rgba(255,149,0,0.10)", color: "#ff9500" },
+  { bg: "rgba(255,149,0,0.10)", color: "#D97706" },
 ];
 
 function inr(n: number) {

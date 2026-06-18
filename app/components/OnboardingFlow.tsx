@@ -74,7 +74,11 @@ export default function OnboardingFlow({ onComplete }: Props) {
           }}
         >
           <div className="text-center">
-            <p className="text-[42px] leading-none mb-3">💼</p>
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-3" style={{ background: "var(--surface-secondary)", color: "var(--text-tertiary)" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+              </svg>
+            </div>
             <h1
               className="text-[28px] font-extrabold tracking-tight"
               style={{ color: "var(--text-primary)" }}

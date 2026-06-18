@@ -17,7 +17,7 @@ const NAV_ITEMS = [
 
 function PortfolioIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="7" width="20" height="14" rx="2" />
       <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
       <line x1="12" y1="12" x2="12" y2="16" />
@@ -28,7 +28,7 @@ function PortfolioIcon() {
 
 function StocksIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
       <polyline points="16 7 22 7 22 13" />
     </svg>
@@ -37,7 +37,7 @@ function StocksIcon() {
 
 function GoalsIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
       <circle cx="12" cy="12" r="6" />
       <circle cx="12" cy="12" r="2" />
@@ -47,26 +47,40 @@ function GoalsIcon() {
 
 function CashFlowIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <line x1="12" y1="1" x2="12" y2="23" />
       <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
     </svg>
   );
 }
 
-function SearchIcon() {
+function SunIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.35-4.35" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5" />
+      <line x1="12" y1="1" x2="12" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="23" />
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      <line x1="1" y1="12" x2="3" y2="12" />
+      <line x1="21" y1="12" x2="23" y2="12" />
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
     </svg>
   );
 }
 
-
+function MoonIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
 
 function PersonIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
@@ -75,9 +89,17 @@ function PersonIcon() {
 
 function SettingsIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
+function HeartIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </svg>
   );
 }
@@ -98,101 +120,56 @@ function UserDropdown({
   const name = user.user_metadata?.name as string | undefined;
   return (
     <div
-      className="absolute right-0 top-full mt-2 w-52 rounded-[16px] overflow-hidden z-[60]"
+      className="absolute right-0 top-full mt-2 w-52 rounded-lg overflow-hidden z-[60]"
       style={{
-        background: isDark ? "rgba(28,28,30,0.98)" : "#ffffff",
-        border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.08)",
+        background: isDark ? "#18181B" : "#ffffff",
+        border: `1px solid ${isDark ? "#27272A" : "#E2E8F0"}`,
         boxShadow: isDark
-          ? "0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3)"
-          : "0 8px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
-        backdropFilter: "blur(20px)",
+          ? "0 8px 32px rgba(0,0,0,0.5)"
+          : "0 8px 32px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
       }}
     >
-      <div
-        className="px-4 py-3.5"
-        style={{ borderBottom: "1px solid var(--separator)" }}
-      >
+      <div className="px-3.5 py-3" style={{ borderBottom: `1px solid ${isDark ? "#27272A" : "#E2E8F0"}` }}>
         {name && (
-          <p
-            className="text-[13px] font-semibold truncate"
-            style={{ color: "var(--text-primary)" }}
-          >
+          <p className="text-[13px] font-semibold truncate" style={{ color: "var(--text-primary)" }}>
             {name}
           </p>
         )}
-        <p
-          className="text-[11px] truncate"
-          style={{ color: "var(--text-tertiary)", marginTop: name ? 2 : 0 }}
-        >
+        <p className="text-[11px] truncate" style={{ color: "var(--text-tertiary)", marginTop: name ? 2 : 0 }}>
           {user.email}
         </p>
       </div>
       <Link
         href="/settings"
         onClick={onClose}
-        className="w-full text-left px-4 py-3 text-[13px] font-medium transition-opacity active:opacity-60 flex items-center gap-2"
-        style={{ color: "var(--text-primary)", borderBottom: "1px solid var(--separator)", display: "flex" }}
+        className="w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5"
+        style={{ color: "var(--text-primary)", borderBottom: `1px solid ${isDark ? "#27272A" : "#E2E8F0"}`, display: "flex", transition: "background 120ms ease" }}
+        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--surface-secondary)")}
+        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
       >
         <SettingsIcon />
         Settings
       </Link>
       <button
         onClick={onDonate}
-        className="w-full text-left px-4 py-3 text-[13px] font-medium transition-opacity active:opacity-60 flex items-center gap-2"
-        style={{ color: "#ff2d55", borderBottom: "1px solid var(--separator)" }}
+        className="w-full text-left px-3.5 py-2.5 text-[13px] font-medium flex items-center gap-2.5"
+        style={{ color: "#E11D48", borderBottom: `1px solid ${isDark ? "#27272A" : "#E2E8F0"}`, transition: "background 120ms ease" }}
+        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(225,29,72,0.06)")}
+        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
       >
         <HeartIcon />
         Donate
       </button>
       <button
         onClick={onSignOut}
-        className="w-full text-left px-4 py-3 text-[13px] font-medium transition-opacity active:opacity-60"
-        style={{ color: "#ff3b30" }}
+        className="w-full text-left px-3.5 py-2.5 text-[13px] font-medium"
+        style={{ color: "#DC2626", transition: "background 120ms ease" }}
+        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(220,38,38,0.06)")}
+        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
       >
         Sign out
       </button>
     </div>
-  );
-}
-
-function HeartIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-    </svg>
-  );
-}
-
-function BellIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  );
-}
-
-function SunIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="5" />
-      <line x1="12" y1="1" x2="12" y2="3" />
-      <line x1="12" y1="21" x2="12" y2="23" />
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-      <line x1="1" y1="12" x2="3" y2="12" />
-      <line x1="21" y1="12" x2="23" y2="12" />
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-    </svg>
-  );
-}
-
-function MoonIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-    </svg>
   );
 }
 
@@ -209,14 +186,14 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [scrolled, setScrolled] = useState(false);
   const [showDonate, setShowDonate] = useState(false);
 
   const activeTab =
-    pathname === "/stocks"    ? "stocks"    :
-    pathname === "/goals"     ? "goals"     :
-    pathname === "/cashflow"  ? "cashflow"  :
+    pathname === "/stocks"   ? "stocks"   :
+    pathname === "/goals"    ? "goals"    :
+    pathname === "/cashflow" ? "cashflow" :
     "portfolio";
+
   const [showUserMenu, setShowUserMenu] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const desktopMenuRef = useRef<HTMLDivElement>(null);
@@ -267,13 +244,6 @@ export default function Navbar() {
   }, [activeTab]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Close user menu on outside click
-  useEffect(() => {
     if (!showUserMenu) return;
     const handle = (e: MouseEvent) => {
       const inMobile = mobileMenuRef.current?.contains(e.target as Node);
@@ -298,7 +268,6 @@ export default function Navbar() {
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
   const displayName = user?.user_metadata?.name as string | undefined;
 
-  // Two-letter initials: first letter of first + last word (e.g. "Deesh R" → "DR")
   const initials = (() => {
     if (displayName) {
       const parts = displayName.trim().split(/\s+/).filter(Boolean);
@@ -308,80 +277,56 @@ export default function Navbar() {
     return (user?.email?.[0] ?? "?").toUpperCase();
   })();
 
+  const navBg = isDark ? "rgba(9, 9, 11, 0.97)" : "rgba(255, 255, 255, 0.97)";
+  const navBorder = isDark ? "#27272A" : "#E2E8F0";
 
   return (
     <>
       {/* ── Top navbar ── */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 border-b flex items-center px-4 sm:px-6 lg:px-8"
+        className="fixed top-0 left-0 right-0 z-50 flex items-center px-4 sm:px-6 lg:px-8"
         style={{
           paddingTop: "env(safe-area-inset-top)",
           height: "calc(50px + env(safe-area-inset-top))",
-          background: isDark
-            ? "rgba(18,18,20,0.92)"
-            : scrolled ? "rgba(28,28,32,0.78)" : "rgba(255,255,255,0.92)",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          borderColor: isDark
-            ? "rgba(255,255,255,0.08)"
-            : scrolled ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
-          transition: "background 350ms ease, border-color 350ms ease",
+          background: navBg,
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          borderBottom: `1px solid ${navBorder}`,
+          transition: "background 250ms ease, border-color 250ms ease",
         }}
       >
         {/* ── Mobile top bar ── */}
         <div className="md:hidden flex items-center w-full">
-          {/* Left: theme toggle */}
           <div className="flex-1 flex items-center">
             <button
               onClick={toggle}
-              className="icon-btn w-8 h-8 flex items-center justify-center rounded-full"
-              style={{
-                color: scrolled ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)",
-                background: scrolled ? "rgba(255,255,255,0.12)" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(60,60,67,0.06)"),
-                transition: "color 400ms ease, background 400ms ease",
-              }}
-              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              className="icon-btn w-8 h-8 flex items-center justify-center rounded-md"
+              style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }}
+              title={isDark ? "Light mode" : "Dark mode"}
             >
               {isDark ? <SunIcon /> : <MoonIcon />}
             </button>
           </div>
 
-          {/* Center: wordmark */}
-          <span
-            className="text-[21.5px] font-extrabold tracking-tight"
-            style={{ color: scrolled ? "#ffffff" : "var(--text-primary)", transition: "color 400ms ease" }}
-          >
+          <span className="text-[19px] font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
             my<span style={{ color: "#AEDD00" }}>Finance</span>
           </span>
 
-          {/* Right: donate + avatar / login */}
           <div className="flex-1 flex items-center justify-end gap-2">
-            <button
-              onClick={() => setShowDonate(true)}
-              className="icon-btn w-8 h-8 flex items-center justify-center rounded-full active:scale-95"
-              style={{
-                color: "#ff2d55",
-                background: scrolled ? "rgba(255,45,85,0.18)" : "rgba(255,45,85,0.10)",
-                transition: "background 300ms ease",
-              }}
-              title="Donate"
-            >
-              <HeartIcon />
-            </button>
             <div ref={mobileMenuRef} className="relative">
               <button
                 onClick={handleAvatarClick}
-                className="shrink-0 flex items-center justify-center"
-                style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}
+                className="shrink-0 flex items-center justify-center rounded-full overflow-hidden"
+                style={{ width: 30, height: 30, boxShadow: "0 1px 4px rgba(0,0,0,0.15)" }}
               >
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : user ? (
-                  <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(145deg, #636366 0%, #48484A 100%)", color: "rgba(255,255,255,0.92)", fontSize: 11, fontWeight: 500, letterSpacing: "0.04em", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif" }}>
+                  <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#3F3F46", color: "rgba(255,255,255,0.9)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em" }}>
                     {initials}
                   </span>
                 ) : (
-                  <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: isDark ? "rgba(255,255,255,0.1)" : "rgba(60,60,67,0.08)", color: "var(--text-tertiary)" }}>
+                  <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-secondary)", color: "var(--text-tertiary)" }}>
                     <PersonIcon />
                   </span>
                 )}
@@ -394,50 +339,36 @@ export default function Navbar() {
         </div>
 
         {/* ── Desktop top bar ── */}
-        {/* Logo — left */}
         <div className="hidden md:flex flex-1">
-          <span
-            className="text-[21.5px] font-extrabold tracking-tight"
-            style={{ color: scrolled ? "#ffffff" : "var(--text-primary)", transition: "color 400ms ease" }}
-          >
+          <span className="text-[19px] font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
             my<span style={{ color: "#AEDD00" }}>Finance</span>
           </span>
         </div>
 
-        {/* Nav items — center (desktop only) */}
+        {/* Nav — center */}
         <div
           ref={desktopNavRef}
-          className="hidden lg:flex items-center gap-0.5 p-1 rounded-[14px] relative"
+          className="hidden lg:flex items-center gap-0.5 p-[3px] rounded-lg relative"
           style={{
-            background: scrolled
-              ? "rgba(255,255,255,0.08)"
-              : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
-            backdropFilter: "blur(40px) saturate(200%)",
-            WebkitBackdropFilter: "blur(40px) saturate(200%)",
-            border: scrolled
-              ? "1px solid rgba(255,255,255,0.1)"
-              : (isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.06)"),
-            transition: "background 350ms ease, border-color 350ms ease",
+            background: isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9",
+            border: `1px solid ${isDark ? "#27272A" : "#E2E8F0"}`,
           }}
         >
-          {/* Sliding pill */}
           {desktopPill && (
             <span
               aria-hidden
-              className="absolute rounded-[10px] pointer-events-none"
+              className="absolute rounded-md pointer-events-none"
               style={{
                 left: desktopPill.left,
                 top: desktopPill.top,
                 width: desktopPill.width,
                 height: desktopPill.height,
-                background: scrolled
-                  ? "rgba(255,255,255,0.15)"
-                  : (isDark ? "rgba(255,255,255,0.13)" : "rgba(255,255,255,0.92)"),
-                boxShadow: isDark || scrolled
-                  ? "inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 6px rgba(0,0,0,0.28)"
-                  : "0 2px 6px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.95)",
+                background: isDark ? "rgba(255,255,255,0.12)" : "#ffffff",
+                boxShadow: isDark
+                  ? "0 1px 4px rgba(0,0,0,0.4)"
+                  : "0 1px 3px rgba(0,0,0,0.10), 0 1px 1px rgba(0,0,0,0.04)",
                 transition: desktopPillReady
-                  ? "left 360ms cubic-bezier(0.34,1.2,0.64,1), width 360ms cubic-bezier(0.34,1.2,0.64,1), background 300ms ease"
+                  ? "left 300ms cubic-bezier(0.4,0,0.2,1), width 300ms cubic-bezier(0.4,0,0.2,1)"
                   : "none",
               }}
             />
@@ -450,14 +381,12 @@ export default function Navbar() {
                 key={item.id}
                 ref={(el) => { desktopBtnRefs.current[idx] = el; }}
                 onClick={() => router.push(item.id === "portfolio" ? "/" : `/${item.id}`)}
-                className="relative z-10 px-3 py-1.5 rounded-[10px] text-[14px]"
+                className="relative z-10 px-3 py-1.5 rounded-md text-[13px] font-medium"
                 style={{
-                  fontWeight: isActive ? 700 : 500,
-                  letterSpacing: isActive ? "-0.01em" : "0",
-                  color: isActive
-                    ? (scrolled ? "#ffffff" : "var(--text-primary)")
-                    : (scrolled ? "rgba(255,255,255,0.45)" : "var(--text-tertiary)"),
-                  transition: "color 280ms ease, font-weight 0ms",
+                  fontWeight: isActive ? 600 : 500,
+                  color: isActive ? "var(--text-primary)" : "var(--text-tertiary)",
+                  transition: "color 200ms ease",
+                  letterSpacing: "-0.005em",
                 }}
               >
                 {item.label}
@@ -467,44 +396,27 @@ export default function Navbar() {
         </div>
 
         {/* Right icons (desktop) */}
-        <div className="hidden md:flex flex-1 items-center justify-end gap-2 sm:gap-2.5">
+        <div className="hidden md:flex flex-1 items-center justify-end gap-1.5 sm:gap-2">
           <button
             onClick={toggle}
-            className="icon-btn w-8 h-8 flex items-center justify-center rounded-full"
-            style={{
-              color: scrolled ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)",
-              background: scrolled ? "rgba(255,255,255,0.12)" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(60,60,67,0.06)"),
-              transition: "color 400ms ease, background 400ms ease",
-            }}
-            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            className="icon-btn w-8 h-8 flex items-center justify-center rounded-md"
+            style={{ color: "var(--text-tertiary)", background: "var(--surface-secondary)" }}
+            title={isDark ? "Light mode" : "Dark mode"}
           >
             {isDark ? <SunIcon /> : <MoonIcon />}
           </button>
 
           <button
-            className="icon-btn w-8 h-8 flex items-center justify-center rounded-full"
-            style={{ color: scrolled ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)", transition: "color 400ms ease" }}
-          >
-            <SearchIcon />
-          </button>
-
-          <button
-            className="icon-btn w-8 h-8 hidden sm:flex items-center justify-center rounded-full"
-            style={{ color: scrolled ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)", transition: "color 400ms ease" }}
-          >
-            <BellIcon />
-          </button>
-
-          {/* Donate button (desktop) */}
-          <button
             onClick={() => setShowDonate(true)}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold transition-all active:scale-95"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold"
             style={{
-              color: "#ff2d55",
-              background: scrolled ? "rgba(255,45,85,0.18)" : "rgba(255,45,85,0.10)",
-              border: "1px solid rgba(255,45,85,0.22)",
-              transition: "background 300ms ease, border-color 300ms ease",
+              color: "#E11D48",
+              background: "rgba(225,29,72,0.07)",
+              border: "1px solid rgba(225,29,72,0.18)",
+              transition: "background 150ms ease",
             }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(225,29,72,0.12)")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(225,29,72,0.07)")}
           >
             <HeartIcon />
             Donate
@@ -513,17 +425,17 @@ export default function Navbar() {
           <div ref={desktopMenuRef} className="relative ml-0.5">
             <button
               onClick={handleAvatarClick}
-              className="shrink-0 flex items-center justify-center"
-              style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}
+              className="shrink-0 flex items-center justify-center rounded-full overflow-hidden"
+              style={{ width: 30, height: 30, boxShadow: "0 1px 4px rgba(0,0,0,0.15)" }}
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               ) : user ? (
-                <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(145deg, #636366 0%, #48484A 100%)", color: "rgba(255,255,255,0.92)", fontSize: 11, fontWeight: 500, letterSpacing: "0.04em", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif" }}>
+                <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#3F3F46", color: "rgba(255,255,255,0.9)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em" }}>
                   {initials}
                 </span>
               ) : (
-                <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: isDark ? "rgba(255,255,255,0.1)" : "rgba(60,60,67,0.08)", color: "var(--text-tertiary)" }}>
+                <span style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-secondary)", color: "var(--text-tertiary)" }}>
                   <PersonIcon />
                 </span>
               )}
@@ -542,44 +454,36 @@ export default function Navbar() {
         className="fixed bottom-0 left-0 right-0 z-50 flex justify-center items-end lg:hidden pointer-events-none"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }}
       >
-        {/* Nav pill */}
         <div
           ref={bottomNavRef}
-          className="flex items-center gap-0.5 p-[2px] pointer-events-auto relative"
+          className="flex items-center gap-0.5 p-[3px] pointer-events-auto relative"
           style={{
-            borderRadius: 32,
-            background: isDark
-              ? "rgba(22, 22, 26, 0.44)"
-              : "rgba(255, 255, 255, 0.46)",
-            backdropFilter: "blur(52px) saturate(200%) brightness(1.06)",
-            WebkitBackdropFilter: "blur(52px) saturate(200%) brightness(1.06)",
-            border: isDark
-              ? "1px solid rgba(255,255,255,0.11)"
-              : "1px solid rgba(255,255,255,0.78)",
+            borderRadius: 28,
+            background: isDark ? "rgba(18,18,20,0.94)" : "rgba(255,255,255,0.94)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            border: `1px solid ${isDark ? "#27272A" : "#E2E8F0"}`,
             boxShadow: isDark
-              ? "0 12px 40px rgba(0,0,0,0.45), 0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.14)"
-              : "0 12px 40px rgba(0,0,0,0.12), 0 3px 10px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,1)",
+              ? "0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)"
+              : "0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.05)",
           }}
         >
-          {/* Sliding active pill */}
           {bottomPill && (
             <span
               aria-hidden
               className="absolute pointer-events-none"
               style={{
-                borderRadius: 28,
+                borderRadius: 24,
                 left: bottomPill.left,
                 top: bottomPill.top,
                 width: bottomPill.width,
                 height: bottomPill.height,
-                background: isDark
-                  ? "rgba(255,255,255,0.13)"
-                  : "rgba(0,0,0,0.08)",
+                background: isDark ? "rgba(255,255,255,0.10)" : "rgba(15,23,42,0.08)",
                 boxShadow: isDark
-                  ? "inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 10px rgba(0,0,0,0.25)"
-                  : "inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 6px rgba(0,0,0,0.1)",
+                  ? "inset 0 1px 0 rgba(255,255,255,0.12)"
+                  : "inset 0 1px 0 rgba(255,255,255,0.8)",
                 transition: bottomPillReady
-                  ? "left 380ms cubic-bezier(0.34,1.2,0.64,1), width 380ms cubic-bezier(0.34,1.2,0.64,1)"
+                  ? "left 300ms cubic-bezier(0.4,0,0.2,1), width 300ms cubic-bezier(0.4,0,0.2,1)"
                   : "none",
               }}
             />
@@ -587,25 +491,25 @@ export default function Navbar() {
 
           {NAV_ITEMS.map((item, idx) => {
             const isActive = activeTab === item.id;
-            const activeColor   = isDark ? "#ffffff" : "#1d1d1f";
-            const inactiveColor = isDark ? "rgba(255,255,255,0.38)" : "rgba(60,60,67,0.4)";
+            const activeColor   = isDark ? "#FAFAFA" : "#0F172A";
+            const inactiveColor = isDark ? "#71717A" : "#94A3B8";
             return (
               <button
                 key={item.id}
                 ref={(el) => { bottomBtnRefs.current[idx] = el; }}
                 onClick={() => router.push(item.id === "portfolio" ? "/" : `/${item.id}`)}
-                className={`relative z-10 flex flex-col items-center gap-[3px] px-[18px] py-[4px] active:scale-95${item.id === "stocks" ? " hidden" : ""}`}
+                className={`relative z-10 flex flex-col items-center gap-[3px] px-[18px] py-[5px] active:scale-95${item.id === "stocks" ? " hidden" : ""}`}
                 style={{
-                  borderRadius: 28,
-                  transition: "transform 140ms cubic-bezier(0.25,0.46,0.45,0.94)",
+                  borderRadius: 24,
+                  transition: "transform 120ms ease",
                 }}
               >
-                <span style={{ color: isActive ? activeColor : inactiveColor, transition: "color 260ms ease" }}>
+                <span style={{ color: isActive ? activeColor : inactiveColor, transition: "color 200ms ease" }}>
                   {NAV_ICONS[item.id]}
                 </span>
                 <span
                   className="text-[10px] font-semibold"
-                  style={{ color: isActive ? activeColor : inactiveColor, transition: "color 260ms ease", letterSpacing: "-0.01em" }}
+                  style={{ color: isActive ? activeColor : inactiveColor, transition: "color 200ms ease", letterSpacing: "-0.01em" }}
                 >
                   {item.label}
                 </span>
@@ -613,9 +517,7 @@ export default function Navbar() {
             );
           })}
         </div>
-
       </div>
-
     </>
   );
 }

@@ -58,9 +58,9 @@ export default function MobileCreateFab({ onAddAsset, onAddLiability, onAddExpen
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const actions = [
-    { label: "Asset",     color: "#007aff", bg: "rgba(0,122,255,0.14)",  icon: <AssetIcon />,     onTap: onAddAsset },
-    { label: "Liability", color: "#ff3b30", bg: "rgba(255,59,48,0.14)",  icon: <LiabilityIcon />, onTap: onAddLiability },
-    { label: "Expense",   color: "#ff9500", bg: "rgba(255,149,0,0.14)",  icon: <ExpenseIcon />,   onTap: onAddExpense ?? (() => {}) },
+    { label: "Asset",     color: "#2563EB", bg: "rgba(0,122,255,0.14)",  icon: <AssetIcon />,     onTap: onAddAsset },
+    { label: "Liability", color: "#DC2626", bg: "rgba(255,59,48,0.14)",  icon: <LiabilityIcon />, onTap: onAddLiability },
+    { label: "Expense",   color: "#D97706", bg: "rgba(255,149,0,0.14)",  icon: <ExpenseIcon />,   onTap: onAddExpense ?? (() => {}) },
   ];
 
   // Close on outside tap
@@ -193,7 +193,7 @@ export default function MobileCreateFab({ onAddAsset, onAddLiability, onAddExpen
             width: 56,
             height: 56,
             borderRadius: "50%",
-            background: "#007aff",
+            background: "#2563EB",
             color: "#ffffff",
             border: "none",
             display: "flex",

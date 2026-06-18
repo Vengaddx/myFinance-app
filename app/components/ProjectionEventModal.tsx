@@ -197,7 +197,7 @@ function applyQuick(q: (typeof QUICK_PICKS)[0]) {
   if (!open) return null;
 
   const isExpense = form.event_type === "expense";
-  const accentColor = isExpense ? "#ff3b30" : "#34c759";
+  const accentColor = isExpense ? "#DC2626" : "#16A34A";
 
   return (
     <div
@@ -306,8 +306,8 @@ function applyQuick(q: (typeof QUICK_PICKS)[0]) {
                       border: "1px solid",
                       borderColor: active
                         ? q.type === "expense"
-                          ? "#ff3b30"
-                          : "#34c759"
+                          ? "#DC2626"
+                          : "#16A34A"
                         : "var(--separator)",
                       background: active
                         ? q.type === "expense"
@@ -316,8 +316,8 @@ function applyQuick(q: (typeof QUICK_PICKS)[0]) {
                         : "var(--surface-secondary)",
                       color: active
                         ? q.type === "expense"
-                          ? "#ff3b30"
-                          : "#34c759"
+                          ? "#DC2626"
+                          : "#16A34A"
                         : "var(--text-primary)",
                       fontSize: 12,
                       fontWeight: 500,
@@ -340,7 +340,7 @@ function applyQuick(q: (typeof QUICK_PICKS)[0]) {
             <div style={{ display: "flex", gap: 8 }}>
               {(["expense", "income"] as const).map((t) => {
                 const a = form.event_type === t;
-                const c = t === "expense" ? "#ff3b30" : "#34c759";
+                const c = t === "expense" ? "#DC2626" : "#16A34A";
                 return (
                   <button
                     key={t}
@@ -421,7 +421,7 @@ function applyQuick(q: (typeof QUICK_PICKS)[0]) {
         {error && (
           <div
             style={{
-              color: "#ff3b30",
+              color: "#DC2626",
               fontSize: 13,
               marginTop: 14,
               padding: "8px 12px",

@@ -147,7 +147,7 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
     height: 42,
     padding: "0 14px",
     borderRadius: 12,
-    border: `1px solid ${hasError ? "#ff3b30" : inputBorder}`,
+    border: `1px solid ${hasError ? "#DC2626" : inputBorder}`,
     background: hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg,
     fontSize: 16,
     color: inputColor,
@@ -163,7 +163,7 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
   };
 
   const onBlur = (hasError?: boolean) => (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.currentTarget.style.borderColor = hasError ? "#ff3b30" : inputBorder;
+    e.currentTarget.style.borderColor = hasError ? "#DC2626" : inputBorder;
     e.currentTarget.style.boxShadow = "none";
     e.currentTarget.style.background = hasError ? (isDark ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.04)") : inputBg;
   };
@@ -252,7 +252,7 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
                     className="flex-1 h-[34px] rounded-[9px] text-[13px] font-medium capitalize transition-all"
                     style={{
                       background: form.lender_type === t
-                        ? (t === "bank" ? "#007aff" : "#ff9500")
+                        ? (t === "bank" ? "#2563EB" : "#D97706")
                         : "transparent",
                       color: form.lender_type === t ? "#ffffff" : labelColor,
                     }}
@@ -266,10 +266,10 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
             {/* Lender Name */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
-                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.lender_name ? "#ff3b30" : labelColor }}>
+                <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.lender_name ? "#DC2626" : labelColor }}>
                   {isFriend ? "Friend Name" : "Bank / Lender Name"}
                 </label>
-                <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
+                <span className="text-[#DC2626] text-[12px] leading-none">*</span>
               </div>
               <input
                 ref={firstInputRef}
@@ -282,17 +282,17 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
                 onFocus={onFocus}
                 onBlur={onBlur(errors.lender_name)}
               />
-              {errors.lender_name && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Name is required</p>}
+              {errors.lender_name && <p className="text-[12px]" style={{ color: "#DC2626" }}>Name is required</p>}
             </div>
 
             {/* Loan Amount + Currency */}
             <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-1.5">
-                  <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.original_amount ? "#ff3b30" : labelColor }}>
+                  <label className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: errors.original_amount ? "#DC2626" : labelColor }}>
                     Loan Amount
                   </label>
-                  <span className="text-[#ff3b30] text-[12px] leading-none">*</span>
+                  <span className="text-[#DC2626] text-[12px] leading-none">*</span>
                 </div>
                 <input
                   type="number"
@@ -305,7 +305,7 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
                   onFocus={onFocus}
                   onBlur={onBlur(errors.original_amount)}
                 />
-                {errors.original_amount && <p className="text-[12px]" style={{ color: "#ff3b30" }}>Required</p>}
+                {errors.original_amount && <p className="text-[12px]" style={{ color: "#DC2626" }}>Required</p>}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -332,7 +332,7 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
                 type="button"
                 onClick={() => setShowOutstanding(true)}
                 className="text-[13px] font-medium text-left"
-                style={{ color: "#007aff" }}
+                style={{ color: "#2563EB" }}
               >
                 + Already repaid some? Set current outstanding
               </button>
@@ -428,7 +428,7 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
               disabled={saving}
               className="h-10 px-6 rounded-[12px] text-[14px] font-semibold text-white"
               style={{
-                background: saving ? "#5ac8fa" : "#007aff",
+                background: saving ? "#5ac8fa" : "#2563EB",
                 transition: "background 150ms ease, transform 150ms ease",
               }}
               onMouseEnter={(e) => {
@@ -438,7 +438,7 @@ export default function AddLiabilityModal({ open, onClose, onSave, initialData =
                 }
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = saving ? "#5ac8fa" : "#007aff";
+                (e.currentTarget as HTMLElement).style.background = saving ? "#5ac8fa" : "#2563EB";
                 (e.currentTarget as HTMLElement).style.transform = "none";
               }}
             >

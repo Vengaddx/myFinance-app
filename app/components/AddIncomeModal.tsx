@@ -131,7 +131,7 @@ export default function AddIncomeModal({ open, monthKey, editData, onClose, onSa
           disabled={saving || !valid}
           style={{
             marginTop: 20, width: "100%", padding: "14px", borderRadius: 14,
-            background: "#34c759", border: "none", color: "#fff", fontWeight: 700,
+            background: "#16A34A", border: "none", color: "#fff", fontWeight: 700,
             fontSize: 16, cursor: saving || !valid ? "not-allowed" : "pointer",
             fontFamily: "inherit", opacity: saving || !valid ? 0.5 : 1,
             transition: "opacity 200ms",

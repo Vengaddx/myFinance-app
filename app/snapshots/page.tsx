@@ -327,8 +327,8 @@ export default function SnapshotsPage() {
           label: "Overall Growth",
           value: `${stats.growthFromFirst >= 0 ? "+" : ""}${stats.growthFromFirst.toFixed(1)}%`,
           sub: "from first snapshot",
-          subColor: stats.growthFromFirst >= 0 ? "#34c759" : "#ff3b30",
-          valueColor: stats.growthFromFirst >= 0 ? "#34c759" : "#ff3b30",
+          subColor: stats.growthFromFirst >= 0 ? "#16A34A" : "#DC2626",
+          valueColor: stats.growthFromFirst >= 0 ? "#16A34A" : "#DC2626",
         },
         ...(stats.growthFromPrev !== null
           ? [
@@ -336,8 +336,8 @@ export default function SnapshotsPage() {
                 label: "Last Change",
                 value: `${stats.growthFromPrev >= 0 ? "+" : ""}${stats.growthFromPrev.toFixed(1)}%`,
                 sub: "from previous snapshot",
-                subColor: stats.growthFromPrev >= 0 ? "#34c759" : "#ff3b30",
-                valueColor: stats.growthFromPrev >= 0 ? "#34c759" : "#ff3b30",
+                subColor: stats.growthFromPrev >= 0 ? "#16A34A" : "#DC2626",
+                valueColor: stats.growthFromPrev >= 0 ? "#16A34A" : "#DC2626",
               },
             ]
           : []),
@@ -346,14 +346,14 @@ export default function SnapshotsPage() {
           value: fmtINR(stats.highest.net_worth),
           sub: fmtDateFull(stats.highest.snapshot_date),
           subColor: "var(--text-tertiary)" as string,
-          valueColor: "#34c759" as string,
+          valueColor: "#16A34A" as string,
         },
         {
           label: "All-Time Low",
           value: fmtINR(stats.lowest.net_worth),
           sub: fmtDateFull(stats.lowest.snapshot_date),
           subColor: "var(--text-tertiary)" as string,
-          valueColor: "#ff3b30" as string,
+          valueColor: "#DC2626" as string,
         },
         {
           label: "Snapshots",
@@ -475,7 +475,7 @@ export default function SnapshotsPage() {
                 disabled={takingSnapshot}
                 className="flex-1 py-3 rounded-[12px] text-[14px] font-bold text-white"
                 style={{
-                  background: "#007aff",
+                  background: "#2563EB",
                   opacity: takingSnapshot ? 0.6 : 1,
                   transition: "opacity 0.15s",
                 }}
@@ -522,7 +522,7 @@ export default function SnapshotsPage() {
           <button
             onClick={() => setShowModal(true)}
             className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-[12px] text-[13px] font-bold text-white"
-            style={{ background: "#007aff" }}
+            style={{ background: "#2563EB" }}
           >
             <span className="text-[17px] leading-none font-normal">+</span>
             Snapshot
@@ -572,7 +572,7 @@ export default function SnapshotsPage() {
             <button
               onClick={() => setShowModal(true)}
               className="px-7 py-3 rounded-[14px] text-[14px] font-bold text-white"
-              style={{ background: "#007aff" }}
+              style={{ background: "#2563EB" }}
             >
               Take First Snapshot
             </button>
@@ -610,7 +610,7 @@ export default function SnapshotsPage() {
                     <span
                       className="text-[13px] font-semibold mb-0.5"
                       style={{
-                        color: stats.growthFromFirst >= 0 ? "#34c759" : "#ff3b30",
+                        color: stats.growthFromFirst >= 0 ? "#16A34A" : "#DC2626",
                       }}
                     >
                       {stats.growthFromFirst >= 0 ? "▲" : "▼"}{" "}
@@ -628,8 +628,8 @@ export default function SnapshotsPage() {
                   >
                     <defs>
                       <linearGradient id="nwGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#007aff" stopOpacity={0.4} />
-                        <stop offset="90%" stopColor="#007aff" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#2563EB" stopOpacity={0.4} />
+                        <stop offset="90%" stopColor="#2563EB" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid
@@ -659,13 +659,13 @@ export default function SnapshotsPage() {
                     <Area
                       type="monotone"
                       dataKey="net_worth"
-                      stroke="#007aff"
+                      stroke="#2563EB"
                       strokeWidth={2.5}
                       fill="url(#nwGrad)"
                       dot={false}
                       activeDot={{
                         r: 5,
-                        fill: "#007aff",
+                        fill: "#2563EB",
                         stroke: "rgba(255,255,255,0.35)",
                         strokeWidth: 2,
                       }}
@@ -792,7 +792,7 @@ export default function SnapshotsPage() {
                           <p
                             className="text-[14px] font-semibold"
                             style={{
-                              color: snap.total_pnl >= 0 ? "#34c759" : "#ff3b30",
+                              color: snap.total_pnl >= 0 ? "#16A34A" : "#DC2626",
                               letterSpacing: "-0.01em",
                             }}
                           >
@@ -813,7 +813,7 @@ export default function SnapshotsPage() {
                               onClick={() => handleDelete(snap.id)}
                               disabled={deletingId === snap.id}
                               className="text-[11px] font-bold px-2.5 py-1.5 rounded-[8px]"
-                              style={{ background: "rgba(255,59,48,0.12)", color: "#ff3b30" }}
+                              style={{ background: "rgba(255,59,48,0.12)", color: "#DC2626" }}
                             >
                               {deletingId === snap.id ? "…" : "Delete"}
                             </button>
@@ -834,7 +834,7 @@ export default function SnapshotsPage() {
                             className="mt-0.5 w-7 h-7 flex items-center justify-center rounded-[8px]"
                             style={{
                               background: isDark ? "rgba(255,59,48,0.1)" : "rgba(255,59,48,0.08)",
-                              color: "#ff3b30",
+                              color: "#DC2626",
                             }}
                           >
                             <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
@@ -866,7 +866,7 @@ export default function SnapshotsPage() {
                         >
                           Liabilities
                         </p>
-                        <p className="text-[12px] font-semibold" style={{ color: "#ff3b30" }}>
+                        <p className="text-[12px] font-semibold" style={{ color: "#DC2626" }}>
                           {fmtINR(snap.total_liabilities)}
                         </p>
                       </div>
@@ -907,13 +907,13 @@ export default function SnapshotsPage() {
                     >
                       {fmtINR(snap.total_assets)}
                     </p>
-                    <p className="text-[13px]" style={{ color: "#ff3b30" }}>
+                    <p className="text-[13px]" style={{ color: "#DC2626" }}>
                       {fmtINR(snap.total_liabilities)}
                     </p>
                     <p
                       className="text-[13px] font-semibold"
                       style={{
-                        color: snap.total_pnl >= 0 ? "#34c759" : "#ff3b30",
+                        color: snap.total_pnl >= 0 ? "#16A34A" : "#DC2626",
                       }}
                     >
                       {snap.total_pnl >= 0 ? "+" : ""}
@@ -933,7 +933,7 @@ export default function SnapshotsPage() {
                             onClick={() => handleDelete(snap.id)}
                             disabled={deletingId === snap.id}
                             className="text-[11px] font-bold px-2 py-1 rounded-[7px]"
-                            style={{ background: "rgba(255,59,48,0.12)", color: "#ff3b30" }}
+                            style={{ background: "rgba(255,59,48,0.12)", color: "#DC2626" }}
                           >
                             {deletingId === snap.id ? "…" : "Yes"}
                           </button>
@@ -954,7 +954,7 @@ export default function SnapshotsPage() {
                           className="w-7 h-7 flex items-center justify-center rounded-[8px] opacity-0 group-hover:opacity-100 transition-opacity"
                           style={{
                             background: isDark ? "rgba(255,59,48,0.1)" : "rgba(255,59,48,0.08)",
-                            color: "#ff3b30",
+                            color: "#DC2626",
                           }}
                           title="Delete snapshot"
                         >

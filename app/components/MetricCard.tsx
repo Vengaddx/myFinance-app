@@ -12,9 +12,9 @@ type MetricCardProps = {
 };
 
 const subColorMap = {
-  green: "#34c759",
-  red:   "#ff3b30",
-  blue:  "#007aff",
+  green: "#16A34A",
+  red:   "#DC2626",
+  blue:  "#2563EB",
   muted: "var(--text-secondary)",
 };
 
@@ -35,7 +35,7 @@ export default function MetricCard({
   let boxShadow: string;
 
   if (isDanger) {
-    background = isDark ? "rgba(255,59,48,0.08)" : "color-mix(in srgb, #ff3b30 8%, var(--surface))";
+    background = isDark ? "rgba(255,59,48,0.08)" : "color-mix(in srgb, #DC2626 8%, var(--surface))";
     border = "1px solid rgba(255,59,48,0.18)";
     boxShadow = isDark ? "0 0 0 1px rgba(255,59,48,0.12)" : "none";
   } else if (isDark) {
@@ -61,7 +61,7 @@ export default function MetricCard({
       </p>
       <p
         className="text-[19px] font-bold leading-none"
-        style={{ color: isDanger ? "#ff3b30" : "var(--text-primary)", letterSpacing: "-0.02em" }}
+        style={{ color: isDanger ? "#DC2626" : "var(--text-primary)", letterSpacing: "-0.02em" }}
       >
         {value}
       </p>

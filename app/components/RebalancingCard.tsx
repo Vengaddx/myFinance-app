@@ -114,14 +114,14 @@ export default function RebalancingCard({ byCategory, totalAssets }: Props) {
           <div style={{
             width: 32, height: 32, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center",
             background: alertCount > 0 ? "rgba(255,149,0,0.15)" : "rgba(0,122,255,0.10)",
-            color: alertCount > 0 ? "#ff9500" : "#007aff",
+            color: alertCount > 0 ? "#D97706" : "#2563EB",
           }}>
             <BarIcon />
           </div>
           <div>
             <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>Rebalancing</p>
             {alertCount > 0 && (
-              <p style={{ margin: "1px 0 0", fontSize: 12, color: "#ff9500", fontWeight: 600 }}>
+              <p style={{ margin: "1px 0 0", fontSize: 12, color: "#D97706", fontWeight: 600 }}>
                 {alertCount} {alertCount === 1 ? "category" : "categories"} drift &gt;5%
               </p>
             )}
@@ -139,7 +139,7 @@ export default function RebalancingCard({ byCategory, totalAssets }: Props) {
               <button
                 onClick={saveTargets}
                 disabled={saving}
-                style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#007aff", color: "#fff", fontSize: 13, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: saving ? 0.6 : 1 }}
+                style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#2563EB", color: "#fff", fontSize: 13, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: saving ? 0.6 : 1 }}
               >
                 {saving ? "…" : "Save"}
               </button>
@@ -178,7 +178,7 @@ export default function RebalancingCard({ byCategory, totalAssets }: Props) {
             ))}
           </div>
           <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end" }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: draftTotal === 100 ? "#34c759" : "#ff9500" }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: draftTotal === 100 ? "#16A34A" : "#D97706" }}>
               Total: {draftTotal.toFixed(0)}%
             </span>
           </div>
@@ -188,7 +188,7 @@ export default function RebalancingCard({ byCategory, totalAssets }: Props) {
           <p style={{ margin: "0 0 8px", fontSize: 14, color: "var(--text-secondary)" }}>No target allocation set.</p>
           <button
             onClick={() => { setDraft({}); setEditMode(true); }}
-            style={{ color: "#007aff", background: "none", border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600, fontFamily: "inherit" }}
+            style={{ color: "#2563EB", background: "none", border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600, fontFamily: "inherit" }}
           >
             Set targets →
           </button>
@@ -208,7 +208,7 @@ export default function RebalancingCard({ byCategory, totalAssets }: Props) {
                       <span style={{
                         fontSize: 11, fontWeight: 700, padding: "1px 6px", borderRadius: 5,
                         background: drift > 0 ? "rgba(255,149,0,0.12)" : "rgba(255,59,48,0.10)",
-                        color: drift > 0 ? "#ff9500" : "#ff3b30",
+                        color: drift > 0 ? "#D97706" : "#DC2626",
                       }}>
                         {drift > 0 ? "+" : ""}{drift.toFixed(1)}%
                       </span>
@@ -218,7 +218,7 @@ export default function RebalancingCard({ byCategory, totalAssets }: Props) {
                     {hasTarget && (
                       <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>target {targetPct}%</span>
                     )}
-                    <span style={{ fontSize: 13, fontWeight: 700, color: isDrift ? (drift > 0 ? "#ff9500" : "#ff3b30") : "var(--text-primary)" }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: isDrift ? (drift > 0 ? "#D97706" : "#DC2626") : "var(--text-primary)" }}>
                       {actualPct.toFixed(1)}%
                     </span>
                   </div>
@@ -233,7 +233,7 @@ export default function RebalancingCard({ byCategory, totalAssets }: Props) {
                   {hasTarget && (
                     <div style={{
                       position: "absolute", top: -4, width: 2, height: 13,
-                      background: isDrift ? "#ff9500" : "var(--text-tertiary)",
+                      background: isDrift ? "#D97706" : "var(--text-tertiary)",
                       borderRadius: 1, left: `${Math.min(targetPct, 100)}%`,
                       transform: "translateX(-50%)",
                     }} />
