@@ -1646,7 +1646,113 @@ onDataChanged?.();
         });
       };
 
-      // ─── SHEET 1: ASSETS ───────────────────────────────────────
+      // ─── Shared totals (used by Summary + Assets sheets) ────────
+      const totalPortfolioVal =
+        mappedAssets.reduce((s, a) => s + a.curVal, 0) +
+        kiteUiAssets.reduce((s, a) => s + a.curVal, 0);
+
+      const bankCashValue = mappedAssets
+        .filter((a) => a.category === "bank" || a.category === "cash")
+        .reduce((s, a) => s + a.curVal, 0);
+      const totalInvested =
+        mappedAssets.reduce((s, a) => s + a.invested, 0) +
+        kiteUiAssets.reduce((s, a) => s + a.invested, 0);
+      // Exclude bank/cash from P&L — they have no cost basis (mirrors the home page calc)
+      const totalPnlVal = (totalPortfolioVal - bankCashValue) - totalInvested;
+      const totalPnlPctVal = totalInvested > 0 ? (totalPnlVal / totalInvested) * 100 : 0;
+      const activeLiabilitiesTotal = mappedLiabilities
+        .filter((l) => l.status === "active")
+        .reduce((s, l) => s + l.outstandingAmount, 0);
+      const netWorthVal = totalPortfolioVal - activeLiabilitiesTotal;
+
+      const categoryTotals: Record<string, number> = {};
+      for (const a of mappedAssets) categoryTotals[a.category] = (categoryTotals[a.category] ?? 0) + a.curVal;
+      for (const h of kiteUiAssets) categoryTotals[h.category] = (categoryTotals[h.category] ?? 0) + h.curVal;
+      const categoryBreakdown = Object.entries(categoryTotals)
+        .filter(([, val]) => val > 0)
+        .map(([cat, val]) => ({
+          label: CATEGORY_META[cat as AssetCategory]?.label ?? cat,
+          value: val,
+          pct: totalPortfolioVal > 0 ? (val / totalPortfolioVal) * 100 : 0,
+        }))
+        .sort((a, b) => b.value - a.value);
+
+      // ─── SHEET 1: SUMMARY ────────────────────────────────────────
+      const ws0 = workbook.addWorksheet("Summary");
+      ws0.columns = [{ width: 28 }, { width: 22 }, { width: 16 }];
+
+      ws0.mergeCells("A1:C1");
+      ws0.getCell("A1").value = "MyFinance — Portfolio Summary";
+      ws0.getCell("A1").font = { bold: true, size: 16, color: { argb: C.BLUE_DARK } };
+      ws0.getRow(1).height = 26;
+
+      ws0.mergeCells("A2:C2");
+      ws0.getCell("A2").value = `Generated ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}`;
+      ws0.getCell("A2").font = { italic: true, size: 10, color: { argb: C.MUTED } };
+
+      ws0.mergeCells("A4:C4");
+      ws0.getCell("A4").value = "KEY METRICS";
+      styleHeader(ws0.getRow(4));
+
+      const metricsRows: [string, number, "currency" | "percent"][] = [
+        ["Net Worth", netWorthVal, "currency"],
+        ["Total Assets", totalPortfolioVal, "currency"],
+        ["Total Liabilities", activeLiabilitiesTotal, "currency"],
+        ["Total Invested", totalInvested, "currency"],
+        ["Total P&L (₹)", totalPnlVal, "currency"],
+        ["Total P&L (%)", totalPnlPctVal, "percent"],
+      ];
+      let r = 5;
+      metricsRows.forEach(([label, value, kind], idx) => {
+        const row = ws0.getRow(r);
+        row.getCell(1).value = label;
+        row.getCell(2).value = value;
+        row.getCell(1).font = { bold: true };
+        row.getCell(2).numFmt = kind === "percent" ? "0.00" : "#,##0.00";
+        if (label.startsWith("Total P&L")) {
+          row.getCell(2).font = { bold: true, color: { argb: value >= 0 ? C.GREEN : C.RED } };
+        }
+        styleDataRow(row, idx);
+        row.height = 21;
+        r++;
+      });
+
+      r += 1;
+      ws0.mergeCells(`A${r}:C${r}`);
+      ws0.getCell(`A${r}`).value = "ASSET ALLOCATION BY CATEGORY";
+      styleHeader(ws0.getRow(r));
+      r++;
+
+      const allocColHeaderRow = ws0.getRow(r);
+      ["Category", "Current Value (₹)", "Allocation (%)"].forEach((h, i) => {
+        const cell = allocColHeaderRow.getCell(i + 1);
+        cell.value = h;
+        cell.font = { bold: true, size: 10, color: { argb: C.MUTED } };
+        cell.border = { bottom: thin(C.BORDER) };
+      });
+      r++;
+
+      categoryBreakdown.forEach((cat, idx) => {
+        const row = ws0.getRow(r);
+        row.getCell(1).value = cat.label;
+        row.getCell(2).value = cat.value;
+        row.getCell(3).value = cat.pct;
+        row.getCell(2).numFmt = "#,##0.00";
+        row.getCell(3).numFmt = "0.00";
+        styleDataRow(row, idx);
+        row.height = 21;
+        r++;
+      });
+
+      const totalAllocRow = ws0.getRow(r);
+      totalAllocRow.getCell(1).value = "TOTAL";
+      totalAllocRow.getCell(2).value = totalPortfolioVal;
+      totalAllocRow.getCell(3).value = 100;
+      totalAllocRow.getCell(2).numFmt = "#,##0.00";
+      totalAllocRow.getCell(3).numFmt = "0.00";
+      styleTotalRow(totalAllocRow);
+
+      // ─── SHEET 2: ASSETS ───────────────────────────────────────
       const ws1 = workbook.addWorksheet("Assets", {
         views: [{ state: "frozen", xSplit: 0, ySplit: 1 }],
       });
@@ -1663,10 +1769,8 @@ onDataChanged?.();
 
       styleHeader(ws1.getRow(1));
 
-      const totalPortfolioVal =
-        mappedAssets.reduce((s, a) => s + a.curVal, 0) +
-        kiteUiAssets.reduce((s, a) => s + a.curVal, 0);
-
+      // Kite holdings appear as one aggregated row per category — never individual stock symbols —
+      // matching how the app itself displays them.
       const assetsForReport = [
         ...mappedAssets.map((a) => ({
           name: a.name,
@@ -1677,16 +1781,16 @@ onDataChanged?.();
           pnlPct: a.pnlPct,
           allocation: totalPortfolioVal > 0 ? (a.curVal / totalPortfolioVal) * 100 : 0,
         })),
-        ...kiteUiAssets.map((h) => ({
-          name: h.name + (h.accountLabel ? ` (${h.accountLabel})` : ""),
-          category: "Stocks & ETFs",
-          curVal: h.curVal,
-          invested: h.invested,
-          pnl: h.pnl,
-          pnlPct: h.pnlPct,
-          allocation: totalPortfolioVal > 0 ? (h.curVal / totalPortfolioVal) * 100 : 0,
+        ...kiteGroupedRows.map((kr) => ({
+          name: `${kr.name} (${kr.count} position${kr.count !== 1 ? "s" : ""})`,
+          category: CATEGORY_META[kr.category as AssetCategory]?.label ?? kr.category,
+          curVal: kr.curVal,
+          invested: kr.invested,
+          pnl: kr.pnl,
+          pnlPct: kr.pnlPct,
+          allocation: kr.allocation,
         })),
-      ];
+      ].sort((a, b) => b.curVal - a.curVal);
 
       assetsForReport.forEach((a, idx) => {
         const row = ws1.addRow({
@@ -1730,7 +1834,7 @@ onDataChanged?.();
       totRow1.getCell("pnlPct").numFmt = "0.00";
       totRow1.getCell("allocation").numFmt = "0.00";
 
-      // ─── SHEET 2: LIABILITIES ──────────────────────────────────
+      // ─── SHEET 3: LIABILITIES ──────────────────────────────────
       const ws2 = workbook.addWorksheet("Liabilities", {
         views: [{ state: "frozen", xSplit: 0, ySplit: 1 }],
       });
@@ -1771,6 +1875,9 @@ onDataChanged?.();
         dueDate: l.dueDate ?? "",
         status: l.status.charAt(0).toUpperCase() + l.status.slice(1),
       }));
+
+      lentData.sort((a, b) => b.outstanding - a.outstanding);
+      borrowedData.sort((a, b) => b.outstanding - a.outstanding);
 
       [...lentData, ...borrowedData].forEach((l, idx) => {
         const row = ws2.addRow(l);
