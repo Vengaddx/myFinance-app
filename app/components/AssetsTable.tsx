@@ -1124,6 +1124,12 @@ onDataChanged?.();
     }));
   }, [kiteUiAssets, mappedAssets]);
 
+  // Kite holdings always render as a single aggregated row — never as individual stock symbols
+  const visibleKiteGroupedRows = useMemo(
+    () => kiteGroupedRows.filter((r) => activeTab === "all" || r.category === activeTab),
+    [kiteGroupedRows, activeTab]
+  );
+
   const mappedLiabilities = liabilities.map((l) => ({
   id: l.id,
   name: l.liability_name || l.lender_name,
@@ -1198,17 +1204,10 @@ onDataChanged?.();
       return matchTab && matchSearch;
     });
 
-    // In ALL view, kite items are shown as grouped summary rows — not individually
-    const kiteBase = activeTab === "all" ? [] : kiteUiAssets.filter((a) => {
-      const matchSearch = a.name.toLowerCase().includes(q);
-      return a.category === activeTab && matchSearch;
-    });
-
-    const combined = [...manualBase, ...kiteBase];
-
+    // Kite holdings never appear as individual rows — they're always shown as one aggregated row (see kiteGroupedRows)
     // Recompute allocation relative to the visible filtered set
-    const totalCurVal = combined.reduce((s, a) => s + a.curVal, 0);
-    const withAlloc = combined.map((a) => ({
+    const totalCurVal = manualBase.reduce((s, a) => s + a.curVal, 0);
+    const withAlloc = manualBase.map((a) => ({
       ...a,
       allocation: totalCurVal > 0 ? Number(((a.curVal / totalCurVal) * 100).toFixed(1)) : 0,
     }));
@@ -1218,7 +1217,7 @@ onDataChanged?.();
       const diff = a[sortKey] - b[sortKey];
       return sortDir === "asc" ? diff : -diff;
     });
-  }, [mappedAssets, kiteUiAssets, activeTab, search, sortKey, sortDir]);
+  }, [mappedAssets, activeTab, search, sortKey, sortDir]);
 
   useEffect(() => {
     if (!onSummaryChange) return;
@@ -1240,10 +1239,11 @@ onDataChanged?.();
       return;
     }
 
-    // For ALL tab, kite items are not in `filtered` — add their totals separately
-    const kiteInv = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.invested, 0) : 0;
-    const kiteCur = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.curVal, 0) : 0;
-    const kitePnl = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.pnl, 0) : 0;
+    // Kite items are never in `filtered` — add their totals (scoped to the active tab) separately
+    const kiteForTab = kiteUiAssets.filter((a) => activeTab === "all" || a.category === activeTab);
+    const kiteInv = kiteForTab.reduce((s, a) => s + a.invested, 0);
+    const kiteCur = kiteForTab.reduce((s, a) => s + a.curVal, 0);
+    const kitePnl = kiteForTab.reduce((s, a) => s + a.pnl, 0);
     const invested = filtered.reduce((s, a) => s + a.invested, 0) + kiteInv;
     const curVal   = filtered.reduce((s, a) => s + a.curVal, 0) + kiteCur;
     // Sum individual pnl values (bank/cash assets already carry pnl=0)
@@ -1937,9 +1937,10 @@ onDataChanged?.();
 
         {/* Desktop-only inline summary — always visible above the table */}
         {(() => {
-          const kiteInv = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.invested, 0) : 0;
-          const kiteCur = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.curVal, 0) : 0;
-          const kitePnl = activeTab === "all" ? kiteUiAssets.reduce((s, a) => s + a.pnl, 0) : 0;
+          const kiteForTab = kiteUiAssets.filter((a) => activeTab === "all" || a.category === activeTab);
+          const kiteInv = kiteForTab.reduce((s, a) => s + a.invested, 0);
+          const kiteCur = kiteForTab.reduce((s, a) => s + a.curVal, 0);
+          const kitePnl = kiteForTab.reduce((s, a) => s + a.pnl, 0);
           const inv  = filtered.reduce((s, a) => s + a.invested, 0) + kiteInv;
           const cur  = filtered.reduce((s, a) => s + a.curVal, 0) + kiteCur;
           // Sum individual pnl values so bank/cash (pnl=0) don't inflate P&L
@@ -2018,7 +2019,7 @@ onDataChanged?.();
         <div className="md:hidden">
           {filtered.map((asset, idx) => {
             const isKite = asset.id.startsWith("kite_");
-            const hasKiteRows = activeTab === "all" && kiteGroupedRows.length > 0;
+            const hasKiteRows = visibleKiteGroupedRows.length > 0;
             const isLast = idx === filtered.length - 1;
 
             return (
@@ -2091,9 +2092,9 @@ onDataChanged?.();
             );
           })}
 
-          {/* Kite grouped summary rows — ALL view only */}
-          {activeTab === "all" && kiteGroupedRows.map((row, idx) => {
-            const isLast = idx === kiteGroupedRows.length - 1;
+          {/* Kite holdings — always one aggregated row per category, never individual stocks */}
+          {visibleKiteGroupedRows.map((row, idx) => {
+            const isLast = idx === visibleKiteGroupedRows.length - 1;
             return (
               <div
                 key={row.id}
@@ -2129,7 +2130,7 @@ onDataChanged?.();
             );
           })}
 
-          {filtered.length === 0 && kiteGroupedRows.length === 0 && (
+          {filtered.length === 0 && visibleKiteGroupedRows.length === 0 && (
             <div className="py-16 flex flex-col items-center gap-2">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "var(--surface-secondary)", color: "var(--text-tertiary)" }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -2195,7 +2196,7 @@ onDataChanged?.();
             <tbody>
               {filtered.map((asset, idx) => {
                 const isKite = asset.id.startsWith("kite_");
-                const hasKiteRows = activeTab === "all" && kiteGroupedRows.length > 0;
+                const hasKiteRows = visibleKiteGroupedRows.length > 0;
                 const isLast = idx === filtered.length - 1;
 
                 return (
@@ -2272,9 +2273,9 @@ onDataChanged?.();
                 );
               })}
 
-              {/* Kite grouped summary rows — ALL view only */}
-              {activeTab === "all" && kiteGroupedRows.map((row, idx) => {
-                const isLast = idx === kiteGroupedRows.length - 1;
+              {/* Kite holdings — always one aggregated row per category, never individual stocks */}
+              {visibleKiteGroupedRows.map((row, idx) => {
+                const isLast = idx === visibleKiteGroupedRows.length - 1;
                 return (
                   <tr
                     key={row.id}
@@ -2327,7 +2328,7 @@ onDataChanged?.();
             </tbody>
           </table>
 
-          {filtered.length === 0 && kiteGroupedRows.length === 0 && (
+          {filtered.length === 0 && visibleKiteGroupedRows.length === 0 && (
             <div className="py-16 flex flex-col items-center gap-2">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "var(--surface-secondary)", color: "var(--text-tertiary)" }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
