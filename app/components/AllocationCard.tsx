@@ -56,9 +56,9 @@ type Props = {
 };
 
 function fmtINRShort(n: number) {
-  if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(1)} Cr`;
-  if (n >= 100_000)    return `₹${(n / 100_000).toFixed(1)} L`;
-  return `₹${n.toLocaleString("en-IN")}`;
+  if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(2)} Cr`;
+  if (n >= 100_000)    return `₹${(n / 100_000).toFixed(2)} L`;
+  return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function DonutChart({
@@ -121,7 +121,7 @@ function DonutChart({
           <text x={cx} y={cy - 18} textAnchor="middle" fontSize="10" fontWeight="600"
             fill={hovered.color} letterSpacing="0.06em">{hovered.label.toUpperCase()}</text>
           <text x={cx} y={cy + 2} textAnchor="middle" fontSize="16" fontWeight="700"
-            fill={primaryFill}>{hovered.pct}%</text>
+            fill={primaryFill}>{hovered.pct.toFixed(2)}%</text>
           <text x={cx} y={cy + 18} textAnchor="middle" fontSize="11" fontWeight="500"
             fill={mutedFill}>{fmtINRShort(hovered.amount)}</text>
         </>
@@ -155,7 +155,7 @@ function SegmentRow({ label, pct, amount, color }: AllocationItem) {
         <span className="text-[12.5px] font-medium" style={{ color: "var(--text-secondary)" }}>{label}</span>
       </div>
       <p className="text-[12.5px] font-semibold pl-3" style={{ color: "var(--text-primary)" }}>
-        {pct}%
+        {pct.toFixed(2)}%
         <span className="font-normal ml-1.5" style={{ color: "var(--text-tertiary)" }}>· {fmtINRShort(amount)}</span>
       </p>
     </div>
@@ -177,7 +177,7 @@ function HoldingRow({ holding, rank }: { holding: TopHolding; rank: number }) {
       <p className="text-[12.5px] font-semibold" style={{ color: "var(--text-primary)", paddingLeft: "1.125rem" }}>
         {fmtINRShort(holding.value)}
         <span className="font-normal ml-1.5" style={{ color: "var(--text-tertiary)" }}>
-          · {holding.pct.toFixed(1)}%
+          · {holding.pct.toFixed(2)}%
         </span>
       </p>
     </div>
@@ -313,7 +313,7 @@ function RebalanceView({
           </div>
           <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
             <span style={{ fontSize: 12.5, fontWeight: 700, color: draftTotal === 100 ? "#16A34A" : "#D97706" }}>
-              Total: {draftTotal.toFixed(0)}%
+              Total: {draftTotal.toFixed(2)}%
             </span>
           </div>
         </div>
@@ -344,16 +344,16 @@ function RebalanceView({
                         background: drift > 0 ? "rgba(255,149,0,0.12)" : "rgba(255,59,48,0.10)",
                         color: drift > 0 ? "#D97706" : "#DC2626",
                       }}>
-                        {drift > 0 ? "+" : ""}{drift.toFixed(1)}%
+                        {drift > 0 ? "+" : ""}{drift.toFixed(2)}%
                       </span>
                     )}
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     {hasTarget && (
-                      <span style={{ fontSize: 11.5, color: "var(--text-tertiary)" }}>target {targetPct}%</span>
+                      <span style={{ fontSize: 11.5, color: "var(--text-tertiary)" }}>target {targetPct.toFixed(2)}%</span>
                     )}
                     <span style={{ fontSize: 12.5, fontWeight: 700, color: isDrift ? (drift > 0 ? "#D97706" : "#DC2626") : "var(--text-primary)" }}>
-                      {actualPct.toFixed(1)}%
+                      {actualPct.toFixed(2)}%
                     </span>
                   </div>
                 </div>

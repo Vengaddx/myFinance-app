@@ -158,7 +158,7 @@ export default function MarkReceivedModal({ open, onClose, onReceive, friendName
             <div className="flex items-center justify-between rounded-[12px] px-4 py-3" style={{ background: "rgba(52,199,89,0.08)" }}>
               <span className="text-[13px] font-medium" style={{ color: labelColor }}>Still owed to you</span>
               <span className="text-[15px] font-bold" style={{ color: "#16A34A" }}>
-                {sym}{outstanding.toLocaleString("en-IN")}
+                {sym}{outstanding.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
           </div>
@@ -179,7 +179,7 @@ export default function MarkReceivedModal({ open, onClose, onReceive, friendName
                 onFocus={onFocus} onBlur={onBlur(errors.amount || errors.amountExceeds)}
               />
               {errors.amount && <p className="text-[12px]" style={{ color: "#DC2626" }}>Enter a valid amount</p>}
-              {errors.amountExceeds && <p className="text-[12px]" style={{ color: "#DC2626" }}>Cannot exceed outstanding ({sym}{outstanding.toLocaleString("en-IN")})</p>}
+              {errors.amountExceeds && <p className="text-[12px]" style={{ color: "#DC2626" }}>Cannot exceed outstanding ({sym}{outstanding.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</p>}
             </div>
 
             <div className="flex flex-col gap-2">

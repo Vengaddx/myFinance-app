@@ -330,7 +330,7 @@ export default function AddExpenseModal({ open, onClose, onSave, initialData = n
                   <>
                     <div className="w-px h-3.5 ml-1 shrink-0" style={{ background: "rgba(0,122,255,0.3)" }} />
                     <p className="text-[12px] font-semibold ml-1 shrink-0" style={{ color: "#2563EB" }}>
-                      ≈ ₹{inrPreview.toLocaleString("en-IN")}
+                      ≈ ₹{inrPreview.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </>
                 )}

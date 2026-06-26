@@ -346,7 +346,7 @@ export default function DonateModal({ open, onClose }: Props) {
                 {copied ? "Copied!" : "Copy ID"}
               </button>
               <span style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>
-                ₹{amount.toLocaleString("en-IN")} · Scan or copy to pay
+                ₹{amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Scan or copy to pay
               </span>
             </div>
           </div>
@@ -376,7 +376,7 @@ export default function DonateModal({ open, onClose }: Props) {
             onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
           >
             <HeartIcon size={16} filled />
-            Pay ₹{amount.toLocaleString("en-IN")} via Google Pay
+            Pay ₹{amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} via Google Pay
           </button>
         </div>
       </div>

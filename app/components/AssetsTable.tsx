@@ -201,19 +201,19 @@ function fmtINR(n?: number | string | null) {
   const value = Number(n ?? 0);
 
   if (value >= 10_000_000) return `₹${(value / 10_000_000).toFixed(2)} Cr`;
-  if (value >= 100_000) return `₹${(value / 100_000).toFixed(1)} L`;
-  if (value >= 1_000) return `₹${(value / 1_000).toFixed(1)} K`;
-  return `₹${value.toLocaleString("en-IN")}`;
+  if (value >= 100_000) return `₹${(value / 100_000).toFixed(2)} L`;
+  if (value >= 1_000) return `₹${(value / 1_000).toFixed(2)} K`;
+  return `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function fmtINRFull(n?: number | string | null) {
   const value = Number(n ?? 0);
-  return `₹${value.toLocaleString("en-IN")}`;
+  return `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function fmtAmt(amount: number, currency: string = "INR") {
   const sym = currency === "USD" ? "$" : currency === "SAR" ? "﷼" : "₹";
-  return `${sym}${amount.toLocaleString("en-IN")}`;
+  return `${sym}${amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function fmtDate(d: string | null | undefined) {
@@ -392,7 +392,7 @@ function PnlCell({ value, pct, neutral }: { value: number; pct: number; neutral?
         style={{ color: pos ? "#16A34A" : "#DC2626", opacity: 0.7 }}
       >
         {pos ? "+" : ""}
-        {pct.toFixed(1)}%
+        {pct.toFixed(2)}%
       </span>
     </div>
   );
@@ -530,7 +530,7 @@ function AssetMobileCard({
 
       <div className="flex items-start justify-between mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
         <StatLabel label="Cur. Val" value={fmtINRFull(asset.curVal)} />
-        <StatLabel label="Alloc." value={`${asset.allocation}%`} align="right" />
+        <StatLabel label="Alloc." value={`${asset.allocation.toFixed(2)}%`} align="right" />
       </div>
 
       {!isKite && (
@@ -661,7 +661,7 @@ function AssetDesktopRow({
             <div className="h-full rounded-full" style={{ width: `${Math.min(asset.allocation, 100)}%`, background: "var(--text-primary)" }} />
           </div>
           <span className="text-[15px] font-bold w-9 text-right" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
-            {asset.allocation}%
+            {asset.allocation.toFixed(2)}%
           </span>
         </div>
       </td>
@@ -711,7 +711,7 @@ function KiteDesktopRow({ row, isDark, isLast }: { row: KiteGroupRow; isDark: bo
             <div className="h-full rounded-full" style={{ width: `${Math.min(row.allocation, 100)}%`, background: "var(--text-primary)" }} />
           </div>
           <span className="text-[15px] font-bold w-9 text-right" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
-            {row.allocation}%
+            {row.allocation.toFixed(2)}%
           </span>
         </div>
       </td>
@@ -1300,7 +1300,7 @@ onDataChanged?.();
 
     return base.map((item) => ({
       ...item,
-      allocation: totalCurVal > 0 ? Number(((item.curVal / totalCurVal) * 100).toFixed(1)) : 0,
+      allocation: totalCurVal > 0 ? (item.curVal / totalCurVal) * 100 : 0,
     }));
   }, [dbAssets]);
 
@@ -1372,7 +1372,7 @@ onDataChanged?.();
       kiteUiAssets.reduce((s, a) => s + a.curVal, 0);
     return rows.map((r) => ({
       ...r,
-      allocation: totalPortfolio > 0 ? Number(((r.curVal / totalPortfolio) * 100).toFixed(1)) : 0,
+      allocation: totalPortfolio > 0 ? (r.curVal / totalPortfolio) * 100 : 0,
     }));
   }, [kiteUiAssets, mappedAssets]);
 
@@ -1448,7 +1448,7 @@ onDataChanged?.();
     const totalCurVal = manualBase.reduce((s, a) => s + a.curVal, 0);
     const withAlloc = manualBase.map((a) => ({
       ...a,
-      allocation: totalCurVal > 0 ? Number(((a.curVal / totalCurVal) * 100).toFixed(1)) : 0,
+      allocation: totalCurVal > 0 ? (a.curVal / totalCurVal) * 100 : 0,
     }));
 
     if (!sortKey) return withAlloc;
@@ -1481,7 +1481,7 @@ onDataChanged?.();
     const totalCurVal = manualAll.reduce((s, a) => s + a.curVal, 0);
     const byCategory = new Map<string, UiAsset[]>();
     for (const a of manualAll) {
-      const withAlloc = { ...a, allocation: totalCurVal > 0 ? Number(((a.curVal / totalCurVal) * 100).toFixed(1)) : 0 };
+      const withAlloc = { ...a, allocation: totalCurVal > 0 ? (a.curVal / totalCurVal) * 100 : 0 };
       const arr = byCategory.get(a.category) ?? [];
       arr.push(withAlloc);
       byCategory.set(a.category, arr);
@@ -1798,8 +1798,8 @@ onDataChanged?.();
         original: lTotalOriginal,
         outstanding: lTotalOutstanding,
         currency: "",
-        dueDate: `Lent: ₹${lTotalLent.toLocaleString("en-IN")}`,
-        status: `Owed: ₹${lTotalBorrowed.toLocaleString("en-IN")}`,
+        dueDate: `Lent: ₹${lTotalLent.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        status: `Owed: ₹${lTotalBorrowed.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       });
       styleTotalRow(totRow2);
       totRow2.getCell("original").numFmt = "#,##0.00";
@@ -2269,7 +2269,7 @@ onDataChanged?.();
                   <p className="text-[9.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>P&L</p>
                   <p className="text-[19px] font-bold" style={{ color: pnl >= 0 ? "#16A34A" : "#DC2626", letterSpacing: "-0.025em" }}>
                     {pnl >= 0 ? "+" : ""}{fmtINR(pnl)}
-                    <span className="text-[13px] font-medium ml-1.5" style={{ opacity: 0.7 }}>({pct >= 0 ? "+" : ""}{pct.toFixed(1)}%)</span>
+                    <span className="text-[13px] font-medium ml-1.5" style={{ opacity: 0.7 }}>({pct >= 0 ? "+" : ""}{pct.toFixed(2)}%)</span>
                   </p>
                 </div>
               </>)}
@@ -2344,7 +2344,7 @@ onDataChanged?.();
                         <p className="text-[14px] font-bold" style={{ color: "var(--text-primary)" }}>{fmtINRFull(group.curVal)}</p>
                         {group.invested > 0 && (
                           <p className="text-[11px] font-semibold" style={{ color: group.pnl >= 0 ? "#16A34A" : "#DC2626" }}>
-                            {group.pnl >= 0 ? "+" : ""}{group.pnlPct.toFixed(1)}%
+                            {group.pnl >= 0 ? "+" : ""}{group.pnlPct.toFixed(2)}%
                           </p>
                         )}
                       </div>
@@ -2394,7 +2394,7 @@ onDataChanged?.();
                       <span className="text-[14px] font-bold" style={{ color: "var(--text-primary)" }}>{fmtINRFull(group.curVal)}</span>
                       {group.invested > 0 && (
                         <span className="text-[13px] font-semibold w-16 text-right" style={{ color: group.pnl >= 0 ? "#16A34A" : "#DC2626" }}>
-                          {group.pnl >= 0 ? "+" : ""}{group.pnlPct.toFixed(1)}%
+                          {group.pnl >= 0 ? "+" : ""}{group.pnlPct.toFixed(2)}%
                         </span>
                       )}
                     </div>
@@ -2715,10 +2715,10 @@ onDataChanged?.();
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-[18px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.025em" }}>
-                        ₹{e.amount.toLocaleString("en-IN")}
+                        ₹{e.amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                       {mSar !== null && (
-                        <p className="text-[12px] font-medium" style={{ color: "var(--text-tertiary)" }}>﷼{mSar.toLocaleString("en-IN")}</p>
+                        <p className="text-[12px] font-medium" style={{ color: "var(--text-tertiary)" }}>﷼{mSar.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                       )}
                     </div>
                   </div>
@@ -2822,10 +2822,10 @@ onDataChanged?.();
                       </td>
                       <td className="px-4 py-4 text-right">
                         <span className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
-                          ₹{e.amount.toLocaleString("en-IN")}
+                          ₹{e.amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                         {dSar !== null && (
-                          <p className="text-[12px] font-medium" style={{ color: "var(--text-tertiary)" }}>﷼{dSar.toLocaleString("en-IN")}</p>
+                          <p className="text-[12px] font-medium" style={{ color: "var(--text-tertiary)" }}>﷼{dSar.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         )}
                       </td>
                       <td className="px-4 py-4">
