@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
 
+export type AssetBreakdownItem = { label: string; amount: number; color: string };
+
 type Props = {
   netWorth: number;
   invested: number;
@@ -13,6 +15,7 @@ type Props = {
   liabilities: number;
   netWorthChange?: number;
   onClick?: () => void;
+  assetBreakdown?: AssetBreakdownItem[];
 };
 
 function fmtINR(n: number) {
@@ -93,11 +96,23 @@ export default function NetWorthCard({
   liabilities,
   netWorthChange = 0,
   onClick,
+  assetBreakdown = [],
 }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const displayNetWorth = useCountUp(netWorth);
   const up = netWorthChange >= 0;
+  const [showInfo, setShowInfo] = useState(false);
+  const infoRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showInfo) return;
+    const handler = (e: MouseEvent) => {
+      if (infoRef.current && !infoRef.current.contains(e.target as Node)) setShowInfo(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showInfo]);
 
   const bg = isDark ? "#18181B" : "#0F172A";
 
@@ -116,12 +131,66 @@ export default function NetWorthCard({
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p
-          className="text-[10px] font-semibold uppercase"
-          style={{ color: "rgba(255,255,255,0.32)", letterSpacing: "0.12em" }}
-        >
-          Net Worth
-        </p>
+        <div ref={infoRef} className="flex items-center gap-1.5 relative">
+          <p
+            className="text-[10px] font-semibold uppercase"
+            style={{ color: "rgba(255,255,255,0.32)", letterSpacing: "0.12em" }}
+          >
+            Net Worth
+          </p>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowInfo((v) => !v); }}
+            className="w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0"
+            style={{ color: "rgba(255,255,255,0.34)" }}
+            aria-label="How net worth is calculated"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="11" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+          </button>
+
+          {showInfo && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="absolute top-full left-0 mt-2 z-30 w-[250px] rounded-md p-3.5"
+              style={{
+                background: isDark ? "#27272A" : "#1E293B",
+                border: "1px solid rgba(255,255,255,0.10)",
+                boxShadow: "0 12px 32px rgba(0,0,0,0.4)",
+              }}
+            >
+              <p className="text-[11px] font-semibold text-white mb-2.5">Net Worth = Assets − Liabilities</p>
+              {assetBreakdown.length > 0 && (
+                <div className="flex flex-col gap-1 mb-2.5">
+                  {assetBreakdown.map((b) => (
+                    <div key={b.label} className="flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-1.5 text-[11px]" style={{ color: "rgba(255,255,255,0.6)" }}>
+                        <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: b.color }} />
+                        {b.label}
+                      </span>
+                      <span className="text-[11px] font-medium text-white whitespace-nowrap">{fmtShort(b.amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }} className="pt-2 flex flex-col gap-1">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>Total Assets</span>
+                  <span className="text-[11px] font-semibold text-white">{fmtShort(totalAssets)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>Liabilities</span>
+                  <span className="text-[11px] font-semibold" style={{ color: "#EF4444" }}>−{fmtShort(liabilities)}</span>
+                </div>
+              </div>
+              <p className="text-[10.5px] mt-2.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
+                Assets include equities &amp; Kite holdings, gold, FDs, real estate, bank &amp; cash, crypto, and money lent to others. Liabilities are the outstanding balance on your active loans.
+              </p>
+            </div>
+          )}
+        </div>
         {onClick && (
           <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.24)", letterSpacing: "0.01em" }}>
             Timeline &rsaquo;

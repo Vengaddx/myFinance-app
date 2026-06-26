@@ -444,6 +444,7 @@ export default function Home() {
             liabilities={summary.liabilities}
             netWorthChange={0}
             onClick={() => router.push("/snapshots")}
+            assetBreakdown={summary.allocationData}
           />
           <div className="hidden md:block h-full fade-in-up fade-in-up-1">
             <AllocationCard
