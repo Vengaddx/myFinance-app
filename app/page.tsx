@@ -53,6 +53,9 @@ const allocationColorMap: Record<string, string> = {
   other:      "#71717A",
 };
 
+// Asset allocation pie chart palette — assigned by rank (largest slice first), cycling if there are more categories than colors
+const PIE_CHART_COLORS = ["#B4D43A", "#4AA3DB", "#F2994A", "#E0356F"];
+
 const allocationLabelMap: Record<string, string> = {
   stocks: "Stocks & ETFs",
   gold: "Gold & Silver",
@@ -270,9 +273,9 @@ export default function Home() {
         label: allocationLabelMap[key] ?? key,
         pct: totalAssets > 0 ? Number(((amount / totalAssets) * 100).toFixed(1)) : 0,
         amount,
-        color: allocationColorMap[key] ?? "#8E8E93",
       }))
-      .sort((a, b) => b.amount - a.amount);
+      .sort((a, b) => b.amount - a.amount)
+      .map((item, idx) => ({ ...item, color: PIE_CHART_COLORS[idx % PIE_CHART_COLORS.length] }));
 
     const topHoldings: TopHolding[] = [...dbAssets]
       .sort((a, b) => Number(b.value ?? 0) - Number(a.value ?? 0))
