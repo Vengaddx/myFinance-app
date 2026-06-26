@@ -34,7 +34,6 @@ export async function bioAvailable(): Promise<boolean> {
 
 export const bioEnabled   = () => lsg(K.ENABLED)  === "1";
 export const bioPrompted  = () => lsg(K.PROMPTED) === "1";
-export const isFreshLogin = () => ssg(S.FRESH)    === "1";
 export const isUnlocked   = () => ssg(S.UNLOCKED) === "1";
 
 export function clearFreshLogin() { try { sessionStorage.removeItem(S.FRESH); } catch { /* */ } }

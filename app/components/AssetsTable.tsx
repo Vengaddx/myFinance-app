@@ -1154,19 +1154,6 @@ onDataChanged?.();
     currency: "INR" as const,
   })), [mappedAssets]);
 
-  const friendsBorrowed = useMemo(() => mappedLiabilities.filter((l) => l.liabilityType === "friend").map((l) => ({
-    id: l.id,
-    name: l.lenderName,
-    label: l.name !== l.lenderName ? l.name : undefined,
-    amount: l.outstandingAmount,
-    originalAmount: l.originalAmount,
-    kind: "borrowed" as const,
-    currency: l.currency,
-    borrowedDate: l.borrowedDate,
-    dueDate: l.dueDate,
-    status: l.status,
-  })), [mappedLiabilities]);
-
   // All borrowed (bank + friend) filtered by search — for unified loans view
   const filteredAllBorrowed = useMemo(() => {
     const q = search.toLowerCase().trim();
