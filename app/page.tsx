@@ -37,8 +37,8 @@ function isKiteGold(tradingsymbol: string) {
 
 function fmtINR(n: number) {
   if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(2)} Cr`;
-  if (n >= 100_000) return `₹${(n / 100_000).toFixed(1)} L`;
-  return `₹${n.toLocaleString("en-IN")}`;
+  if (n >= 100_000) return `₹${(n / 100_000).toFixed(2)} L`;
+  return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 const allocationColorMap: Record<string, string> = {
@@ -262,16 +262,17 @@ export default function Home() {
     const netWorth = totalAssets - liabilities;
     // Exclude bank/cash balances from P&L — they have no cost basis
     const totalPnl = (totalAssets - bankCashValue) - invested;
+    // Keep raw precision here — rounding to a fixed number of decimals happens only at display time
     const investedPctOfNetWorth =
-      netWorth > 0 ? Number(((invested / netWorth) * 100).toFixed(1)) : 0;
+      netWorth > 0 ? (invested / netWorth) * 100 : 0;
     const totalPnlPct =
-      invested > 0 ? Number(((totalPnl / invested) * 100).toFixed(1)) : 0;
+      invested > 0 ? (totalPnl / invested) * 100 : 0;
 
     const allocationData = Object.entries(byCategory)
       .filter(([, amount]) => amount > 0)
       .map(([key, amount]) => ({
         label: allocationLabelMap[key] ?? key,
-        pct: totalAssets > 0 ? Number(((amount / totalAssets) * 100).toFixed(1)) : 0,
+        pct: totalAssets > 0 ? (amount / totalAssets) * 100 : 0,
         amount,
       }))
       .sort((a, b) => b.amount - a.amount)
@@ -374,7 +375,7 @@ export default function Home() {
                 <p className="text-[13px] font-semibold" style={{ color: (stickyData?.pnl ?? 0) >= 0 ? "#16A34A" : "#DC2626", letterSpacing: "-0.015em" }}>
                   {(stickyData?.pnl ?? 0) >= 0 ? "+" : ""}{fmtINR(stickyData?.pnl ?? 0)}
                   <span className="text-[11px] font-medium ml-1" style={{ opacity: 0.75 }}>
-                    ({(stickyData?.pnlPct ?? 0) >= 0 ? "+" : ""}{(stickyData?.pnlPct ?? 0).toFixed(1)}%)
+                    ({(stickyData?.pnlPct ?? 0) >= 0 ? "+" : ""}{(stickyData?.pnlPct ?? 0).toFixed(2)}%)
                   </span>
                 </p>
               </div>

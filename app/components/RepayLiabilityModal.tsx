@@ -178,7 +178,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
             >
               <span className="text-[13px] font-medium" style={{ color: labelColor }}>Outstanding balance</span>
               <span className="text-[15px] font-bold" style={{ color: "#DC2626" }}>
-                {currencySymbol}{outstanding.toLocaleString("en-IN")}
+                {currencySymbol}{outstanding.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function RepayLiabilityModal({ open, onClose, onRepay, liabilityN
                 onBlur={onBlur(errors.amount || errors.amountExceeds)}
               />
               {errors.amount && <p className="text-[12px]" style={{ color: "#DC2626" }}>Enter a valid amount</p>}
-              {errors.amountExceeds && <p className="text-[12px]" style={{ color: "#DC2626" }}>Cannot exceed outstanding ({currencySymbol}{outstanding.toLocaleString("en-IN")})</p>}
+              {errors.amountExceeds && <p className="text-[12px]" style={{ color: "#DC2626" }}>Cannot exceed outstanding ({currencySymbol}{outstanding.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</p>}
             </div>
 
             {/* Date */}

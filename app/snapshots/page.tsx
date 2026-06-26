@@ -53,8 +53,8 @@ function fmtINR(n: number) {
   const abs = Math.abs(n);
   const sign = n < 0 ? "-" : "";
   if (abs >= 10_000_000) return `${sign}₹${(abs / 10_000_000).toFixed(2)} Cr`;
-  if (abs >= 100_000) return `${sign}₹${(abs / 100_000).toFixed(1)} L`;
-  return `${sign}₹${abs.toLocaleString("en-IN")}`;
+  if (abs >= 100_000) return `${sign}₹${(abs / 100_000).toFixed(2)} L`;
+  return `${sign}₹${abs.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function fmtDateShort(dateStr: string) {
@@ -325,7 +325,7 @@ export default function SnapshotsPage() {
         },
         {
           label: "Overall Growth",
-          value: `${stats.growthFromFirst >= 0 ? "+" : ""}${stats.growthFromFirst.toFixed(1)}%`,
+          value: `${stats.growthFromFirst >= 0 ? "+" : ""}${stats.growthFromFirst.toFixed(2)}%`,
           sub: "from first snapshot",
           subColor: stats.growthFromFirst >= 0 ? "#16A34A" : "#DC2626",
           valueColor: stats.growthFromFirst >= 0 ? "#16A34A" : "#DC2626",
@@ -334,7 +334,7 @@ export default function SnapshotsPage() {
           ? [
               {
                 label: "Last Change",
-                value: `${stats.growthFromPrev >= 0 ? "+" : ""}${stats.growthFromPrev.toFixed(1)}%`,
+                value: `${stats.growthFromPrev >= 0 ? "+" : ""}${stats.growthFromPrev.toFixed(2)}%`,
                 sub: "from previous snapshot",
                 subColor: stats.growthFromPrev >= 0 ? "#16A34A" : "#DC2626",
                 valueColor: stats.growthFromPrev >= 0 ? "#16A34A" : "#DC2626",
@@ -614,7 +614,7 @@ export default function SnapshotsPage() {
                       }}
                     >
                       {stats.growthFromFirst >= 0 ? "▲" : "▼"}{" "}
-                      {Math.abs(stats.growthFromFirst).toFixed(1)}% overall
+                      {Math.abs(stats.growthFromFirst).toFixed(2)}% overall
                     </span>
                   )}
                 </div>

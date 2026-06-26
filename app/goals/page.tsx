@@ -138,17 +138,17 @@ function fmtINR(n: number): string {
   const abs = Math.abs(n);
   const sign = n < 0 ? "-" : "";
   if (abs >= 10_000_000) return `${sign}₹${(abs / 10_000_000).toFixed(2)} Cr`;
-  if (abs >= 100_000) return `${sign}₹${(abs / 100_000).toFixed(1)} L`;
-  return `${sign}₹${abs.toLocaleString("en-IN")}`;
+  if (abs >= 100_000) return `${sign}₹${(abs / 100_000).toFixed(2)} L`;
+  return `${sign}₹${abs.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function fmtShort(n: number): string {
   const abs = Math.abs(n);
   const sign = n < 0 ? "-" : "";
-  if (abs >= 10_000_000) return `${sign}${(abs / 10_000_000).toFixed(1)}Cr`;
-  if (abs >= 100_000) return `${sign}${(abs / 100_000).toFixed(1)}L`;
-  if (abs >= 1_000) return `${sign}${(abs / 1_000).toFixed(0)}K`;
-  return `${sign}${abs.toLocaleString("en-IN")}`;
+  if (abs >= 10_000_000) return `${sign}${(abs / 10_000_000).toFixed(2)}Cr`;
+  if (abs >= 100_000) return `${sign}${(abs / 100_000).toFixed(2)}L`;
+  if (abs >= 1_000) return `${sign}${(abs / 1_000).toFixed(2)}K`;
+  return `${sign}${abs.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function horizonLabel(months: number): string {
@@ -483,7 +483,7 @@ function FIREView({
 
     if (progress > 0) {
       out.push({
-        text: `You are ${progress.toFixed(1)}% of the way to your FIRE corpus${fireDate ? ` — on track for ${fireDate}` : ""}`,
+        text: `You are ${progress.toFixed(2)}% of the way to your FIRE corpus${fireDate ? ` — on track for ${fireDate}` : ""}`,
         type: progress >= 50 ? "positive" : progress >= 25 ? "neutral" : "negative",
       });
     }
@@ -534,7 +534,7 @@ function FIREView({
             <div style={{ height: 5, borderRadius: 3, background: "rgba(120,120,128,0.12)", overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${progress}%`, borderRadius: 3, background: progressColor, transition: "width 400ms ease" }} />
             </div>
-            <div style={{ marginTop: 5, textAlign: "center", fontSize: 11, fontWeight: 700, color: progressColor }}>{progress.toFixed(1)}%</div>
+            <div style={{ marginTop: 5, textAlign: "center", fontSize: 11, fontWeight: 700, color: progressColor }}>{progress.toFixed(2)}%</div>
           </div>
           <div style={{ minWidth: 100, textAlign: "right" }}>
             <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--text-tertiary)" }}>FIRE Corpus</p>
@@ -594,13 +594,13 @@ function FIREView({
             <SliderRow
               label="Expected ROI / year"
               value={roiPct} min={4} max={30} step={0.5}
-              onChange={setRoiPct} display={`${roiPct}%`} accentColor="#2563EB"
+              onChange={setRoiPct} display={`${roiPct.toFixed(2)}%`} accentColor="#2563EB"
             />
             <SliderRow
               label="Safe Withdrawal Rate"
               hint="4% rule = 25× expenses"
               value={swrPct} min={2} max={6} step={0.5}
-              onChange={setSwrPct} display={`${swrPct}%`} accentColor="#9333EA"
+              onChange={setSwrPct} display={`${swrPct.toFixed(2)}%`} accentColor="#9333EA"
             />
           </div>
           <p style={{ margin: "18px 0 0", fontSize: 12, color: "var(--text-tertiary)", lineHeight: 1.6, paddingTop: 16, borderTop: "1px solid var(--separator)" }}>
@@ -1790,7 +1790,7 @@ export default function GoalsPage() {
                             color: "var(--text-primary)",
                           }}
                         >
-                          {cm.scenario.annual_return_pct}%
+                          {cm.scenario.annual_return_pct.toFixed(2)}%
                         </td>
                         <td
                           style={{
@@ -1895,7 +1895,7 @@ export default function GoalsPage() {
                     iconBg: "rgba(174,221,0,0.10)",
                     label: "Return Growth",
                     value: fmtINR(Math.max(0, metrics.growthFromReturns)),
-                    sub: `${selectedScenario.annual_return_pct}% p.a.`,
+                    sub: `${selectedScenario.annual_return_pct.toFixed(2)}% p.a.`,
                     color: "#AEDD00",
                   },
                   {
@@ -2423,7 +2423,7 @@ export default function GoalsPage() {
                     },
                     {
                       label: "Annual Return",
-                      value: `${selectedScenario.annual_return_pct}%`,
+                      value: `${selectedScenario.annual_return_pct.toFixed(2)}%`,
                     },
                     {
                       label: "Time Horizon",

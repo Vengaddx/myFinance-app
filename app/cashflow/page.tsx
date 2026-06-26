@@ -15,8 +15,8 @@ function fmtINR(n: number): string {
   const abs = Math.abs(n);
   const sign = n < 0 ? "-" : "";
   if (abs >= 10_000_000) return `${sign}₹${(abs / 10_000_000).toFixed(2)} Cr`;
-  if (abs >= 100_000)    return `${sign}₹${(abs / 100_000).toFixed(1)} L`;
-  return `${sign}₹${abs.toLocaleString("en-IN")}`;
+  if (abs >= 100_000)    return `${sign}₹${(abs / 100_000).toFixed(2)} L`;
+  return `${sign}₹${abs.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function monthLabel(mk: string): string {
@@ -68,7 +68,7 @@ function RateTooltip({ active, payload, label }: { active?: boolean; payload?: {
     }}>
       <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</p>
       <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 600, color: rateColor(rate, d.income > 0) }}>
-        {d.income > 0 ? `${rate.toFixed(0)}% saved` : "No data"}
+        {d.income > 0 ? `${rate.toFixed(2)}% saved` : "No data"}
       </p>
       {d.income > 0 && (
         <p style={{ margin: 0, fontSize: 12, color: "var(--text-secondary)" }}>
@@ -187,7 +187,7 @@ export default function CashFlowPage() {
       const pct = ((thisM.expenses - prevM.expenses) / prevM.expenses) * 100;
       if (Math.abs(pct) >= 8) {
         out.push({
-          text: `Expenses ${pct > 0 ? "up" : "down"} ${Math.abs(pct).toFixed(0)}% vs ${prevM.label}`,
+          text: `Expenses ${pct > 0 ? "up" : "down"} ${Math.abs(pct).toFixed(2)}% vs ${prevM.label}`,
           type: pct > 0 ? "negative" : "positive",
         });
       }
@@ -201,7 +201,7 @@ export default function CashFlowPage() {
     // 6-month average
     if (avgSavingsRate > 0 && out.length < 3) {
       out.push({
-        text: `6-month avg savings rate: ${avgSavingsRate.toFixed(1)}%`,
+        text: `6-month avg savings rate: ${avgSavingsRate.toFixed(2)}%`,
         type: avgSavingsRate >= 30 ? "positive" : avgSavingsRate >= 15 ? "neutral" : "negative",
       });
     }
@@ -310,7 +310,7 @@ export default function CashFlowPage() {
                 ))}
                 <div>
                   <p style={{ margin: "0 0 1px", fontSize: 10, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Savings Rate</p>
-                  <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: rc2, letterSpacing: "-0.01em" }}>{overallRate.toFixed(1)}%</p>
+                  <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: rc2, letterSpacing: "-0.01em" }}>{overallRate.toFixed(2)}%</p>
                 </div>
               </div>
             </div>
@@ -354,7 +354,7 @@ export default function CashFlowPage() {
                   {/* Rate badge */}
                   <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 20, background: isDark ? "rgba(255,255,255,0.06)" : "var(--surface-secondary)", border: "1px solid var(--separator)" }}>
                     <div style={{ width: 7, height: 7, borderRadius: "50%", background: rc, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, fontWeight: 600, color: rc }}>{current.savingsRate.toFixed(1)}% savings rate</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: rc }}>{current.savingsRate.toFixed(2)}% savings rate</span>
                     <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>· target 30%</span>
                   </div>
 
@@ -553,7 +553,7 @@ export default function CashFlowPage() {
                         </td>
                         <td style={{ padding: "12px 20px", textAlign: "right" }}>
                           {m.income > 0 ? (
-                            <span style={{ fontWeight: 700, color: rc3 }}>{m.savingsRate.toFixed(1)}%</span>
+                            <span style={{ fontWeight: 700, color: rc3 }}>{m.savingsRate.toFixed(2)}%</span>
                           ) : (
                             <span style={{ color: "var(--text-tertiary)" }}>—</span>
                           )}
@@ -581,7 +581,7 @@ export default function CashFlowPage() {
                       <td style={{ padding: "12px 20px", textAlign: "right", fontWeight: 700, color: "#16A34A" }}>{fmtINR(totalIncome)}</td>
                       <td style={{ padding: "12px 20px", textAlign: "right", fontWeight: 700, color: "#DC2626" }}>{fmtINR(totalExpenses)}</td>
                       <td style={{ padding: "12px 20px", textAlign: "right", fontWeight: 700, color: totalSavings >= 0 ? "var(--text-primary)" : "#DC2626" }}>{fmtINR(totalSavings)}</td>
-                      <td style={{ padding: "12px 20px", textAlign: "right", fontWeight: 700, color: rc4 }}>{overallRate.toFixed(1)}%</td>
+                      <td style={{ padding: "12px 20px", textAlign: "right", fontWeight: 700, color: rc4 }}>{overallRate.toFixed(2)}%</td>
                     </tr>
                   </tfoot>
                 );

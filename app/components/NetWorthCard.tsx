@@ -19,13 +19,13 @@ type Props = {
 };
 
 function fmtINR(n: number) {
-  return `₹ ${n.toLocaleString("en-IN")}`;
+  return `₹ ${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function fmtShort(n: number) {
   if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(2)} Cr`;
-  if (n >= 100_000) return `₹${(n / 100_000).toFixed(1)} L`;
-  return `₹${n.toLocaleString("en-IN")}`;
+  if (n >= 100_000) return `₹${(n / 100_000).toFixed(2)} L`;
+  return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function useCountUp(target: number, duration = 900) {
@@ -42,7 +42,8 @@ function useCountUp(target: number, duration = 900) {
     const step = (now: number) => {
       const t = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - t, 3);
-      setValue(Math.round(from + (target - from) * eased));
+      // Keep full precision — rounding happens only at display time (fmtINR), not here
+      setValue(from + (target - from) * eased);
       if (t < 1) { rafRef.current = requestAnimationFrame(step); }
     };
     rafRef.current = requestAnimationFrame(step);
@@ -231,7 +232,7 @@ export default function NetWorthCard({
         <MetricBlock
           label="Invested"
           value={fmtINR(invested)}
-          sub={`${investedPctOfNetWorth}% of net worth`}
+          sub={`${investedPctOfNetWorth.toFixed(2)}% of net worth`}
         />
         <MetricBlock
           label="Total P&L"

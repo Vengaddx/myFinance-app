@@ -204,14 +204,14 @@ export default function LiabilityLogsModal({ open, onClose, liabilityId, liabili
                       <div>
                         <p className="text-[10.5px] uppercase font-semibold mb-0.5" style={{ color: labelColor, letterSpacing: "0.07em" }}>Amount</p>
                         <p className="text-[14px] font-semibold" style={{ color: titleColor }}>
-                          {currencySymbol}{Number(log.amount).toLocaleString("en-IN")}
+                          {currencySymbol}{Number(log.amount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
                       </div>
                       {log.previous_outstanding != null && (
                         <div>
                           <p className="text-[10.5px] uppercase font-semibold mb-0.5" style={{ color: labelColor, letterSpacing: "0.07em" }}>Before</p>
                           <p className="text-[14px] font-semibold" style={{ color: titleColor }}>
-                            {currencySymbol}{Number(log.previous_outstanding).toLocaleString("en-IN")}
+                            {currencySymbol}{Number(log.previous_outstanding).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </p>
                         </div>
                       )}
@@ -219,7 +219,7 @@ export default function LiabilityLogsModal({ open, onClose, liabilityId, liabili
                         <div>
                           <p className="text-[10.5px] uppercase font-semibold mb-0.5" style={{ color: labelColor, letterSpacing: "0.07em" }}>After</p>
                           <p className="text-[14px] font-semibold" style={{ color: titleColor }}>
-                            {currencySymbol}{Number(log.new_outstanding).toLocaleString("en-IN")}
+                            {currencySymbol}{Number(log.new_outstanding).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </p>
                         </div>
                       )}
