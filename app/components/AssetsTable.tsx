@@ -2341,9 +2341,9 @@ onDataChanged?.();
                     </div>
                     <div className="flex items-center gap-2.5 shrink-0">
                       <div className="text-right">
-                        <p className="text-[14px] font-bold" style={{ color: "var(--text-primary)" }}>{fmtINRFull(group.curVal)}</p>
+                        <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>{fmtINRFull(group.curVal)}</p>
                         {group.invested > 0 && (
-                          <p className="text-[11px] font-semibold" style={{ color: group.pnl >= 0 ? "#16A34A" : "#DC2626" }}>
+                          <p className="text-[11.5px] font-semibold mt-0.5" style={{ color: group.pnl >= 0 ? "#16A34A" : "#DC2626" }}>
                             {group.pnl >= 0 ? "+" : ""}{group.pnlPct.toFixed(2)}%
                           </p>
                         )}
@@ -2390,10 +2390,10 @@ onDataChanged?.();
                       <p className="text-[14px] font-bold" style={{ color: "var(--text-primary)" }}>{group.label}</p>
                       <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>{group.count} asset{group.count !== 1 ? "s" : ""}</span>
                     </div>
-                    <div className="flex items-center gap-6">
-                      <span className="text-[14px] font-bold" style={{ color: "var(--text-primary)" }}>{fmtINRFull(group.curVal)}</span>
+                    <div className="flex flex-col items-end">
+                      <span className="text-[16px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>{fmtINRFull(group.curVal)}</span>
                       {group.invested > 0 && (
-                        <span className="text-[13px] font-semibold w-16 text-right" style={{ color: group.pnl >= 0 ? "#16A34A" : "#DC2626" }}>
+                        <span className="text-[11.5px] font-semibold mt-0.5" style={{ color: group.pnl >= 0 ? "#16A34A" : "#DC2626" }}>
                           {group.pnl >= 0 ? "+" : ""}{group.pnlPct.toFixed(2)}%
                         </span>
                       )}
