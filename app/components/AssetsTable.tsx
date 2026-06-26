@@ -39,6 +39,19 @@ type UiAsset = {
   accountLabel?: string; // only set for Kite holdings
 };
 
+type KiteGroupRow = {
+  id: string;
+  name: string;
+  subLabel: string;
+  category: string;
+  count: number;
+  invested: number;
+  curVal: number;
+  pnl: number;
+  pnlPct: number;
+  allocation: number;
+};
+
 type DbExpenseRow = {
   id: string;
   title: string;
@@ -465,6 +478,258 @@ function StatLabel({
       <p className="text-[15px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
         {value}
       </p>
+    </div>
+  );
+}
+
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+      strokeLinecap="round" strokeLinejoin="round"
+      style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 180ms ease", flexShrink: 0 }}
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+// ── Shared row renderers — used by both the flat (category-tab) list and the grouped (All-tab) list ──
+
+function AssetMobileCard({
+  asset, isDark, isLast, onEdit, onDelete,
+}: {
+  asset: UiAsset; isDark: boolean; isLast: boolean;
+  onEdit: (a: UiAsset) => void; onDelete: (id: string) => void;
+}) {
+  const isKite = asset.id.startsWith("kite_");
+  return (
+    <div className="px-4 sm:px-5 py-4" style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <AssetIcon type={asset.category} isDark={isDark} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                {asset.name}
+              </p>
+              {isKite && (
+                <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
+                  style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
+                  {asset.accountLabel ?? "KITE"}
+                </span>
+              )}
+            </div>
+            <div className="mt-0.5">
+              <CategoryBadge category={asset.category} />
+            </div>
+          </div>
+        </div>
+        <PnlCell value={asset.pnl} pct={asset.pnlPct} neutral={asset.category === "bank" || asset.category === "cash"} />
+      </div>
+
+      <div className="flex items-start justify-between mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
+        <StatLabel label="Cur. Val" value={fmtINRFull(asset.curVal)} />
+        <StatLabel label="Alloc." value={`${asset.allocation}%`} align="right" />
+      </div>
+
+      {!isKite && (
+        <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
+          <button
+            onClick={() => onEdit(asset)}
+            className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium"
+            style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}
+          >
+            <EditIcon /> Edit
+          </button>
+          <button
+            onClick={() => onDelete(asset.id)}
+            className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]"
+            style={{ color: "var(--text-tertiary)" }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#DC2626")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
+          >
+            <TrashIcon />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function KiteMobileCard({ row, isDark, isLast }: { row: KiteGroupRow; isDark: boolean; isLast: boolean }) {
+  return (
+    <div className="px-4 sm:px-5 py-4" style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <AssetIcon type={row.category} isDark={isDark} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                {row.name}
+              </p>
+              <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
+                style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
+                KITE SYNC
+              </span>
+            </div>
+            <div className="mt-0.5">
+              <CategoryBadge category={row.category} />
+            </div>
+            <p className="text-[12px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>{row.subLabel}</p>
+          </div>
+        </div>
+        <PnlCell value={row.pnl} pct={row.pnlPct} />
+      </div>
+      <div className="flex items-start justify-between mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
+        <StatLabel label="Cur. Val" value={fmtINRFull(row.curVal)} />
+        <StatLabel label="Invested" value={fmtINRFull(row.invested)} align="right" />
+      </div>
+    </div>
+  );
+}
+
+function AssetDesktopRow({
+  asset, isDark, isLast, onEdit, onDelete,
+}: {
+  asset: UiAsset; isDark: boolean; isLast: boolean;
+  onEdit: (a: UiAsset) => void; onDelete: (id: string) => void;
+}) {
+  const isKite = asset.id.startsWith("kite_");
+  return (
+    <tr
+      className="cursor-pointer"
+      style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+    >
+      <td className="pl-6 pr-4 py-3.5">
+        <div className="flex items-center gap-3">
+          <AssetIcon type={asset.category} isDark={isDark} />
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                {asset.name}
+              </p>
+              {isKite && (
+                <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                  style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
+                  {asset.accountLabel ?? "KITE"}
+                </span>
+              )}
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <CategoryBadge category={asset.category} />
+              {!isKite && (
+                <>
+                  <button
+                    onClick={() => onEdit(asset)}
+                    className="icon-btn w-5 h-5 flex items-center justify-center rounded-md"
+                    style={{ color: "var(--text-tertiary)" }}
+                    title="Edit"
+                  >
+                    <EditIcon />
+                  </button>
+                  <button
+                    onClick={() => onDelete(asset.id)}
+                    className="icon-btn w-5 h-5 flex items-center justify-center rounded-md"
+                    style={{ color: "var(--text-tertiary)" }}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#DC2626")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
+                    title="Delete"
+                  >
+                    <TrashIcon />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </td>
+
+      <td className="px-4 py-3.5 text-right text-[15px] font-bold" style={{ color: "var(--text-primary)", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
+        {fmtINRFull(asset.curVal)}
+      </td>
+
+      <td className="px-4 py-4 text-right">
+        <PnlCell value={asset.pnl} pct={asset.pnlPct} neutral={asset.category === "bank" || asset.category === "cash"} />
+      </td>
+
+      <td className="pr-6 pl-4 py-4 text-right">
+        <div className="flex items-center justify-end gap-2.5">
+          <div className="w-14 h-[3px] rounded-full overflow-hidden" style={{ background: "var(--separator)" }}>
+            <div className="h-full rounded-full" style={{ width: `${Math.min(asset.allocation, 100)}%`, background: "var(--text-primary)" }} />
+          </div>
+          <span className="text-[15px] font-bold w-9 text-right" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+            {asset.allocation}%
+          </span>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function KiteDesktopRow({ row, isDark, isLast }: { row: KiteGroupRow; isDark: boolean; isLast: boolean }) {
+  return (
+    <tr
+      style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+    >
+      <td className="pl-6 pr-4 py-3.5">
+        <div className="flex items-center gap-3">
+          <AssetIcon type={row.category} isDark={isDark} />
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                {row.name}
+              </p>
+              <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
+                KITE SYNC
+              </span>
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <CategoryBadge category={row.category} />
+              <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>{row.subLabel}</span>
+            </div>
+          </div>
+        </div>
+      </td>
+
+      <td className="px-4 py-4 text-right text-[15px] font-bold" style={{ color: "var(--text-primary)", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
+        {fmtINRFull(row.curVal)}
+      </td>
+
+      <td className="px-4 py-4 text-right">
+        <PnlCell value={row.pnl} pct={row.pnlPct} />
+      </td>
+
+      <td className="pr-6 pl-4 py-4 text-right">
+        <div className="flex items-center justify-end gap-2.5">
+          <div className="w-14 h-[3px] rounded-full overflow-hidden" style={{ background: "var(--separator)" }}>
+            <div className="h-full rounded-full" style={{ width: `${Math.min(row.allocation, 100)}%`, background: "var(--text-primary)" }} />
+          </div>
+          <span className="text-[15px] font-bold w-9 text-right" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
+            {row.allocation}%
+          </span>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function EmptyAssetsState() {
+  return (
+    <div className="py-16 flex flex-col items-center gap-2">
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "var(--surface-secondary)", color: "var(--text-tertiary)" }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+        </svg>
+      </div>
+      <p className="text-[14px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No assets yet</p>
+      <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>Add your first asset to get started</p>
     </div>
   );
 }
@@ -1063,19 +1328,6 @@ onDataChanged?.();
   }, [brokerHoldings]);
 
   // ── Kite grouped summary rows (for ALL view only) ────────────────────────────
-  type KiteGroupRow = {
-    id: string;
-    name: string;
-    subLabel: string;
-    category: string;
-    count: number;
-    invested: number;
-    curVal: number;
-    pnl: number;
-    pnlPct: number;
-    allocation: number;
-  };
-
   const kiteGroupedRows = useMemo<KiteGroupRow[]>(() => {
     const stocksH = kiteUiAssets.filter((h) => h.category === "stocks");
     const commH   = kiteUiAssets.filter((h) => h.category === "gold");
@@ -1205,6 +1457,71 @@ onDataChanged?.();
       return sortDir === "asc" ? diff : -diff;
     });
   }, [mappedAssets, activeTab, search, sortKey, sortDir]);
+
+  // ── Grouped-by-category view for the "All" tab — collapsible sections instead of one long flat list ──
+  type CategoryGroup = {
+    category: AssetCategory;
+    label: string;
+    items: UiAsset[];
+    kiteRow: KiteGroupRow | null;
+    curVal: number;
+    invested: number;
+    pnl: number;
+    pnlPct: number;
+    count: number;
+  };
+
+  const groupedAssets = useMemo<CategoryGroup[]>(() => {
+    const q = search.toLowerCase().trim();
+    const manualAll = mappedAssets.filter((a) => {
+      if (a.category === "lended") return false; // lended lives in Friends tab
+      return a.name.toLowerCase().includes(q) || a.ticker.toLowerCase().includes(q);
+    });
+
+    const totalCurVal = manualAll.reduce((s, a) => s + a.curVal, 0);
+    const byCategory = new Map<string, UiAsset[]>();
+    for (const a of manualAll) {
+      const withAlloc = { ...a, allocation: totalCurVal > 0 ? Number(((a.curVal / totalCurVal) * 100).toFixed(1)) : 0 };
+      const arr = byCategory.get(a.category) ?? [];
+      arr.push(withAlloc);
+      byCategory.set(a.category, arr);
+    }
+
+    return TABS
+      .filter((t) => t.value !== "all")
+      .map((tab) => {
+        const items = byCategory.get(tab.value) ?? [];
+        const kiteRow = kiteGroupedRows.find((r) => r.category === tab.value) ?? null;
+        const curVal = items.reduce((s, a) => s + a.curVal, 0) + (kiteRow?.curVal ?? 0);
+        const invested = items.reduce((s, a) => s + a.invested, 0) + (kiteRow?.invested ?? 0);
+        const pnl = items.reduce((s, a) => s + a.pnl, 0) + (kiteRow?.pnl ?? 0);
+        return {
+          category: tab.value as AssetCategory,
+          label: tab.label,
+          items,
+          kiteRow,
+          curVal,
+          invested,
+          pnl,
+          pnlPct: invested > 0 ? (pnl / invested) * 100 : 0,
+          count: items.length + (kiteRow ? 1 : 0),
+        };
+      })
+      .filter((g) => g.count > 0)
+      .sort((a, b) => b.curVal - a.curVal);
+  }, [mappedAssets, search, kiteGroupedRows]);
+
+  // Collapsed by default — only the categories you expand take up scroll space.
+  // Searching or having a single category auto-expands, so results are never hidden behind a click.
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const isGroupExpanded = (category: string) =>
+    search.trim() !== "" || groupedAssets.length <= 1 || expandedGroups.has(category);
+  const toggleGroup = (category: string) =>
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) next.delete(category); else next.add(category);
+      return next;
+    });
 
   useEffect(() => {
     if (!onSummaryChange) return;
@@ -2003,331 +2320,202 @@ onDataChanged?.();
         })()}
 
         {sectionTab === "assets" && (<>
-        <div className="md:hidden">
-          {filtered.map((asset, idx) => {
-            const isKite = asset.id.startsWith("kite_");
-            const hasKiteRows = visibleKiteGroupedRows.length > 0;
-            const isLast = idx === filtered.length - 1;
-
-            return (
-              <div
-                key={asset.id}
-                className="px-4 sm:px-5 py-4"
-                style={{
-                  borderBottom: isLast && !hasKiteRows ? "none" : "1px solid var(--separator-subtle)",
-                }}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <AssetIcon type={asset.category} isDark={isDark} />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p
-                          className="text-[16px] font-bold truncate"
-                          style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
-                        >
-                          {asset.name}
-                        </p>
-                        {isKite && (
-                          <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
-                            style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
-                            {asset.accountLabel ?? "KITE"}
-                          </span>
+        {activeTab === "all" ? (<>
+          {/* ── Grouped-by-category view — collapsible sections instead of one long flat list ── */}
+          <div className="md:hidden">
+            {groupedAssets.map((group) => {
+              const expanded = isGroupExpanded(group.category);
+              return (
+                <div key={group.category}>
+                  <button
+                    onClick={() => toggleGroup(group.category)}
+                    className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3"
+                    style={{ background: "var(--surface-secondary)", borderBottom: "1px solid var(--separator-subtle)" }}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <AssetIcon type={group.category} isDark={isDark} />
+                      <div className="text-left min-w-0">
+                        <p className="text-[14.5px] font-bold truncate" style={{ color: "var(--text-primary)" }}>{group.label}</p>
+                        <p className="text-[11.5px]" style={{ color: "var(--text-tertiary)" }}>{group.count} asset{group.count !== 1 ? "s" : ""}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2.5 shrink-0">
+                      <div className="text-right">
+                        <p className="text-[14px] font-bold" style={{ color: "var(--text-primary)" }}>{fmtINRFull(group.curVal)}</p>
+                        {group.invested > 0 && (
+                          <p className="text-[11px] font-semibold" style={{ color: group.pnl >= 0 ? "#16A34A" : "#DC2626" }}>
+                            {group.pnl >= 0 ? "+" : ""}{group.pnlPct.toFixed(1)}%
+                          </p>
                         )}
                       </div>
-                      <div className="mt-0.5">
-                        <CategoryBadge category={asset.category} />
-                      </div>
+                      <span style={{ color: "var(--text-tertiary)" }}><ChevronIcon expanded={expanded} /></span>
                     </div>
-                  </div>
-                  <PnlCell value={asset.pnl} pct={asset.pnlPct} neutral={asset.category === "bank" || asset.category === "cash"} />
-                </div>
+                  </button>
 
-                <div
-                  className="flex items-start justify-between mt-3 pt-3"
-                  style={{ borderTop: "1px solid var(--separator-subtle)" }}
-                >
-                  <StatLabel label="Cur. Val" value={fmtINRFull(asset.curVal)} />
-                  <StatLabel
-                    label="Alloc."
-                    value={`${asset.allocation}%`}
-                    align="right"
-                  />
-                </div>
-
-                {!isKite && (
-                  <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
-                    <button
-                      onClick={() => handleEdit(asset)}
-                      className="flex items-center gap-1 h-7 px-2.5 rounded-[8px] text-[12px] font-medium"
-                      style={{ color: "var(--text-secondary)", background: "var(--surface-secondary)" }}
-                    >
-                      <EditIcon /> Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(asset.id)}
-                      className="icon-btn ml-auto w-7 h-7 flex items-center justify-center rounded-[8px]"
-                      style={{ color: "var(--text-tertiary)" }}
-                      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#DC2626")}
-                      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Kite holdings — always one aggregated row per category, never individual stocks */}
-          {visibleKiteGroupedRows.map((row, idx) => {
-            const isLast = idx === visibleKiteGroupedRows.length - 1;
-            return (
-              <div
-                key={row.id}
-                className="px-4 sm:px-5 py-4"
-                style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <AssetIcon type={row.category} isDark={isDark} />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-[16px] font-bold truncate" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
-                          {row.name}
-                        </p>
-                        <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
-                          style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
-                          KITE SYNC
-                        </span>
-                      </div>
-                      <div className="mt-0.5">
-                        <CategoryBadge category={row.category} />
-                      </div>
-                      <p className="text-[12px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>{row.subLabel}</p>
+                  {expanded && (
+                    <div>
+                      {group.items.map((asset, idx) => (
+                        <AssetMobileCard
+                          key={asset.id}
+                          asset={asset}
+                          isDark={isDark}
+                          isLast={idx === group.items.length - 1 && !group.kiteRow}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                        />
+                      ))}
+                      {group.kiteRow && <KiteMobileCard row={group.kiteRow} isDark={isDark} isLast />}
                     </div>
-                  </div>
-                  <PnlCell value={row.pnl} pct={row.pnlPct} />
+                  )}
                 </div>
-                <div className="flex items-start justify-between mt-3 pt-3" style={{ borderTop: "1px solid var(--separator-subtle)" }}>
-                  <StatLabel label="Cur. Val" value={fmtINRFull(row.curVal)} />
-                  <StatLabel label="Invested" value={fmtINRFull(row.invested)} align="right" />
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
 
-          {filtered.length === 0 && visibleKiteGroupedRows.length === 0 && (
-            <div className="py-16 flex flex-col items-center gap-2">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "var(--surface-secondary)", color: "var(--text-tertiary)" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-                  <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
-                </svg>
-              </div>
-              <p className="text-[14px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No assets yet</p>
-              <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>Add your first asset to get started</p>
-            </div>
-          )}
-        </div>
+            {groupedAssets.length === 0 && <EmptyAssetsState />}
+          </div>
 
-        <div className="hidden md:block" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100dvh - 280px)" }}>
-          <table className="w-full">
-            <thead style={{
-              position: "sticky",
-              top: 0,
-              zIndex: 10,
-              boxShadow: isDark
-                ? "0 1px 0 rgba(255,255,255,0.07), 0 4px 20px rgba(0,0,0,0.4)"
-                : "0 1px 0 rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.06)",
-            }}>
-              <tr>
-                <th
-                  className="py-3.5 pl-6 pr-4 text-left text-[11px] font-semibold uppercase"
-                  style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}
-                >
-                  ASSET NAME
-                </th>
-                {(
-                  [
-                    { label: "CUR. VAL", key: "curVal" as const, pad: "px-4" },
-                    { label: "P&L", key: "pnl" as const, pad: "px-4" },
-                  ] as const
-                ).map((col) => {
-                  const isActive = sortKey === col.key;
-                  return (
-                    <th
-                      key={col.key}
-                      className={`py-3.5 ${col.pad} text-right text-[11px] font-semibold uppercase cursor-pointer select-none`}
-                      style={{ color: isActive ? "var(--text-primary)" : "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}
-                      onClick={() => handleSort(col.key)}
-                    >
-                      <span className="inline-flex items-center justify-end gap-1">
-                        {col.label}
-                        <span style={{ opacity: isActive ? 1 : 0.35, fontSize: 9 }}>
-                          {isActive && sortDir === "asc" ? "▲" : "▼"}
+          <div className="hidden md:block" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100dvh - 280px)" }}>
+            {groupedAssets.map((group) => {
+              const expanded = isGroupExpanded(group.category);
+              return (
+                <div key={group.category}>
+                  <button
+                    onClick={() => toggleGroup(group.category)}
+                    className="w-full flex items-center justify-between gap-4 px-6 py-3"
+                    style={{ background: "var(--surface-secondary)", borderBottom: "1px solid var(--separator-subtle)" }}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <ChevronIcon expanded={expanded} />
+                      <AssetIcon type={group.category} isDark={isDark} />
+                      <p className="text-[14px] font-bold" style={{ color: "var(--text-primary)" }}>{group.label}</p>
+                      <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>{group.count} asset{group.count !== 1 ? "s" : ""}</span>
+                    </div>
+                    <div className="flex items-center gap-6">
+                      <span className="text-[14px] font-bold" style={{ color: "var(--text-primary)" }}>{fmtINRFull(group.curVal)}</span>
+                      {group.invested > 0 && (
+                        <span className="text-[13px] font-semibold w-16 text-right" style={{ color: group.pnl >= 0 ? "#16A34A" : "#DC2626" }}>
+                          {group.pnl >= 0 ? "+" : ""}{group.pnlPct.toFixed(1)}%
                         </span>
-                      </span>
-                    </th>
-                  );
-                })}
-                <th
-                  className="py-3.5 pr-6 pl-4 text-right text-[11px] font-semibold uppercase"
-                  style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}
-                >
-                  % ALLOC.
-                </th>
-              </tr>
-            </thead>
+                      )}
+                    </div>
+                  </button>
 
-            <tbody>
-              {filtered.map((asset, idx) => {
-                const isKite = asset.id.startsWith("kite_");
-                const hasKiteRows = visibleKiteGroupedRows.length > 0;
-                const isLast = idx === filtered.length - 1;
+                  {expanded && (
+                    <table className="w-full">
+                      <tbody>
+                        {group.items.map((asset, idx) => (
+                          <AssetDesktopRow
+                            key={asset.id}
+                            asset={asset}
+                            isDark={isDark}
+                            isLast={idx === group.items.length - 1 && !group.kiteRow}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                          />
+                        ))}
+                        {group.kiteRow && <KiteDesktopRow row={group.kiteRow} isDark={isDark} isLast />}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              );
+            })}
 
-                return (
-                  <tr
+            {groupedAssets.length === 0 && <EmptyAssetsState />}
+          </div>
+        </>) : (<>
+          {/* ── Flat list — single category already keeps this short ── */}
+          <div className="md:hidden">
+            {filtered.map((asset, idx) => (
+              <AssetMobileCard
+                key={asset.id}
+                asset={asset}
+                isDark={isDark}
+                isLast={idx === filtered.length - 1 && visibleKiteGroupedRows.length === 0}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))}
+
+            {/* Kite holdings — always one aggregated row per category, never individual stocks */}
+            {visibleKiteGroupedRows.map((row, idx) => (
+              <KiteMobileCard key={row.id} row={row} isDark={isDark} isLast={idx === visibleKiteGroupedRows.length - 1} />
+            ))}
+
+            {filtered.length === 0 && visibleKiteGroupedRows.length === 0 && <EmptyAssetsState />}
+          </div>
+
+          <div className="hidden md:block" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100dvh - 280px)" }}>
+            <table className="w-full">
+              <thead style={{
+                position: "sticky",
+                top: 0,
+                zIndex: 10,
+                boxShadow: isDark
+                  ? "0 1px 0 rgba(255,255,255,0.07), 0 4px 20px rgba(0,0,0,0.4)"
+                  : "0 1px 0 rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.06)",
+              }}>
+                <tr>
+                  <th
+                    className="py-3.5 pl-6 pr-4 text-left text-[11px] font-semibold uppercase"
+                    style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}
+                  >
+                    ASSET NAME
+                  </th>
+                  {(
+                    [
+                      { label: "CUR. VAL", key: "curVal" as const, pad: "px-4" },
+                      { label: "P&L", key: "pnl" as const, pad: "px-4" },
+                    ] as const
+                  ).map((col) => {
+                    const isActive = sortKey === col.key;
+                    return (
+                      <th
+                        key={col.key}
+                        className={`py-3.5 ${col.pad} text-right text-[11px] font-semibold uppercase cursor-pointer select-none`}
+                        style={{ color: isActive ? "var(--text-primary)" : "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}
+                        onClick={() => handleSort(col.key)}
+                      >
+                        <span className="inline-flex items-center justify-end gap-1">
+                          {col.label}
+                          <span style={{ opacity: isActive ? 1 : 0.35, fontSize: 9 }}>
+                            {isActive && sortDir === "asc" ? "▲" : "▼"}
+                          </span>
+                        </span>
+                      </th>
+                    );
+                  })}
+                  <th
+                    className="py-3.5 pr-6 pl-4 text-right text-[11px] font-semibold uppercase"
+                    style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "var(--surface)" }}
+                  >
+                    % ALLOC.
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filtered.map((asset, idx) => (
+                  <AssetDesktopRow
                     key={asset.id}
-                    className="cursor-pointer"
-                    style={{ borderBottom: isLast && !hasKiteRows ? "none" : "1px solid var(--separator-subtle)" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                  >
-                    <td className="pl-6 pr-4 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <AssetIcon type={asset.category} isDark={isDark} />
-                        <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
-                            {asset.name}
-                          </p>
-                          {isKite && (
-                            <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                              style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
-                              {asset.accountLabel ?? "KITE"}
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-1 flex items-center gap-2">
-                          <CategoryBadge category={asset.category} />
-                          {!isKite && (
-                            <>
-                              <button
-                                onClick={() => handleEdit(asset)}
-                                className="icon-btn w-5 h-5 flex items-center justify-center rounded-md"
-                                style={{ color: "var(--text-tertiary)" }}
-                                title="Edit"
-                              >
-                                <EditIcon />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(asset.id)}
-                                className="icon-btn w-5 h-5 flex items-center justify-center rounded-md"
-                                style={{ color: "var(--text-tertiary)" }}
-                                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#DC2626")}
-                                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)")}
-                                title="Delete"
-                              >
-                                <TrashIcon />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                        </div>
-                      </div>
-                    </td>
+                    asset={asset}
+                    isDark={isDark}
+                    isLast={idx === filtered.length - 1 && visibleKiteGroupedRows.length === 0}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
 
-                    <td className="px-4 py-3.5 text-right text-[15px] font-bold" style={{ color: "var(--text-primary)", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
-                      {fmtINRFull(asset.curVal)}
-                    </td>
+                {/* Kite holdings — always one aggregated row per category, never individual stocks */}
+                {visibleKiteGroupedRows.map((row, idx) => (
+                  <KiteDesktopRow key={row.id} row={row} isDark={isDark} isLast={idx === visibleKiteGroupedRows.length - 1} />
+                ))}
+              </tbody>
+            </table>
 
-                    <td className="px-4 py-4 text-right">
-                      <PnlCell value={asset.pnl} pct={asset.pnlPct} neutral={asset.category === "bank" || asset.category === "cash"} />
-                    </td>
-
-                    <td className="pr-6 pl-4 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2.5">
-                        <div className="w-14 h-[3px] rounded-full overflow-hidden" style={{ background: "var(--separator)" }}>
-                          <div className="h-full rounded-full" style={{ width: `${Math.min(asset.allocation, 100)}%`, background: "var(--text-primary)" }} />
-                        </div>
-                        <span className="text-[15px] font-bold w-9 text-right" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
-                          {asset.allocation}%
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-
-              {/* Kite holdings — always one aggregated row per category, never individual stocks */}
-              {visibleKiteGroupedRows.map((row, idx) => {
-                const isLast = idx === visibleKiteGroupedRows.length - 1;
-                return (
-                  <tr
-                    key={row.id}
-                    style={{ borderBottom: isLast ? "none" : "1px solid var(--separator-subtle)" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                  >
-                    <td className="pl-6 pr-4 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <AssetIcon type={row.category} isDark={isDark} />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-[15px] font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
-                              {row.name}
-                            </p>
-                            <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                              style={{ background: "rgba(174,221,0,0.12)", color: "#5a7a00" }}>
-                              KITE SYNC
-                            </span>
-                          </div>
-                          <div className="mt-1 flex items-center gap-2">
-                            <CategoryBadge category={row.category} />
-                            <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>{row.subLabel}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-4 text-right text-[15px] font-bold" style={{ color: "var(--text-primary)", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
-                      {fmtINRFull(row.curVal)}
-                    </td>
-
-                    <td className="px-4 py-4 text-right">
-                      <PnlCell value={row.pnl} pct={row.pnlPct} />
-                    </td>
-
-                    <td className="pr-6 pl-4 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2.5">
-                        <div className="w-14 h-[3px] rounded-full overflow-hidden" style={{ background: "var(--separator)" }}>
-                          <div className="h-full rounded-full" style={{ width: `${Math.min(row.allocation, 100)}%`, background: "var(--text-primary)" }} />
-                        </div>
-                        <span className="text-[15px] font-bold w-9 text-right" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>
-                          {row.allocation}%
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {filtered.length === 0 && visibleKiteGroupedRows.length === 0 && (
-            <div className="py-16 flex flex-col items-center gap-2">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "var(--surface-secondary)", color: "var(--text-tertiary)" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-                  <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
-                </svg>
-              </div>
-              <p className="text-[14px] font-semibold mt-1" style={{ color: "var(--text-primary)" }}>No assets yet</p>
-              <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>Add your first asset to get started</p>
-            </div>
-          )}
-        </div>
+            {filtered.length === 0 && visibleKiteGroupedRows.length === 0 && <EmptyAssetsState />}
+          </div>
+        </>)}
         </>)}
 
         {sectionTab === "liabilities" && (() => {
