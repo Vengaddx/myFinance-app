@@ -125,7 +125,6 @@ export default function Home() {
   const [showSplash, setShowSplash] = useState(false);
   const [stickyVisible, setStickyVisible] = useState(false);
   const [stickyData, setStickyData] = useState<StickyBarData | null>(null);
-  const [dataLoaded, setDataLoaded] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [tableRefreshKey, setTableRefreshKey] = useState(0);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -181,7 +180,6 @@ export default function Home() {
 
     const assets = (data as DbAssetRow[]) ?? [];
     setDbAssets(assets);
-    setDataLoaded(true);
   };
 
   const fetchLiabilities = async () => {

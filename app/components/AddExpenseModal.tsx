@@ -23,9 +23,9 @@ export const EXPENSE_CATEGORIES = [
   "Travel", "Medical", "Entertainment", "Office", "Other",
 ];
 
-export const DEFAULT_SAR_RATE = "24.2";
+const DEFAULT_SAR_RATE = "24.2";
 
-export const EMPTY_EXPENSE_FORM: ExpenseFormData = {
+const EMPTY_EXPENSE_FORM: ExpenseFormData = {
   title: "",
   amount: "",
   currency: "SAR",

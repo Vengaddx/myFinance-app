@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/lib/ThemeContext";
 
-export type AssetBreakdownItem = { label: string; amount: number; color: string };
+type AssetBreakdownItem = { label: string; amount: number; color: string };
 
 type Props = {
   netWorth: number;
